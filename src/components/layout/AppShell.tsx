@@ -30,15 +30,15 @@ export const AppShell: FC<AppShellProps> = ({
         </div>
       )}
 
-      {/* Main Workspace: Sidebar + MainContent */}
-      <div className="flex flex-1 min-h-0 overflow-hidden w-full">
+      {/* Main Workspace: CSS Grid [sidebar] [main] */}
+      <div className="grid grid-cols-[220px_1fr] flex-1 min-h-0 w-full overflow-hidden">
         {/* Fixed 220px Sidebar container */}
-        <div className="w-[220px] min-w-[220px] max-w-[220px] shrink-0 h-full">
+        <div className="w-[220px] h-full overflow-hidden">
           {sidebar}
         </div>
 
         {/* Fluid Scrollable Main Content container */}
-        <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">
+        <div className="min-w-0 h-full flex flex-col overflow-hidden">
           {mainContent}
         </div>
       </div>
