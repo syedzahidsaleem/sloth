@@ -30,6 +30,7 @@ import {
   setAccentPalette,
   getCurrentAccent,
 } from './styles/tokens';
+import { SourcesPanel } from './components/settings/SourcesPanel';
 
 const SAMPLE_TRACKS: Track[] = [
   {
@@ -495,6 +496,9 @@ export default function App() {
                   })}
                 </div>
               </div>
+
+              {/* Nuclear-Style Audio Source Fallback Registry */}
+              <SourcesPanel />
 
               {/* Engine Status & Source Diagnostics */}
               <div className="p-5 rounded-[4px] bg-[var(--surface)] border border-[var(--border)] space-y-3">

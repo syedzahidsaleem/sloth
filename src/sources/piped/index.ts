@@ -302,3 +302,129 @@ export class PipedClient {
     throw new Error(`Failed to resolve stream for ${videoId} across Piped and Invidious`);
   }
 }
+
+import type {
+  AudioSource,
+  TrackMeta,
+  SourceSearchResult,
+  SourceResolvedStream,
+  NuclearStreamCandidate,
+  NuclearStream,
+} from '../types';
+import { matchTrack } from '../matcher';
+
+export class PipedAudioSource implements AudioSource {
+  public readonly id = 'piped';
+  public readonly label = 'Piped Proxy';
+  public readonly supportsLossless = false;
+
+  public readonly name = 'Piped Proxy';
+  public readonly kind = 'streaming' as const;
+
+  private client: PipedClient;
+
+  constructor(client?: PipedClient) {
+    this.client = client ?? new PipedClient();
+  }
+
+  public async search(query: string): Promise<SourceSearchResult[]> {
+    const rawItems = await this.client.search(query, 'music_songs');
+    return rawItems
+      .filter((i) => i.type === 'stream')
+      .map((item) => {
+        // Extract video ID from URL (e.g. /watch?v=xyz or xyz)
+        const id = item.url.includes('v=')
+          ? item.url.split('v=')[1].split('&')[0]
+          : item.url.replace(/^\/watch\?v=/, '');
+
+        return {
+          id,
+          title: item.title,
+          artist: item.uploaderName,
+          durationSeconds: item.duration,
+          sourceId: this.id,
+          thumbnailUrl: item.thumbnail,
+          lossless: false,
+        };
+      });
+  }
+
+  public async resolve(track: TrackMeta): Promise<SourceResolvedStream> {
+    let videoId = track.id;
+    if (!/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+      const candidates = await this.search(`${track.title} ${track.artist}`.trim());
+      if (candidates.length === 0) {
+        throw new Error(`Piped: No search candidates found for "${track.title}"`);
+      }
+      const matches = candidates.map((cand) => matchTrack(track, cand));
+      matches.sort((a, b) => b.confidence - a.confidence);
+      videoId = matches[0].candidate.id;
+    }
+
+    const manifest = await this.client.streams(videoId);
+    const bestAudio = manifest.audioStreams[0];
+    if (!bestAudio) {
+      throw new Error(`Piped: No audio stream found for ${videoId}`);
+    }
+
+    return {
+      url: bestAudio.url,
+      sourceId: this.id,
+      trackId: videoId,
+      title: manifest.title || track.title,
+      artist: manifest.uploader || track.artist,
+      mimeType: bestAudio.format === 'WEBM' ? 'audio/webm' : 'audio/mp4',
+      codec: bestAudio.codec,
+      bitrate: bestAudio.bitrate,
+      isLossless: false,
+      expiresAt: Date.now() + 4 * 3600 * 1000,
+    };
+  }
+
+  public getConfidence(track: TrackMeta, candidate?: SourceSearchResult): number {
+    if (!candidate) return 0.80;
+    return matchTrack(track, candidate).confidence;
+  }
+
+  public async ping(): Promise<{ online: boolean; latencyMs: number }> {
+    const active = this.client.getActiveInstance();
+    const start = Date.now();
+    try {
+      const resp = await fetch(`${active.apiBase}/trending?region=US`, { method: 'HEAD' });
+      return { online: resp.ok, latencyMs: Date.now() - start };
+    } catch {
+      return { online: false, latencyMs: 999 };
+    }
+  }
+
+  public async searchForTrack(
+    artist: string,
+    title: string,
+    album?: string,
+  ): Promise<NuclearStreamCandidate[]> {
+    const query = [title, artist, album].filter(Boolean).join(' ');
+    const results = await this.search(query);
+    return results.map((r) => ({
+      id: r.id,
+      title: r.title,
+      artist: r.artist,
+      duration: r.durationSeconds,
+      source: this.id,
+      thumbnail: r.thumbnailUrl,
+    }));
+  }
+
+  public async getStreamUrl(candidateId: string): Promise<NuclearStream> {
+    const manifest = await this.client.streams(candidateId);
+    const stream = manifest.audioStreams[0];
+    return {
+      streamUrl: stream.url,
+      source: this.id,
+      format: stream.format,
+      bitrate: stream.bitrate,
+    };
+  }
+}
+
+export const pipedSource = new PipedAudioSource();
+
