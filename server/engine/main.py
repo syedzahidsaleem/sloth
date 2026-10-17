@@ -36,6 +36,7 @@ from .graph import (
     SQLiteGraphBuilder,
 )
 from .coldstart import onboarding_router
+from .generator.api import router as generator_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("sloth-engine-api")
@@ -48,6 +49,8 @@ app = FastAPI(
 
 app.include_router(onboarding_router, prefix="/api/engine/coldstart/onboarding", tags=["coldstart"])
 app.include_router(onboarding_router, prefix="/engine/onboarding", tags=["coldstart"])
+app.include_router(generator_router, prefix="/api/engine/generator", tags=["generator"])
+app.include_router(generator_router, prefix="/engine/generator", tags=["generator"])
 
 app.add_middleware(
     CORSMiddleware,
