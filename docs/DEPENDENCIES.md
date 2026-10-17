@@ -55,7 +55,17 @@ These paths are mapped to extract reference architecture and source-of-truth pat
 
 | Package | Version | Type | Purpose | Verified |
 | :--- | :--- | :--- | :--- | :--- |
-| — | — | — | — | — |
+| `class-variance-authority` | `0.7.1` | Runtime | CVA variant schema for UI components | Yes |
+| `clsx` | `2.1.1` | Runtime | Conditional className concatenation | Yes |
+| `tailwind-merge` | `3.0.1` | Runtime | Conflict-free Tailwind className merging | Yes |
+| `lucide-react` | `0.475.0` | Runtime | Vector icons (player controls, navigation, badges) | Yes |
+| `motion` | `12.4.7` | Runtime | Spring physics & layout animations (`motion/react`) | Yes |
+| `react` | `19.0.0` | Runtime | Core reactive UI engine | Yes |
+| `react-dom` | `19.0.0` | Runtime | React DOM renderer | Yes |
+| `@tailwindcss/vite` | `4.0.6` | Dev | Tailwind CSS v4 native Vite integration | Yes |
+| `tailwindcss` | `4.0.6` | Dev | Next-generation CSS framework & tokens | Yes |
+| `vite` | `6.1.0` | Dev | Lightning-fast ESM bundler & dev server | Yes |
+| `typescript` | `5.7.3` | Dev | Strict static typing and inference | Yes |
 
 ---
 
