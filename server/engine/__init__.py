@@ -43,6 +43,9 @@ from .sequential import (
 from .generator import PlaylistDiffusionConfig, PlaylistDiffusionGenerator, GaussianDiffusionSchedule
 from .coldstart import IPSDebiaser, IPSLossConfig, ThompsonBandit, BanditArm
 from .audio import MERTExtractor, CLAPExtractor
+from .fusion import GatingNetwork, FusionContext, ScoringLayer, SCORING_LAYERS
+from .feedback import FeedbackDispatcher, FeedbackEvent, FeedbackEventType
+from .recommender import SLOTHRecommender, RecommendedTrack
 
 __all__ = [
     # Meld Scoring & Matching
@@ -94,4 +97,14 @@ __all__ = [
     "BanditArm",
     "MERTExtractor",
     "CLAPExtractor",
+    # Gated Fusion, Feedback & Recommender Pipeline
+    "GatingNetwork",
+    "FusionContext",
+    "ScoringLayer",
+    "SCORING_LAYERS",
+    "FeedbackDispatcher",
+    "FeedbackEvent",
+    "FeedbackEventType",
+    "SLOTHRecommender",
+    "RecommendedTrack",
 ]

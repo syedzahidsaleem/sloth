@@ -194,8 +194,15 @@ class PlaylistDiffusionGenerator:
     along planned emotional and context trajectories.
     """
 
-    def __init__(self, config: Optional[DiffusionConfig] = None):
-        self.config = config or DiffusionConfig()
+    def __init__(
+        self,
+        config: Optional[DiffusionConfig] = None,
+        embedding_dim: Optional[int] = None,
+    ):
+        if config is None and embedding_dim is not None:
+            self.config = DiffusionConfig(latent_dim=embedding_dim)
+        else:
+            self.config = config or DiffusionConfig()
         self.schedule = NoiseSchedule(
             timesteps=self.config.timesteps,
             beta_start=self.config.beta_start,
@@ -255,10 +262,11 @@ class PlaylistDiffusionGenerator:
         condition_vector: np.ndarray,
         seed_embedding: Optional[np.ndarray] = None,
         momentum: float = 0.20,
+        sample_steps: int = 25,
     ) -> np.ndarray:
         """
-        Reverse diffusion inference loop (L-DiffRec DDPM sampling):
-        Starts from pure Gaussian noise x_T ~ N(0, I) and denoises through T steps.
+        Reverse diffusion inference loop (L-DiffRec accelerated DDPM/DDIM sampling):
+        Starts from pure Gaussian noise x_T ~ N(0, I) and denoises through strided steps.
         Returns single 768-dim latent representation.
         """
         cond_2d = np.atleast_2d(condition_vector).astype(np.float32)
@@ -271,8 +279,12 @@ class PlaylistDiffusionGenerator:
         else:
             x_t = np.random.normal(size=(1, self.config.latent_dim)).astype(np.float32)
 
-        # Denoising loop: from T-1 down to 0
-        for step in reversed(range(self.config.timesteps)):
+        # Accelerated sampling schedule (25 steps for sub-second 20-track generation)
+        step_stride = max(1, self.config.timesteps // sample_steps)
+        step_indices = list(reversed(range(0, self.config.timesteps, step_stride)))
+
+        # Denoising loop
+        for idx, step in enumerate(step_indices):
             t_tensor = np.array([step], dtype=np.int32)
             pred = self.denoiser.forward(x_t, t_tensor, cond_2d)
 
@@ -289,7 +301,7 @@ class PlaylistDiffusionGenerator:
                 sqrt_one_minus_ab = self.schedule.sqrt_one_minus_alphas_cumprod[step]
                 mean = (1.0 / math.sqrt(alpha_t)) * (x_t - (beta_t / sqrt_one_minus_ab) * pred)
 
-            if step > 0:
+            if idx < len(step_indices) - 1:
                 var = self.schedule.posterior_variance[step]
                 sigma = math.sqrt(max(1e-8, var))
                 z = np.random.normal(size=x_t.shape).astype(np.float32)
@@ -404,39 +416,41 @@ class PlaylistDiffusionGenerator:
         target_mood: Tuple[float, float] = (0.7, 0.25),
         sequence_length: int = 20,
         length: Optional[int] = None,
+        num_tracks: Optional[int] = None,
         preset_name: Optional[str] = None,
         diversity_temperature: float = 0.7,
+        **kwargs: Any,
     ) -> Any:
         """
         End-to-End Generative Diffusion Pipeline:
         Supports both direct context-vector generation and full catalog metadata + coherence audit.
         """
-        num_tracks = length if length is not None else sequence_length
+        count = num_tracks or length or sequence_length or 20
 
         # If called with context vector as first positional argument
         if isinstance(catalog_metadata, np.ndarray):
             c_vec = catalog_metadata
-            gen_embs = self.generate_sequence(context_vector=c_vec, sequence_length=num_tracks)
+            gen_embs = self.generate_sequence(context_vector=c_vec, sequence_length=count)
             return self.retriever.find_unique_trajectory(gen_embs, diversity_temperature=diversity_temperature)
 
         # Full pipeline with CoherenceReport
         meta = catalog_metadata or {}
         if preset_name:
-            waypoints = self.mood_planner.plan_preset_trajectory(preset_name, num_tracks=num_tracks)
+            waypoints = self.mood_planner.plan_preset_trajectory(preset_name, num_tracks=count)
         else:
             waypoints = self.mood_planner.plan_trajectory(
                 start_valence=start_mood[0],
                 start_arousal=start_mood[1],
                 target_valence=target_mood[0],
                 target_arousal=target_mood[1],
-                num_tracks=num_tracks,
+                num_tracks=count,
             )
 
         gen_embs = self.generate_sequence(
             user_preference=user_preference,
             context_vector=context_vector,
             mood_waypoints=waypoints,
-            sequence_length=num_tracks,
+            sequence_length=count,
         )
 
         playlist = self.retriever.find_unique_trajectory(gen_embs, diversity_temperature=diversity_temperature)

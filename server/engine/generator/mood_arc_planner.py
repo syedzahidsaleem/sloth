@@ -19,6 +19,10 @@ class MoodWaypoint:
     valence: float   # [0.0, 1.0]
     arousal: float   # [0.0, 1.0]
 
+    @property
+    def index(self) -> int:
+        return self.step
+
 
 @dataclass
 class MoodPreset:
@@ -147,6 +151,30 @@ class MoodArcPlanner:
             num_tracks=num_tracks,
             noise_std=noise_std,
             random_seed=random_seed,
+        )
+
+    def plan_arc(
+        self,
+        preset: Optional[str] = None,
+        start: Optional[Dict[str, float]] = None,
+        target: Optional[Dict[str, float]] = None,
+        num_tracks: int = 20,
+    ) -> List[MoodWaypoint]:
+        """
+        Unified planner accepting either preset name or explicit start/target coordinates.
+        """
+        if preset and preset.lower().replace(" ", "_") in MOOD_PRESETS:
+            return self.plan_preset_trajectory(preset, num_tracks=num_tracks)
+        start_v = float(start.get("valence", 0.5)) if start else 0.5
+        start_a = float(start.get("arousal", 0.5)) if start else 0.5
+        target_v = float(target.get("valence", 0.5)) if target else 0.5
+        target_a = float(target.get("arousal", 0.5)) if target else 0.5
+        return self.plan_trajectory(
+            start_valence=start_v,
+            start_arousal=start_a,
+            target_valence=target_v,
+            target_arousal=target_a,
+            num_tracks=num_tracks,
         )
 
     def extract_mood_vectors(self, waypoints: List[MoodWaypoint]) -> np.ndarray:

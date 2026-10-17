@@ -34,6 +34,11 @@ class FAISSRetriever:
         self.faiss_index: Any = None
         self.use_faiss = _FAISS_AVAILABLE
 
+    @property
+    def ntotal(self) -> int:
+        """Returns number of indexed tracks in FAISS / NumPy index."""
+        return len(self.track_ids)
+
     def rebuild_index(self, track_embeddings: Dict[str, np.ndarray]) -> int:
         """
         Reconstructs the index over the catalog of MERT track embeddings.

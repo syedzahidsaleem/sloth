@@ -37,6 +37,7 @@ from .graph import (
 )
 from .coldstart import onboarding_router
 from .generator.api import router as generator_router
+from .api import router as engine_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("sloth-engine-api")
@@ -51,6 +52,8 @@ app.include_router(onboarding_router, prefix="/api/engine/coldstart/onboarding",
 app.include_router(onboarding_router, prefix="/engine/onboarding", tags=["coldstart"])
 app.include_router(generator_router, prefix="/api/engine/generator", tags=["generator"])
 app.include_router(generator_router, prefix="/engine/generator", tags=["generator"])
+app.include_router(engine_router, prefix="/api/engine", tags=["engine"])
+app.include_router(engine_router, prefix="", tags=["engine"])
 
 app.add_middleware(
     CORSMiddleware,
@@ -78,7 +81,7 @@ def health_check():
     return {
         "status": "ok",
         "service": "sloth-engine",
-        "features": ["graph", "sequential", "generator", "coldstart", "audio"],
+        "features": ["graph", "sequential", "generator", "coldstart", "audio", "fusion"],
     }
 
 

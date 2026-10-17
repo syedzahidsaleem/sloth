@@ -119,6 +119,23 @@ class CoherenceReport:
     overall_coherent: bool
     coherence_score: float  # [0.0, 1.0]
 
+    def to_dict(self) -> Dict[str, Any]:
+        mean_bpm = float(np.mean(self.bpm_deltas)) if self.bpm_deltas else 0.0
+        harm_rate = float(1.0 - (self.harmonic_violations / max(1, len(self.cof_distances)))) if self.cof_distances else 1.0
+        return {
+            "total_tracks": self.total_tracks,
+            "mean_bpm_delta": round(mean_bpm, 2),
+            "bpm_violations": self.bpm_violations,
+            "bpm_coherent": self.bpm_coherent,
+            "harmonic_compliance_rate": round(harm_rate, 3),
+            "harmonic_violations": self.harmonic_violations,
+            "harmonic_coherent": self.harmonic_coherent,
+            "valence_slope_std": round(float(self.valence_slope_std), 3),
+            "valence_coherent": self.valence_coherent,
+            "overall_coherent": self.overall_coherent,
+            "coherence_score": round(float(self.coherence_score), 3),
+        }
+
 
 class PlaylistCoherenceEvaluator:
     """

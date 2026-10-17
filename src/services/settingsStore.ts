@@ -76,6 +76,8 @@ export interface SlothSettings {
   discordRpcEnabled: boolean;
   mcpServerEnabled: boolean;
   mcpServerPort: number;
+  engineEnabled: boolean;
+  engineHost: string;
 }
 
 export const DEFAULT_SETTINGS: SlothSettings = {
@@ -110,6 +112,8 @@ export const DEFAULT_SETTINGS: SlothSettings = {
   discordRpcEnabled: true,
   mcpServerEnabled: true,
   mcpServerPort: 8800,
+  engineEnabled: true,
+  engineHost: 'localhost:8001',
 };
 
 const SETTINGS_STORAGE_KEY = 'sloth_user_settings_v1';

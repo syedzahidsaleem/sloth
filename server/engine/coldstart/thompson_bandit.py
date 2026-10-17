@@ -51,6 +51,10 @@ class ThompsonBandit:
         b = max(1e-4, arm.beta)
         return float(np.random.beta(a, b))
 
+    def sample(self, item_id: str) -> float:
+        """Alias for sample_arm."""
+        return self.sample_arm(item_id)
+
     def select_top_k(self, candidate_ids: List[str], k: int = 10) -> List[Tuple[str, float]]:
         """
         Selects top-k items by drawing independent Beta samples and ranking.
@@ -78,6 +82,17 @@ class ThompsonBandit:
 
         arm.alpha = self.decay_factor * arm.alpha + r
         arm.beta = self.decay_factor * arm.beta + (1.0 - r)
+        arm.total_pulls += 1
+
+    def update_arm(self, arm_id: str, reward: float, decay: Optional[float] = None) -> None:
+        """
+        Updates an arm with reward and optional custom decay factor.
+        """
+        arm = self.get_or_create_arm(arm_id)
+        r = max(0.0, min(1.0, float(reward)))
+        d = self.decay_factor if decay is None else float(decay)
+        arm.alpha = d * arm.alpha + r
+        arm.beta = d * arm.beta + (1.0 - r)
         arm.total_pulls += 1
 
     def batch_update(self, rewards: Dict[str, float]) -> None:

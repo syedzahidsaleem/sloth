@@ -69,5 +69,16 @@ These paths are mapped to extract reference architecture and source-of-truth pat
 
 ---
 
+## Engine Hosting & Infrastructure Architecture (Vercel vs. Persistent Compute)
+
+> **CRITICAL ARCHITECTURAL DIRECTIVE**: **The SLOTH Neural Engine (`server/engine/`) is NOT hosted on Vercel.**
+
+| Component | Target Platform | Runtime / Requirements | Rationale |
+| :--- | :--- | :--- | :--- |
+| **Frontend & Static UI** | **Vercel** / Static CDN | Next.js 15 App Router, React 19, Tailwind v4, Edge Functions | Ultra-fast global edge delivery, SSR, static asset streaming. |
+| **SLOTH AI & Recommender Engine** | **Fly.io** / **Railway** / Local Daemon | Python 3.11+, PyTorch (CPU/GPU), FAISS native C++, SQLite | Requires persistent compute, unmetered long-lived memory state, native vector search libraries, real-time background task execution, and sub-20ms feedback persistence. Vercel serverless functions have execution timeouts, lack persistent local disk storage for SQLite, and cannot support in-memory FAISS indices or background PyTorch model threads. |
+
+---
+
 ## Attribution & Licensing Notice
 Any code or logic adapted from referenced codebases requires explicit compliance with their respective licenses (`AGPL-3.0`, `GPL-3.0`). Detailed attributions and upstream copyright statements are tracked in [`LICENSE-NOTICES`](../LICENSE-NOTICES).
