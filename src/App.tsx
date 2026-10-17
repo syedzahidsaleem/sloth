@@ -34,6 +34,7 @@ import {
   setAccentPalette,
   getCurrentAccent,
 } from './styles/tokens';
+import { AskSlothModal, useAskSloth } from './features/ask-sloth';
 
 const SAMPLE_TRACKS: Track[] = [
   {
@@ -134,6 +135,9 @@ export default function App() {
 
   // Search input state
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Ask Sloth natural language command palette
+  const askSloth = useAskSloth();
 
   // Sync initial accent and check onboarding on mount
   useEffect(() => {
@@ -255,6 +259,20 @@ export default function App() {
                 className="bg-[var(--background)] border-[var(--border)]"
               />
             </div>
+
+            <button
+              type="button"
+              data-testid="ask-sloth-topbar-button"
+              onClick={askSloth.openModal}
+              className="flex items-center gap-2 px-2.5 py-1.5 rounded-[4px] bg-[var(--surface-raised)] hover:bg-[var(--surface-raised)]/80 border border-[var(--border)] text-xs text-[var(--text-primary)] hover:border-[var(--color-accent)]/50 transition-colors cursor-pointer"
+              title="Natural Language Search (Cmd+K / Ctrl+K)"
+            >
+              <Sparkles size={13} className="text-[var(--color-accent)]" />
+              <span className="font-medium hidden sm:inline">Ask Sloth</span>
+              <kbd className="px-1.5 py-0.5 rounded-[3px] bg-[var(--background)] border border-[var(--border)] text-[10px] font-mono text-[var(--text-secondary)]">
+                ⌘K
+              </kbd>
+            </button>
           </div>
 
           {/* Quick Stats & System Badges */}
@@ -536,6 +554,26 @@ export default function App() {
       onComplete={() => {
         setIsOnboardingOpen(false);
       }}
+    />
+
+    {/* Ask Sloth Command Palette Modal (Cmd+K / Ctrl+K) */}
+    <AskSlothModal
+      isOpen={askSloth.isOpen}
+      onClose={askSloth.closeModal}
+      query={askSloth.query}
+      onQueryChange={askSloth.setQuery}
+      isLoading={askSloth.isLoading}
+      results={askSloth.results}
+      interpretation={askSloth.interpretation}
+      parsedQuery={askSloth.parsedQuery}
+      elapsedMs={askSloth.elapsedMs}
+      selectedIndex={askSloth.selectedIndex}
+      onSelectIndex={askSloth.setSelectedIndex}
+      onPlayTrack={(track) => {
+        handlePlayTrack(track);
+      }}
+      currentTrackId={currentTrack.id}
+      isPlaying={isPlaying}
     />
     </>
   );

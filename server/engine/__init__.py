@@ -45,6 +45,7 @@ from .coldstart import IPSDebiaser, IPSLossConfig, ThompsonBandit, BanditArm
 from .audio import MERTExtractor, CLAPExtractor
 from .fusion import GatingNetwork, FusionContext, ScoringLayer, SCORING_LAYERS
 from .feedback import FeedbackDispatcher, FeedbackEvent, FeedbackEventType
+from .nlp_search import NaturalQueryParser, NaturalSearchPipeline
 from .recommender import SLOTHRecommender, RecommendedTrack
 
 __all__ = [
@@ -107,4 +108,6 @@ __all__ = [
     "FeedbackEventType",
     "SLOTHRecommender",
     "RecommendedTrack",
+    "NaturalQueryParser",
+    "NaturalSearchPipeline",
 ]

@@ -29,6 +29,8 @@ class DownloadStore {
   private abortControllers: Map<string, AbortController> = new Map();
   private listeners: Set<() => void> = new Set();
   private globalSseConnected: boolean = false;
+  private cachedSnapshot: DownloadJob[] = [];
+  private isDirty: boolean = true;
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -37,6 +39,7 @@ class DownloadStore {
   }
 
   private notify() {
+    this.isDirty = true;
     for (const listener of this.listeners) {
       listener();
     }
@@ -49,9 +52,13 @@ class DownloadStore {
     };
   }
 
-  public getSnapshot(): DownloadJob[] {
-    return Array.from(this.jobs.values()).sort((a, b) => b.createdAt - a.createdAt);
-  }
+  public getSnapshot = (): DownloadJob[] => {
+    if (this.isDirty) {
+      this.cachedSnapshot = Array.from(this.jobs.values()).sort((a, b) => b.createdAt - a.createdAt);
+      this.isDirty = false;
+    }
+    return this.cachedSnapshot;
+  };
 
   public getJob(jobId: string): DownloadJob | undefined {
     return this.jobs.get(jobId);

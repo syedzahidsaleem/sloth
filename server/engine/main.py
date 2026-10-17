@@ -81,7 +81,7 @@ def health_check():
     return {
         "status": "ok",
         "service": "sloth-engine",
-        "features": ["graph", "sequential", "generator", "coldstart", "audio", "fusion"],
+        "features": ["graph", "sequential", "generator", "coldstart", "audio", "fusion", "nlp_search"],
     }
 
 

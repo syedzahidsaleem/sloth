@@ -19,14 +19,16 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from .feedback import FeedbackEvent, FeedbackEventType
+from .nlp_search import NaturalSearchPipeline
 from .recommender import SLOTHRecommender
 
 logger = logging.getLogger("sloth-engine-api")
 
 router = APIRouter()
 
-# Global singleton recommender instance
+# Global singleton recommender and NLP pipeline instances
 _recommender: Optional[SLOTHRecommender] = None
+_nlp_pipeline: Optional[NaturalSearchPipeline] = None
 
 
 def get_recommender() -> SLOTHRecommender:
@@ -39,6 +41,14 @@ def get_recommender() -> SLOTHRecommender:
 def set_recommender(rec: SLOTHRecommender) -> None:
     global _recommender
     _recommender = rec
+
+
+def get_nlp_pipeline() -> NaturalSearchPipeline:
+    global _nlp_pipeline
+    if _nlp_pipeline is None:
+        rec = get_recommender()
+        _nlp_pipeline = NaturalSearchPipeline(recommender=rec)
+    return _nlp_pipeline
 
 
 # --- Pydantic V2 Request & Response Schemas ---
@@ -69,6 +79,12 @@ class GeneratePlaylistRequest(BaseModel):
     )
     track_count: int = Field(default=20, ge=5, le=50, description="Number of tracks to diffuse")
     user_id: str = Field(default="user_primary", description="User ID for preference conditioning")
+
+
+class NaturalSearchRequest(BaseModel):
+    query: str = Field(..., description="Natural language music query (e.g. 'rainy late night jazz for studying')")
+    user_id: str = Field(default="user_primary", description="User ID for personalized gated fusion re-ranking")
+    limit: int = Field(default=20, ge=1, le=50, description="Maximum number of candidate tracks to return")
 
 
 # --- Endpoint Implementations ---
@@ -172,3 +188,21 @@ def trigger_reindex_post():
     """
     rec = get_recommender()
     return rec.reindex(force=True)
+
+
+@router.post("/search/natural")
+async def search_natural(req: NaturalSearchRequest):
+    """
+    Executes 'Ask Sloth' multimodal natural language music search:
+    1. Claude (claude-sonnet-4-6) / rule parser -> structured intent JSON
+    2. CLAP audio-text embedding
+    3. FAISS candidate recall
+    4. Structured BPM / genre / mood filtering
+    5. SLOTH 6-layer Gated Fusion personalized re-ranking
+    """
+    pipeline = get_nlp_pipeline()
+    return await pipeline.search(
+        query=req.query,
+        user_id=req.user_id,
+        limit=req.limit,
+    )
