@@ -2,26 +2,56 @@
 
 ## Reference Repositories (Read-Only, Not Bundled)
 
-These external projects serve as engineering references and architectural blueprints located outside this workspace (at `D:\Coding\_hub\references\`). They are never bundled directly, and any ported algorithms or architectural concepts are cited with appropriate attribution under `LICENSE-NOTICES`.
+These external projects serve as engineering references and architectural blueprints located outside this workspace at `D:\Coding\_hub\references\`. They are never bundled directly, and any ported algorithms or architectural concepts are cited with appropriate attribution under [`LICENSE-NOTICES`](../LICENSE-NOTICES).
 
 - **nuclear** (`AGPL-3.0`)
   - **Source Repository**: `https://github.com/nukeop/nuclear.git`
-  - **Purpose**: UI component architecture, theme system (CSS variables / OKLCH tokens), plugin SDK, local library scanner, Storybook visual specifications.
+  - **Purpose**: UI component architecture, theme system, plugin SDK
 - **meld** (`GPL-3.0`)
   - **Source Repository**: `https://github.com/FrancescoGrazioso/Meld.git`
-  - **Purpose**: Recommendation scoring engine, Qobuz & YouTube source provider plugins, ISRC + fuzzy track matching pipeline, 3-tier cache layer.
+  - **Purpose**: Recommendation scoring, Qobuz provider, track matching
 - **metrolist** (`GPL-3.0`)
   - **Source Repository**: `https://github.com/MetrolistGroup/Metrolist.git`
-  - **Purpose**: YouTube InnerTube client, LRCLib lyrics pipeline, metroserver WebSocket listen-together backend.
+  - **Purpose**: InnerTube client, lyrics pipeline, listen-together
 - **spotube** (`GPL-3.0`)
   - **Source Repository**: `https://github.com/team-spotube/spotube.git`
-  - **Purpose**: Cross-platform audio player architecture, yt-dlp download pipeline, SponsorBlock chapter fix integration.
+  - **Purpose**: Download pipeline, SponsorBlock chapter fix
+
+---
+
+## Key Reference Extraction Paths
+
+These paths are mapped to extract reference architecture and source-of-truth patterns in every build prompt:
+
+### NUCLEAR (UI source of truth)
+- `nuclear/packages/ui/src/components/` → all UI components
+- `nuclear/packages/ui/src/styles/` (and `nuclear/packages/themes/src/`) → CSS variables, OKLCH tokens, theme system
+- `nuclear/packages/main/src/` (and `nuclear/packages/player/src/`) → Electron main process (Tauri equivalent) & player runtime
+- `nuclear/packages/core/src/` (and `nuclear/packages/plugin-sdk/src/`) → plugin system, source registry, types
+- `nuclear/packages/scanner/src/` → local library scanner
+- `nuclear/storybook/` (and `nuclear/packages/storybook/`) → component stories (visual reference)
+
+### MELD (recommendation engine + track matching source of truth)
+- `meld/app/src/main/java/.../recommendation/` (and `meld/app/src/main/kotlin/.../playback/SpotifyRecommendationEngine.kt`, `models/SimilarRecommendation.kt`) → scoring engine code
+- `meld/app/src/main/java/.../matching/` (and `meld/app/src/main/kotlin/.../qobuz/QobuzMatchOverride.kt`, `db/entities/*MatchEntity.kt`) → ISRC + fuzzy match pipeline
+- `meld/app/src/main/java/.../cache/` (and `meld/app/src/main/kotlin/.../db/`) → 3-tier cache layer
+- `meld/app/src/main/java/.../providers/` (and `meld/app/src/main/kotlin/.../qobuz/QobuzAudioProvider.kt`) → Qobuz + YouTube source plugins
+
+### METROLIST (InnerTube pipeline + listen-together source of truth)
+- `metrolist/app/src/main/java/.../innertube/` (and `metrolist/innertube/src/main/kotlin/com/metrolist/innertube/`) → YouTube InnerTube client
+- `metrolist/app/src/main/java/.../lyrics/` (and `metrolist/app/src/main/kotlin/com/metrolist/music/lyrics/`) → LRCLib + lyrics pipeline
+- `metrolist/server/` (and `metrolist/app/src/main/kotlin/com/metrolist/music/listentogether/`, `app/src/main/proto/listentogether.proto`) → metroserver WebSocket backend & sync client
+
+### SPOTUBE (cross-platform audio + download pipeline source of truth)
+- `spotube/lib/provider/` → audio player providers & skip segments
+- `spotube/lib/services/` → yt-dlp download, SponsorBlock fix, youtube engine
+- `spotube/lib/models/` → track, playlist, artist models
 
 ---
 
 ## Direct Dependencies
 
-*(Dependencies will be strictly pinned with exact versions via `npm install --save-exact` and audited as the core stack is initialized).*
+*(Dependencies are strictly pinned with exact versions via `npm install --save-exact` and audited as the core stack is initialized).*
 
 | Package | Version | Type | Purpose | Verified |
 | :--- | :--- | :--- | :--- | :--- |
