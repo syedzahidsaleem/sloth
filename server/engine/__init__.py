@@ -28,7 +28,18 @@ from .cache import (
     ThreeTierCache,
 )
 from .graph import HeteroNodeType, HeteroHypergraph, LightHGCN
-from .sequential import BERT4Rec, BERT4RecConfig, ACTRMemoryEngine, TrackMemoryRecord
+from .sequential import (
+    BERT4Rec,
+    BERT4RecConfig,
+    ACTRMemoryEngine,
+    TrackMemoryRecord,
+    ModeDetector,
+    ModeDetectionResult,
+    ModeType,
+    ContextEncoder,
+    ContextFeatures,
+    MoodTrajectoryPredictor,
+)
 from .generator import PlaylistDiffusionConfig, PlaylistDiffusionGenerator, GaussianDiffusionSchedule
 from .coldstart import IPSDebiaser, IPSLossConfig, ThompsonBandit, BanditArm
 from .audio import MERTExtractor, CLAPExtractor
@@ -68,6 +79,12 @@ __all__ = [
     "BERT4RecConfig",
     "ACTRMemoryEngine",
     "TrackMemoryRecord",
+    "ModeDetector",
+    "ModeDetectionResult",
+    "ModeType",
+    "ContextEncoder",
+    "ContextFeatures",
+    "MoodTrajectoryPredictor",
     "PlaylistDiffusionConfig",
     "PlaylistDiffusionGenerator",
     "GaussianDiffusionSchedule",

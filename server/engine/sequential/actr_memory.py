@@ -2,15 +2,23 @@
 # Reference implementation: https://github.com/deezer/recsys24-pisa
 # Adapted for Sloth by: Syed Zahid
 # License of original: MIT
-# Changes: Implementation of ACT-R declarative memory equations: Base-Level Activation A(t) = log(n) - d * log(delta_t) with exact multi-event decay sum, Spreading Activation via Pointwise Mutual Information (PMI), and Partial Matching acoustic similarity for repeat vs discovery prediction.
+# Changes: Implementation of ACT-R declarative memory: A(t) = log(n) - 1.0 * log(delta_t_hours + 1), repeat candidate vs rediscovery classification, Spreading Activation via Pointwise Mutual Information (PMI), and Partial Matching acoustic similarity.
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import Enum
 import math
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 import numpy as np
+
+
+class MemoryCandidateType(str, Enum):
+    REPEAT = "repeat"
+    REDISCOVERY = "rediscovery"
+    EXPLORE = "explore"
+    NEUTRAL = "neutral"
 
 
 @dataclass
@@ -22,22 +30,45 @@ class TrackMemoryRecord:
     co_listens: Dict[str, int] = field(default_factory=dict)     # Co-occurring tracks in session
 
 
+@dataclass
+class MemoryScoreResult:
+    track_id: str
+    activation: float
+    candidate_type: MemoryCandidateType
+    frequency: int
+    elapsed_hours: float
+    similarity_score: float = 0.0
+
+
 class ACTRMemoryEngine:
     """
     Cognitive Memory Architecture based on ACT-R for music listening sessions.
     Models whether a user will repeat-play a familiar track or explore a new track.
+
+    Base activation equation:
+        A(t) = log(n) - 1.0 * log(delta_t_hours + 1)
+    High A(t) -> Repeat candidate (familiar comfort).
+    Low A(t) + Audio-similar -> Rediscovery candidate.
     """
 
     def __init__(
         self,
         decay_factor: float = 0.5,           # Standard cognitive decay parameter d ~ 0.5
         retrieval_threshold: float = -3.0,   # Minimum activation threshold for cognitive recall
+        repeat_threshold: float = 0.0,       # Activation above which track is a repeat candidate
+        rediscovery_min_plays: int = 2,      # Minimum prior plays to be a rediscovery
+        rediscovery_min_hours: float = 72.0, # Minimum elapsed hours (3 days) for rediscovery
+        similarity_threshold: float = 0.65,  # Audio similarity threshold for rediscovery
         temperature: float = 1.0,           # Softmax retrieval temperature tau
-        pmi_weight: float = 0.35,            # Weight of Spreading Activation W_j
-        similarity_weight: float = 0.20,     # Weight of Partial Matching M_ik
+        pmi_weight: float = 0.35,            # Weight of Spreading Activation
+        similarity_weight: float = 0.20,     # Weight of Partial Matching
     ):
         self.decay_factor = decay_factor
         self.retrieval_threshold = retrieval_threshold
+        self.repeat_threshold = repeat_threshold
+        self.rediscovery_min_plays = rediscovery_min_plays
+        self.rediscovery_min_hours = rediscovery_min_hours
+        self.similarity_threshold = similarity_threshold
         self.temperature = temperature
         self.pmi_weight = pmi_weight
         self.similarity_weight = similarity_weight
@@ -87,11 +118,31 @@ class ACTRMemoryEngine:
             for ctx_track in session_context:
                 if ctx_track != track_id:
                     rec.co_listens[ctx_track] = rec.co_listens.get(ctx_track, 0) + 1
-                    # Symmetrical co-occurrence
                     if ctx_track in user_tracks:
                         user_tracks[ctx_track].co_listens[track_id] = (
                             user_tracks[ctx_track].co_listens.get(track_id, 0) + 1
                         )
+
+    def compute_activation(
+        self,
+        record: TrackMemoryRecord,
+        current_time: Optional[float] = None,
+        decay: float = 1.0,
+    ) -> float:
+        """
+        Direct ACT-R base-level memory activation:
+        A(t) = log(n) - 1.0 * log(delta_t_hours + 1)
+        """
+        if record.play_count == 0:
+            return self.retrieval_threshold - 1.0
+
+        now = current_time if current_time is not None else time.time()
+        elapsed_sec = max(0.0, now - record.last_played)
+        elapsed_hours = elapsed_sec / 3600.0
+
+        n = record.play_count
+        act = math.log(max(1, n)) - decay * math.log(elapsed_hours + 1.0)
+        return float(act)
 
     def compute_base_level_activation(
         self,
@@ -102,10 +153,9 @@ class ACTRMemoryEngine:
         """
         Computes Base-Level Activation (BL) in ACT-R:
         Exact formula:
-            B(t) = ln( sum_{k=1}^n (t - t_k)^(-d) )
+            B(t) = ln( sum_{k=1}^n (delta_t_k)^(-d) )
         Approximation formula:
             B(t) = ln(n) - d * ln(delta_t)
-        Where delta_t is elapsed time in hours (or normalized units) since last play.
         """
         if record.play_count == 0 or not record.play_timestamps:
             return self.retrieval_threshold - 1.0
@@ -134,7 +184,7 @@ class ACTRMemoryEngine:
         session_context: List[str],
     ) -> float:
         """
-        Computes Spreading Activation (SPR) from active listening context:
+        Computes Spreading Activation (SPR) from active listening context via PMI:
         S(t) = sum_{j in Context} W_j * S_ji
         where S_ji is the associative strength (PMI) between context track j and target track i.
         """
@@ -160,7 +210,6 @@ class ACTRMemoryEngine:
 
             # Pointwise Mutual Information: PMI = log( P(i,j) / (P(i) * P(j)) )
             pmi = math.log(max(1e-9, p_ij) / (p_i * p_j))
-            # Weight cue inversely proportional to context size (uniform cue attention)
             weight = 1.0 / num_cues
             total_spreading += weight * pmi
 
@@ -249,3 +298,66 @@ class ACTRMemoryEngine:
         ranked = [(candidate_track_ids[i], float(probs[i])) for i in range(len(candidate_track_ids))]
         ranked.sort(key=lambda x: x[1], reverse=True)
         return ranked
+
+    def classify_candidate(
+        self,
+        track_id: str,
+        user_id: str,
+        current_time: Optional[float] = None,
+        context_embedding: Optional[np.ndarray] = None,
+        track_embedding: Optional[np.ndarray] = None,
+    ) -> MemoryScoreResult:
+        """
+        Classifies a track candidate based on ACT-R memory activation:
+          - High A(t) -> REPEAT candidate (familiar, recently heard)
+          - Low A(t) + Audio/Context Similar -> REDISCOVERY candidate (dormant favorite)
+          - No play history -> EXPLORE candidate
+          - Otherwise -> NEUTRAL
+        """
+        now = current_time if current_time is not None else time.time()
+        user_tracks = self.user_memories.get(user_id, {})
+        record = user_tracks.get(track_id)
+
+        # Unheard track -> Exploration
+        if not record or record.play_count == 0:
+            return MemoryScoreResult(
+                track_id=track_id,
+                activation=self.retrieval_threshold - 1.0,
+                candidate_type=MemoryCandidateType.EXPLORE,
+                frequency=0,
+                elapsed_hours=1e6,
+                similarity_score=0.0,
+            )
+
+        act = self.compute_activation(record, now, decay=1.0)
+        elapsed_hours = max(0.0, (now - record.last_played) / 3600.0)
+
+        # Compute audio/context similarity if vectors are provided
+        sim = 0.0
+        if context_embedding is not None and track_embedding is not None:
+            norm_ctx = np.linalg.norm(context_embedding) + 1e-8
+            norm_trk = np.linalg.norm(track_embedding) + 1e-8
+            sim = float(np.dot(context_embedding, track_embedding) / (norm_ctx * norm_trk))
+
+        # Classification logic:
+        if act >= self.repeat_threshold:
+            ctype = MemoryCandidateType.REPEAT
+        elif (
+            record.play_count >= self.rediscovery_min_plays
+            and elapsed_hours >= self.rediscovery_min_hours
+            and sim >= self.similarity_threshold
+        ):
+            ctype = MemoryCandidateType.REDISCOVERY
+        elif act < self.retrieval_threshold:
+            ctype = MemoryCandidateType.EXPLORE
+        else:
+            ctype = MemoryCandidateType.NEUTRAL
+
+        return MemoryScoreResult(
+            track_id=track_id,
+            activation=act,
+            candidate_type=ctype,
+            frequency=record.play_count,
+            elapsed_hours=round(elapsed_hours, 2),
+            similarity_score=round(sim, 4),
+        )

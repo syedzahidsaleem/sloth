@@ -9,7 +9,7 @@ import {
   setAccentPalette,
   getCurrentAccent,
 } from '../styles/tokens';
-import { AppShell, Sidebar, PlayerBar, MainContent } from '../components/layout';
+import { AppShell, Sidebar, PlayerBar, MainContent, MoodSlider } from '../components/layout';
 
 describe('Sloth Layout & Nuclear Design Tokens', () => {
   beforeEach(() => {
@@ -67,10 +67,11 @@ describe('Sloth Layout & Nuclear Design Tokens', () => {
     expect(getCurrentAccent()).toBe('orange');
   });
 
-  it('exports all core layout components', () => {
+  it('exports all core layout components including MoodSlider', () => {
     expect(AppShell).toBeDefined();
     expect(Sidebar).toBeDefined();
     expect(PlayerBar).toBeDefined();
     expect(MainContent).toBeDefined();
+    expect(MoodSlider).toBeDefined();
   });
 });

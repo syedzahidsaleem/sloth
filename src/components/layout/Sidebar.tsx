@@ -13,6 +13,7 @@ import {
 import { cn } from '@/lib/utils';
 import { AccentPalette, ACCENTS, setAccentPalette, getCurrentAccent } from '@/styles/tokens';
 import { DownloadManager } from '@/features/download';
+import { MoodSlider, MoodCoordinates } from './MoodSlider';
 
 export type NavItemKey = 'home' | 'search' | 'library' | 'playlists' | 'plugins' | 'settings';
 
@@ -21,6 +22,7 @@ export interface SidebarProps {
   onTabChange: (tab: NavItemKey) => void;
   currentAccent?: AccentPalette;
   onAccentChange?: (accent: AccentPalette) => void;
+  onMoodChange?: (coords: MoodCoordinates) => void;
   connectedSources?: {
     name: string;
     status: 'online' | 'standby' | 'offline';
@@ -43,6 +45,7 @@ export const Sidebar: FC<SidebarProps> = ({
   onTabChange,
   currentAccent,
   onAccentChange,
+  onMoodChange,
   connectedSources = [
     { name: 'YouTube Music', status: 'online' },
     { name: 'Piped Engine', status: 'online' },
@@ -133,8 +136,9 @@ export const Sidebar: FC<SidebarProps> = ({
         </nav>
       </div>
 
-      {/* Middle Scrollable Section: Download Manager Panel */}
-      <div className="flex-1 flex flex-col gap-2 my-2 min-h-0 overflow-y-auto">
+      {/* Middle Scrollable Section: Mood Guidance & Download Manager Panel */}
+      <div className="flex-1 flex flex-col gap-2.5 my-2 min-h-0 overflow-y-auto pr-0.5">
+        <MoodSlider onChange={onMoodChange} />
         <DownloadManager />
       </div>
 

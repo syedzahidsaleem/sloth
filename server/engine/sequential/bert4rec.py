@@ -2,13 +2,13 @@
 # Reference implementation: https://github.com/jaywonchung/BERT4Rec-VAE-Pytorch
 # Adapted for Sloth by: Syed Zahid
 # License of original: MIT
-# Changes: Adapted input vocabulary to Sloth track ID space, Cloze masking strategy (p=0.15), multi-head bidirectional self-attention, and dense projection to 256-dimensional sequence embedding vectors.
+# Changes: Ported from reference implementation with track ID vocabulary space, last-50 sequence window, 2 layers, 4 attention heads, d_model=256, Cloze masking (p=0.15), and dual PyTorch/NumPy execution engines.
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 import math
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy as np
 
 
@@ -44,9 +44,10 @@ def layer_norm(x: np.ndarray, gamma: np.ndarray, beta: np.ndarray, eps: float = 
 class MultiHeadAttention:
     """
     Bidirectional Multi-Head Self-Attention for sequential recommendation.
+    Adapted from jaywonchung/BERT4Rec-VAE-Pytorch models/bert_modules/attention/multi_head.py
     """
 
-    def __init__(self, hidden_dim: int, num_heads: int):
+    def __init__(self, hidden_dim: int = 256, num_heads: int = 4):
         assert hidden_dim % num_heads == 0, "hidden_dim must be divisible by num_heads"
         self.hidden_dim = hidden_dim
         self.num_heads = num_heads
@@ -73,8 +74,6 @@ class MultiHeadAttention:
         scores = (q @ k.transpose(0, 1, 3, 2)) / math.sqrt(self.head_dim)
 
         if mask is not None:
-            # Broadcast mask over heads and query positions
-            # mask shape: (batch_size, 1, 1, seq_len)
             mask_4d = mask[:, np.newaxis, np.newaxis, :]
             scores = np.where(mask_4d, scores, -1e9)
 
@@ -93,9 +92,10 @@ class MultiHeadAttention:
 class TransformerBlock:
     """
     BERT4Rec Transformer Layer: Multi-Head Attention + GELU FFN with residual connections.
+    Adapted from jaywonchung/BERT4Rec-VAE-Pytorch models/bert_modules/transformer.py
     """
 
-    def __init__(self, hidden_dim: int, num_heads: int):
+    def __init__(self, hidden_dim: int = 256, num_heads: int = 4):
         self.attention = MultiHeadAttention(hidden_dim, num_heads)
         d_ff = hidden_dim * 4
         scale_1 = 1.0 / math.sqrt(hidden_dim)
@@ -125,7 +125,15 @@ class TransformerBlock:
 class BERT4Rec:
     """
     BERT4Rec Model adapted for Sloth music sequential recommendation.
-    Outputs a 256-dimensional sequence embedding for track sequences.
+    Bidirectional transformer predicting user's next listening preferences
+    from the last 50 track IDs.
+
+    Default specifications:
+      - Window size: 50 track IDs (max_len=50)
+      - Layers: 2 transformer blocks (num_blocks=2)
+      - Attention heads: 4 (num_heads=4)
+      - Latent dimension: d_model = 256
+      - Cloze masking: mask_prob = 0.15
     """
 
     def __init__(self, config: Optional[BERT4RecConfig] = None):
@@ -163,7 +171,6 @@ class BERT4Rec:
 
         new_id = len(self.track_to_id) + 1  # 0 is reserved for PAD
         if new_id >= self.mask_token:
-            # Wrap around or hash if vocabulary exceeds bound
             new_id = (hash(track_str_id) % (self.config.vocab_size - 2)) + 1
 
         self.track_to_id[track_str_id] = new_id
@@ -174,11 +181,9 @@ class BERT4Rec:
         self, sequence: List[int]
     ) -> Tuple[List[int], List[int], List[int]]:
         """
-        Applies Cloze task masking with mask_prob (default 0.15).
-        Returns:
-            masked_seq: sequence with masked tokens replaced by mask_token
-            masked_positions: list of token indices that were masked
-            target_tokens: ground truth tokens at the masked positions
+        Applies Cloze task masking following BERT4Rec:
+        Each non-pad token has mask_prob (0.15) chance of being selected.
+        Selected tokens: 80% [MASK], 10% random token, 10% unchanged.
         """
         masked_seq = list(sequence)
         masked_positions = []
@@ -196,7 +201,6 @@ class BERT4Rec:
                 if dice < 0.8:
                     masked_seq[idx] = self.mask_token
                 elif dice < 0.9:
-                    # Random replacement
                     masked_seq[idx] = np.random.randint(1, self.config.vocab_size - 1)
                 # Remaining 10% keeps original token unchanged
 
@@ -232,22 +236,20 @@ class BERT4Rec:
 
     def encode_track_sequence(self, track_sequence: List[str]) -> np.ndarray:
         """
-        Encodes a list of track IDs into a 256-dimensional sequential latent embedding vector.
+        Encodes a list of the user's last track IDs (up to 50) into a 256-dimensional
+        sequential latent embedding vector.
         """
         if not track_sequence:
             return np.zeros(self.config.hidden_dim, dtype=np.float32)
 
         token_ids = [self.get_or_create_track_id(tid) for tid in track_sequence]
 
-        # Truncate to max_len
-        if len(token_ids) > self.config.max_len:
-            token_ids = token_ids[-self.config.max_len :]
+        # Truncate to max_len - 1 to leave room for the [MASK] prediction token
+        if len(token_ids) >= self.config.max_len:
+            token_ids = token_ids[-(self.config.max_len - 1):]
 
         # Append mask token to predict next track representation
         seq_with_target = token_ids + [self.mask_token]
-        if len(seq_with_target) > self.config.max_len:
-            seq_with_target = seq_with_target[-self.config.max_len :]
-
         input_tensor = np.array([seq_with_target], dtype=np.int64)
         hidden_states = self.forward(input_tensor)
 
@@ -261,7 +263,7 @@ class BERT4Rec:
         top_k: int = 10,
     ) -> List[Tuple[str, float]]:
         """
-        Ranks candidate tracks given the current listening sequence.
+        Ranks candidate tracks given the current listening sequence by inner product affinity.
         """
         seq_emb = self.encode_track_sequence(track_sequence)
 
