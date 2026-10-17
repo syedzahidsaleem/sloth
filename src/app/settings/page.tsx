@@ -12,6 +12,7 @@ import {
   ExternalLink,
   ArrowUp,
   ArrowDown,
+  Library,
 } from 'lucide-react';
 import {
   getSlothSettings,
@@ -30,9 +31,11 @@ import {
   setAccentPalette,
 } from '@/styles/tokens';
 import { Button, Badge, Toggle, Slider, Input } from '@/components/ui';
+import { LibraryIndexerRow } from '@/features/library';
 
 export type SettingsCategory =
   | 'general'
+  | 'library'
   | 'playback'
   | 'sources'
   | 'appearance'
@@ -51,6 +54,7 @@ const SlothIcon = Sliders;
 
 const CATEGORIES: NavItem[] = [
   { id: 'general', label: 'General', icon: Sliders, description: 'Application language, music paths, and local storage' },
+  { id: 'library', label: 'Library', icon: Library, description: 'Local music folders, acoustic feature re-indexing, MERT & CLAP vector cache' },
   { id: 'playback', label: 'Playback', icon: Volume2, description: 'Audio quality, 10-band equalizer, crossfade, and DSP' },
   { id: 'sources', label: 'Sources', icon: Radio, description: 'Audio source plugins, priority order, and stream resolution' },
   { id: 'appearance', label: 'Appearance', icon: Palette, description: 'Theme accent palette, typography scaling, and interface layout' },
@@ -310,6 +314,53 @@ export const SettingsPage: FC = () => {
                         <Folder size={13} />
                         Browse
                       </Button>
+                    </div>
+                  </div>
+
+                  <hr className="border-[var(--border)]/60" />
+
+                  {/* Feature Indexing Row */}
+                  <LibraryIndexerRow />
+                </div>
+              </div>
+            )}
+
+            {/* LIBRARY TAB */}
+            {activeCategory === 'library' && (
+              <div className="space-y-6">
+                <div className="rounded-[6px] border border-[var(--border)] bg-[var(--surface)] p-5 space-y-5">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-[var(--text-primary)]">
+                      Monitored Music Folders
+                    </label>
+                    <p className="text-[11px] text-[var(--text-muted)]">
+                      Directory containing your local audio files (FLAC, MP3, Opus, M4A).
+                    </p>
+                    <div className="mt-1 flex items-center gap-2 max-w-lg">
+                      <Input
+                        value={settings.libraryPath}
+                        onChange={(e) => updateSetting('libraryPath', e.target.value)}
+                        className="font-mono text-xs"
+                      />
+                      <Button size="sm" variant="secondary" className="shrink-0 flex items-center gap-1.5">
+                        <Folder size={13} />
+                        Browse
+                      </Button>
+                    </div>
+                  </div>
+
+                  <hr className="border-[var(--border)]/60" />
+
+                  {/* Re-index Library & Vector Store Progress */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-[var(--text-primary)]">
+                      Acoustic & Semantic Embedding Index
+                    </label>
+                    <p className="text-[11px] text-[var(--text-muted)]">
+                      Scans local library tracks in batches of 16 using MERT-v1-95M (768-dim) and CLAP (512-dim), predicting valence and arousal mood values into the sqlite-vec HNSW index.
+                    </p>
+                    <div className="pt-2">
+                      <LibraryIndexerRow />
                     </div>
                   </div>
                 </div>

@@ -233,6 +233,71 @@ async def clear_download_history():
     return {"cleared_count": cleared}
 
 
+# ---------------------------------------------------------
+# Library Batch Feature Indexer (MERT + CLAP + Mood)
+# ---------------------------------------------------------
+
+try:
+    from server.engine.audio.batch_indexer import LibraryBatchIndexer
+except ImportError:
+    try:
+        from engine.audio.batch_indexer import LibraryBatchIndexer  # type: ignore
+    except ImportError:
+        LibraryBatchIndexer = None  # type: ignore
+
+library_indexer = LibraryBatchIndexer(batch_size=16) if LibraryBatchIndexer else None
+
+
+@app.post("/api/library/reindex", tags=["Library Indexer"])
+async def trigger_library_reindex(total_sample_tracks: int = 1402):
+    """
+    Triggers batch background re-indexing of music library tracks
+    and streams real-time progress via Server-Sent Events (SSE).
+    """
+    if library_indexer is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Library indexer engine not initialized",
+        )
+
+    # If already running, subscribe to the existing stream
+    if not library_indexer.is_running():
+        # Generate representative sample tracks if library empty
+        tracks = [
+            (f"track_{i:04d}", f"Track {i:04d} - Music Title")
+            for i in range(1, total_sample_tracks + 1)
+        ]
+        asyncio.create_task(library_indexer.reindex_library(tracks))
+
+    async def sse_event_generator() -> AsyncGenerator[str, None]:
+        async for event in library_indexer.subscribe():
+            yield f"data: {json.dumps(event)}\n\n"
+
+    return StreamingResponse(
+        sse_event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@app.get("/api/library/index-status", tags=["Library Indexer"])
+async def get_library_index_status():
+    if library_indexer is None:
+        return {"status": "unavailable", "indexed": 0, "total": 0}
+    return library_indexer.get_progress().to_dict()
+
+
+@app.post("/api/library/cancel-index", tags=["Library Indexer"])
+async def cancel_library_index():
+    if library_indexer is not None:
+        library_indexer.cancel()
+    return {"status": "canceled"}
+
+
 if __name__ == "__main__":
     import uvicorn
 
