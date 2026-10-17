@@ -27,8 +27,14 @@ from .cache import (
     HostCooldownTracker,
     ThreeTierCache,
 )
+from .graph import HeteroNodeType, HeteroHypergraph, LightHGCN
+from .sequential import BERT4Rec, BERT4RecConfig, ACTRMemoryEngine, TrackMemoryRecord
+from .generator import PlaylistDiffusionConfig, PlaylistDiffusionGenerator, GaussianDiffusionSchedule
+from .coldstart import IPSDebiaser, IPSLossConfig, ThompsonBandit, BanditArm
+from .audio import MERTExtractor, CLAPExtractor
 
 __all__ = [
+    # Meld Scoring & Matching
     "W_SOURCE",
     "W_AFFINITY",
     "W_GENRE",
@@ -54,4 +60,21 @@ __all__ = [
     "MemoryLRUCache",
     "HostCooldownTracker",
     "ThreeTierCache",
+    # Sloth Core ML Engine
+    "HeteroNodeType",
+    "HeteroHypergraph",
+    "LightHGCN",
+    "BERT4Rec",
+    "BERT4RecConfig",
+    "ACTRMemoryEngine",
+    "TrackMemoryRecord",
+    "PlaylistDiffusionConfig",
+    "PlaylistDiffusionGenerator",
+    "GaussianDiffusionSchedule",
+    "IPSDebiaser",
+    "IPSLossConfig",
+    "ThompsonBandit",
+    "BanditArm",
+    "MERTExtractor",
+    "CLAPExtractor",
 ]
