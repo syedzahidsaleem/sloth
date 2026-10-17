@@ -1,0 +1,43 @@
+import { cva, type VariantProps } from 'class-variance-authority';
+import { ComponentProps, FC, ReactNode } from 'react';
+import { cn } from '@/lib/utils';
+
+export const boxVariants = cva(
+  'border-border flex h-full w-full rounded-md border-(length:--border-width) p-4',
+  {
+    variants: {
+      variant: {
+        primary: 'surface-primary',
+        secondary: 'surface-background text-foreground',
+        tertiary: 'surface-muted',
+        warning:
+          'bg-accent-orange/30 text-foreground ring-accent-orange ring ring-2 ring-inset',
+      },
+      shadow: {
+        default: 'shadow-shadow',
+        none: 'shadow-none',
+      },
+    },
+    defaultVariants: {
+      variant: 'primary',
+      shadow: 'default',
+    },
+  },
+);
+
+export type BoxProps = ComponentProps<'div'> &
+  VariantProps<typeof boxVariants> & {
+    children?: ReactNode;
+  };
+
+export const Box: FC<BoxProps> = ({
+  children,
+  className,
+  variant,
+  shadow,
+  ...props
+}) => (
+  <div className={cn(boxVariants({ variant, shadow, className }))} {...props}>
+    {children}
+  </div>
+);
