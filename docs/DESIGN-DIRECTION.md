@@ -1,47 +1,79 @@
-# Sloth — Design Direction & Component Architecture
+# Sloth — Design Direction & Nuclear-Derived Visual Architecture
 
-## Design Identity & Art Direction
-Sloth adopts the bold, tactile aesthetic of Nuclear's modern design system, elevated with modern web engineering:
-- **Design Philosophy**: Tactile Neobrutalism meets high-density streaming client.
-- **Color Model**: Native CSS OKLCH tokens supporting real-time palette swapping (Default, Aurora, Ember, Lagoon).
-- **Default Theme**: Dark Mode with deep, low-chroma surfaces (`oklch(0.22 0.03 5)`) and balanced high-contrast text (`oklch(0.9 0.008 5)`).
-- **Borders & Shadows**: Neobrutalist hard offset borders (`--border-width: 2px` in light, `1px` in dark) with interactive spring translate hover states (`translate-x-shadow-x translate-y-shadow-y`).
-- **Motion Principles**: Fluid spring physics powered by `motion/react` (`stiffness: 400`, `damping: 24`, `mass: 0.8`), interruptible gestures, and strict adherence to `prefers-reduced-motion`.
-
----
-
-## Layout Specifications
-- **App Shell**: `grid h-screen w-screen grid-rows-[auto_1fr_auto] overflow-hidden`
-- **Top Header Bar**: Height 56px (`h-14`), border bottom 2px, surface topbar.
-- **Left Sidebar**: Collapsible with spring transition (`width: 64px` collapsed ↔ `240px` expanded), border right 2px.
-- **Main Content Area**: Scrollable viewport with responsive bento grid and track list.
-- **Bottom Player Bar**: Height 80px (`h-20`), border top 2px, surface bottombar with embedded top seekbar (`surface-seekbar-track` / `surface-seekbar` / `bg-stripes-diagonal`).
+## 1. Visual Identity & Design Philosophy
+Sloth's aesthetic is derived from Nuclear's tactile, high-density music player layout, modernised for web and desktop standards:
+- **Design Lineage**: Nuclear-inspired structural layout with flat, information-dense neobrutalist surfaces.
+- **Surface Philosophy**: **Flat UI — NO glassmorphism, NO frosted panels, NO backdrop blur overlays anywhere**. Depth is achieved strictly through crisp contrast, solid offset borders, and deliberate background-to-surface layer stepping.
+- **Density**: Compact, information-dense interfaces designed for efficient browsing of extensive discographies, track tables, and playback queues.
+- **Awwwards Quality Standard**: Minimum self-audit score of **88/100** before returning any UI code.
 
 ---
 
-## Component Port Registry (Nuclear → Sloth CVA Architecture)
+## 2. Structural Layout Architecture
+Strictly mirrors Nuclear's core layout grid:
+- **Left Sidebar**: Fixed width **220px** (`w-[220px]`). Dark navigation pane hosting primary views (Discover, Queue, Library, Playlists, Settings, Listen Together).
+- **Main Content Area**: Fluid scrollable viewport (`flex-1 overflow-y-auto`) hosting album bento grids, artist portraits, and high-density track tables.
+- **Bottom Player Bar**: Fixed height **72px** (`h-[72px]`). Persistent bottom controls bar hosting now-playing metadata (left), transport playback controls & seekbar (center), and volume/queue/lyrics toggles (right).
 
-Every component has been ported directly from Nuclear's source code, adapted to Tailwind CSS v4, Class Variance Authority (CVA), and strict TypeScript typing:
-
-| Component | Upstream Source in Nuclear | Adaptations & Architecture |
-| :--- | :--- | :--- |
-| **Button** | `nuclear/packages/ui/src/components/Button/` | Adapted to CVA with variants: `default`, `secondary`, `tertiary`, `noShadow`, `text`, `ghost`; sizes: `default`, `sm`, `xs`, `lg`, `icon`, `icon-sm`, `flexible`; intent: `danger`. Tactile offset hover translations. |
-| **Box** | `nuclear/packages/ui/src/components/Box/` | Adapted to CVA with surface variants: `primary`, `secondary`, `tertiary`, `warning`; shadow modes: `default`, `none`. |
-| **Badge** | `nuclear/packages/ui/src/components/Badge/` | Adapted to CVA with styles: `dot`, `pill`; OKLCH palette colors: `green`, `cyan`, `orange`, `red`, `yellow`, `purple`, `blue`, `secondary`, `inverted`; optional pulse animation. |
-| **Input** | `nuclear/packages/ui/src/components/Input/` | Adapted to CVA with variants: `text`, `number`, `password`, `borderless`; tones: `primary`, `secondary`; sizes: `sm`, `default`, `lg`; start/end addon slots, accessible error and description associations. |
-| **Toggle** | `nuclear/packages/ui/src/components/Toggle/` | Ported to headless switch with `motion/react` spring sliding thumb, rounded-full border track, and optional checked/unchecked thumb icons. |
-| **Slider** | `nuclear/packages/ui/src/components/Slider/` | Multi-mode range slider with custom thumb, track fill, mouse wheel acceleration, header label with live value, start/end bounds, accessible keyboard stepping. |
-| **Tabs** | `nuclear/packages/ui/src/components/Tabs/` | Composable compound architecture (`Tabs.Root`, `Tabs.List`, `Tabs.Tab`, `Tabs.Panels`, `Tabs.Panel`) with convenience array items mode, using Button variants. |
-| **Modal (Dialog)** | `nuclear/packages/ui/src/components/Dialog/` | Full-screen accessible overlay with `motion/react` spring scale & backdrop blur, header, description, close icon, and action bar. |
-| **ContextMenu (Popover)** | `nuclear/packages/ui/src/components/TrackContextMenu/` & `Popover/` | Floating dropdown and right-click context menu with spring physics, action items, danger highlights, and separators. |
-| **AlbumCard** | `nuclear/packages/ui/src/components/Card/` | Aspect-square cover art container, cassette/disc placeholder, hover-activated quick-play action button, title, artist, format badge, and skeleton loader. |
-| **ArtistCard** | `nuclear/packages/ui/src/components/Card/` | Circular avatar container, artist portrait, quick radio play overlay button, name, and genre/role tags. |
-| **TrackRow** | `nuclear/packages/ui/src/components/TrackTable/` | Table row with track thumbnail, track title, artist, album, duration timestamp, hover play/pause toggle, favorite heart toggle, add to queue button, and context menu trigger. |
-| **Sidebar** | `nuclear/packages/ui/src/components/SidebarNavigation/` & `PlayerWorkspace/` | Spring-animated collapsible sidebar drawer with navigation items, badge alerts, section headers, and collapse toggle button. |
-| **PlayerBar** | `nuclear/packages/ui/src/components/PlayerBar/` | 3-column layout: left now-playing metadata card with cover art and favorite button, center controls (shuffle, prev, play/pause, next, repeat, discovery) and time codes, top embedded seekbar with animated loading stripes, right volume slider and drawer toggles. |
+```
+┌──────────────┬─────────────────────────────────────────────────────────┐
+│              │                                                         │
+│              │                                                         │
+│   Sidebar    │                   Main Content Area                     │
+│   (220px)    │                (Scrollable Viewport)                    │
+│              │                                                         │
+│              │                                                         │
+├──────────────┴─────────────────────────────────────────────────────────┤
+│                     Bottom Player Bar (72px)                           │
+└─────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## Token Reference (`src/styles/tokens.css`)
-- Direct extraction of all 54 CSS custom properties from `nuclear/packages/tailwind-config/global.css`.
-- Complete support for multi-theme switching: `:root`, `[data-theme='dark']`, `:root[data-theme-id='nuclear:aurora']`, `:root[data-theme-id='nuclear:ember']`, `:root[data-theme-id='nuclear:lagoon']`.
+## 3. Color System (OKLCH Tokens)
+All colors are modeled in native CSS OKLCH color space for perceptual uniformity and vibrant accent reproduction:
+
+### Core Surfaces
+- **App Background**: `#1e2327` (`oklch(0.24 0.015 240)`)
+- **Surface**: `#282d33` (`oklch(0.29 0.015 240)`)
+- **Raised Surface**: `#31383f` (`oklch(0.33 0.015 240)`)
+- **Border**: `oklch(0.38 0.015 240)` (crisp 1px solid separators)
+
+### Typography Colors
+- **Text Primary**: `oklch(0.96 0.005 240)` (high contrast)
+- **Text Secondary**: `oklch(0.72 0.010 240)` (subdued metadata)
+- **Text Muted**: `oklch(0.52 0.010 240)` (timestamps and track numbers)
+
+### Dynamic User-Swappable Accent
+- Managed via the `--color-accent` CSS custom property:
+  - **Default (Nuclear Green)**: `oklch(0.72 0.19 145)`
+  - **Lagoon (Cyan)**: `oklch(0.75 0.15 210)`
+  - **Ember (Orange/Red)**: `oklch(0.70 0.19 40)`
+  - **Aurora (Purple)**: `oklch(0.70 0.20 300)`
+
+---
+
+## 4. Typography System
+- **UI & Headings**: **Inter**
+  - Weights: `400` (Regular), `500` (Medium), `600` (SemiBold), `700` (Bold)
+  - Features: `font-feature-settings: "cv02", "cv03", "cv04", "cv11"`
+- **Metadata, Timestamps & Code**: **JetBrains Mono**
+  - Monospaced numerals for track timecodes (`03:45`), sample rates (`24-bit / 96kHz`), bitrates, and ISRC tags.
+
+---
+
+## 5. Component Architecture (Tailwind CSS v4 + CVA)
+Every component is written as a functional React component typed strictly in TypeScript with Class Variance Authority (CVA):
+- `Button`: Primary, secondary, tertiary, ghost, and icon variants with solid tactile active states.
+- `TrackRow`: Compact table rows with hover-reveal play controls, favorite toggles, and mono duration stamps.
+- `AlbumCard`: Aspect-square cover art container with hover action buttons, no blur filters.
+- `ArtistCard`: Circular avatar presentation with discography badges.
+- `PlayerBar`: 72px persistent 3-column player with embedded progress seekbar and volume slider.
+- `Sidebar`: 220px fixed left navigation pane with active state accent badges.
+
+---
+
+## 6. Motion & Animation Standards
+- **Motion Engine**: Exclusively imported from `"motion/react"` (`import { motion, AnimatePresence } from "motion/react"`).
+- **Reduced Motion**: Every animated component checks `useReducedMotion()` or CSS `@media (prefers-reduced-motion: reduce)` to disable transitions when requested by the OS.
+- **Physics**: Snappy springs (`stiffness: 400`, `damping: 28`) for list transitions and player drawer expansions.
