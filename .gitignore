@@ -11,8 +11,12 @@ target/
 __pycache__/
 *.py[cod]
 *$py.class
-.pytest_cache/
+# Local Database & Cache
+*.db
+*.sqlite
+*.sqlite3
 .sloth_cache/
+.pytest_cache/
 
 # Logs
 npm-debug.log*
