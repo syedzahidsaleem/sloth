@@ -5,18 +5,25 @@
  *
  * Implements Metrolist's prompt construction, JSON line-by-line enforcement,
  * Romanization, and Phonetic Transcription pipelines using Anthropic Claude API.
+ * Caches translations in SQLite `lyrics_translations` table.
  */
 
-import { ParsedLyrics, SyncedLyricsLine } from './metrolist-fetcher';
+import { ParsedLyrics, SyncedLyricsLine } from './parser';
+import {
+  getLyricsTranslation,
+  upsertLyricsTranslation,
+} from '../db/queries/lyrics';
 
 export type TranslationMode = 'Translated' | 'Romanized' | 'Transcribed';
 
 export interface TranslationOptions {
+  trackId?: string;
   targetLanguage?: string;
   mode?: TranslationMode;
   apiKey?: string;
   model?: string;
   systemPrompt?: string;
+  bypassCache?: boolean;
 }
 
 export interface TranslatedLyricsResult {
@@ -27,7 +34,7 @@ export interface TranslatedLyricsResult {
 }
 
 /**
- * Common language code to English name mappings
+ * Common language code to English name mappings (from Metrolist)
  */
 export const LANGUAGE_CODE_TO_NAME: Record<string, string> = {
   en: 'English',
@@ -55,7 +62,7 @@ export const LANGUAGE_CODE_TO_NAME: Record<string, string> = {
 };
 
 /**
- * Builds the structured system prompt enforcing exact line-by-line JSON output
+ * Builds the structured system prompt enforcing exact line-by-line JSON output (from Metrolist)
  */
 export function buildSystemPrompt(lineCount: number, customPrompt?: string): string {
   if (customPrompt && customPrompt.trim().length > 0) {
@@ -144,119 +151,99 @@ Output MUST be a JSON object {"lines": [...]} with EXACTLY ${lineCount} strings.
 }
 
 /**
- * Parses the raw AI response text into an array of string lines
+ * Parses JSON response from Anthropic Claude API
  */
-export function parseAiResponse(rawContent: string, expectedLineCount: number): string[] {
-  let content = rawContent.trim();
+export function parseTranslationResponse(rawResponse: string, expectedCount: number): string[] {
+  let cleaned = rawResponse.trim();
 
-  // Strip markdown code block wrapping if present
-  if (content.startsWith('```')) {
-    content = content.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
+  // Strip Markdown code blocks if model wrapped output
+  if (cleaned.startsWith('```json')) {
+    cleaned = cleaned.substring(7);
+  } else if (cleaned.startsWith('```')) {
+    cleaned = cleaned.substring(3);
   }
+  if (cleaned.endsWith('```')) {
+    cleaned = cleaned.substring(0, cleaned.length - 3);
+  }
+  cleaned = cleaned.trim();
 
   try {
-    const parsed = JSON.parse(content);
+    const parsed = JSON.parse(cleaned);
     if (parsed && Array.isArray(parsed.lines)) {
-      return parsed.lines.map((l: any) => String(l ?? ''));
+      if (parsed.lines.length !== expectedCount) {
+        throw new Error(
+          `Failed to parse translation response: expected ${expectedCount} lines, got ${parsed.lines.length}`
+        );
+      }
+      return parsed.lines.map((l: unknown) => String(l ?? ''));
     }
-  } catch {
-    // If strict JSON parsing fails, fall back to line splitting
-    const extracted = content
+  } catch (err: any) {
+    if (err.message?.includes('expected')) {
+      throw err;
+    }
+    // Fallback: split by newlines if model responded in plain text lines or numbered list
+    const rawLines = cleaned
       .split('\n')
-      .map((l) => l.trim())
-      .filter((l) => l.length > 0)
-      .map((l) => l.replace(/^\d+\.\s*/, '').replace(/^Line\s+\d+:\s*/i, '').replace(/^-\s*/, ''));
-
-    if (extracted.length > 0) {
-      return extracted;
+      .map((l) => l.replace(/^(\d+\.|\*|-|•)\s*/, '').trim())
+      .filter((l) => l.length > 0);
+    if (rawLines.length === expectedCount) {
+      return rawLines;
     }
   }
 
-  // Fallback: fill array to expected length
-  return new Array(expectedLineCount).fill('');
+  throw new Error(`Failed to parse translation response: expected ${expectedCount} lines`);
 }
 
 /**
- * Sloth Claude Lyrics Translator
+ * Alias for backward-compatibility with tests
  */
-export class ClaudeLyricsTranslator {
-  private defaultApiKey?: string;
+export const parseAiResponse = parseTranslationResponse;
+
+/**
+ * Sloth Lyrics Translator Client
+ * Invokes Claude API (claude-sonnet-4-6) and caches translations in SQLite
+ */
+export class LyricsTranslator {
   private defaultModel: string;
-  private cache: Map<string, string[]> = new Map();
 
-  constructor(apiKey?: string, model = 'claude-3-5-sonnet-20241022') {
-    this.defaultApiKey = apiKey;
-    this.defaultModel = model;
-  }
-
-  private getCacheKey(text: string, mode: TranslationMode, lang: string): string {
-    return `${mode}_${lang}_${text.length}_${text.substring(0, 32)}`;
+  constructor(defaultModel = 'claude-sonnet-4-6') {
+    this.defaultModel = defaultModel;
   }
 
   /**
-   * Calls the Anthropic Claude API Messages endpoint
+   * Retrieves Anthropic API key safely from environment (.env.local)
    */
-  private async callClaudeApi(
-    systemPrompt: string,
-    userPrompt: string,
-    apiKey: string,
-    model: string
-  ): Promise<string> {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: 4096,
-        temperature: 0.3,
-        system: systemPrompt,
-        messages: [
-          {
-            role: 'user',
-            content: userPrompt,
-          },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Claude API request failed with status ${response.status}: ${errText}`);
+  private getApiKey(explicitKey?: string): string {
+    if (explicitKey && explicitKey.trim().length > 0) {
+      return explicitKey.trim();
     }
 
-    const data = await response.json();
-    const content = data.content?.[0]?.text;
-    if (!content) {
-      throw new Error('Claude API returned empty message content');
-    }
+    const envKey =
+      (typeof process !== 'undefined' && process.env?.ANTHROPIC_API_KEY) ||
+      (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_ANTHROPIC_API_KEY) ||
+      '';
 
-    return content;
+    return envKey.trim();
   }
 
   /**
-   * Translates or romanizes parsed lyrics, preserving all timestamps for synchronized display
+   * Translates or transliterates synchronized lyrics line-by-line
    */
-  public async translate(lyrics: ParsedLyrics, options: TranslationOptions = {}): Promise<TranslatedLyricsResult> {
-    const mode = options.mode ?? 'Translated';
-    const rawTargetLang = options.targetLanguage ?? 'en';
-    const targetLanguage = LANGUAGE_CODE_TO_NAME[rawTargetLang.toLowerCase()] ?? rawTargetLang;
-    const model = options.model ?? this.defaultModel;
-    const apiKey = options.apiKey ?? this.defaultApiKey ?? (typeof process !== 'undefined' ? process.env?.ANTHROPIC_API_KEY : undefined);
+  public async translate(
+    lyrics: ParsedLyrics,
+    options: TranslationOptions = {}
+  ): Promise<TranslatedLyricsResult> {
+    const {
+      trackId,
+      targetLanguage = 'English',
+      mode = 'Translated',
+      apiKey: explicitKey,
+      model = this.defaultModel,
+      systemPrompt: customSystemPrompt,
+      bypassCache = false,
+    } = options;
 
-    if (!apiKey) {
-      throw new Error('Anthropic API key is required for lyrics translation');
-    }
-
-    // Determine the source lines: use synced lines if present, otherwise plainText split
-    const sourceItems: Array<{ timeMs?: number; text: string }> = lyrics.isSynced && lyrics.lines.length > 0
-      ? lyrics.lines
-      : lyrics.plainText.split('\n').map((text) => ({ text }));
-
-    if (sourceItems.length === 0) {
+    if (!lyrics.lines || lyrics.lines.length === 0) {
       return {
         mode,
         targetLanguage,
@@ -265,34 +252,103 @@ export class ClaudeLyricsTranslator {
       };
     }
 
-    const combinedText = sourceItems.map((item) => item.text).join('\n');
-    const cacheKey = this.getCacheKey(combinedText, mode, targetLanguage);
+    // Resolve language name
+    const resolvedLanguage = LANGUAGE_CODE_TO_NAME[targetLanguage.toLowerCase()] || targetLanguage;
 
-    let translatedLines: string[] | undefined = this.cache.get(cacheKey);
-
-    if (!translatedLines) {
-      const lineCount = sourceItems.length;
-      const systemPrompt = buildSystemPrompt(lineCount, options.systemPrompt);
-      const userPrompt = buildUserPrompt(combinedText, targetLanguage, mode);
-
-      const rawAiResponse = await this.callClaudeApi(systemPrompt, userPrompt, apiKey, model);
-      translatedLines = parseAiResponse(rawAiResponse, lineCount);
-
-      // Cache successful response
-      this.cache.set(cacheKey, translatedLines);
+    // 1. Check SQLite translation cache first
+    if (trackId && !bypassCache) {
+      try {
+        const cached = getLyricsTranslation(trackId, resolvedLanguage, mode);
+        if (cached && cached.content) {
+          const linesData = JSON.parse(cached.content);
+          if (Array.isArray(linesData) && linesData.length === lyrics.lines.length) {
+            const mappedLines: SyncedLyricsLine[] = lyrics.lines.map((orig, i) => ({
+              timeMs: orig.timeMs,
+              text: linesData[i] || orig.text,
+            }));
+            return {
+              mode,
+              targetLanguage: resolvedLanguage,
+              lines: mappedLines,
+              plainText: mappedLines.map((l) => l.text).join('\n'),
+            };
+          }
+        }
+      } catch {
+        // Fallback to API if DB read fails
+      }
     }
 
-    // Reconstruct synchronized lines with translated text while keeping original timestamps
-    const resultLines: SyncedLyricsLine[] = sourceItems.map((item, index) => ({
-      timeMs: item.timeMs ?? 0,
-      text: translatedLines?.[index] ?? item.text,
+    const apiKey = this.getApiKey(explicitKey);
+    if (!apiKey) {
+      throw new Error(
+        'ANTHROPIC_API_KEY is not configured in .env.local or translation options.'
+      );
+    }
+
+    const inputLines = lyrics.lines.map((l) => l.text);
+    const inputText = inputLines.join('\n');
+    const expectedCount = inputLines.length;
+
+    const systemPrompt = buildSystemPrompt(expectedCount, customSystemPrompt);
+    const userPrompt = buildUserPrompt(inputText, resolvedLanguage, mode);
+
+    // Call Anthropic Claude API
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 4096,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }],
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Anthropic Claude API error (${response.status}): ${errText}`);
+    }
+
+    const data = await response.json();
+    const content = data?.content?.[0]?.text || '';
+    const translatedLines = parseTranslationResponse(content, expectedCount);
+
+    // Assemble synced translated lines
+    const resultLines: SyncedLyricsLine[] = lyrics.lines.map((orig, idx) => ({
+      timeMs: orig.timeMs,
+      text: translatedLines[idx] ?? orig.text,
     }));
 
-    return {
+    const result: TranslatedLyricsResult = {
       mode,
-      targetLanguage,
+      targetLanguage: resolvedLanguage,
       lines: resultLines,
       plainText: resultLines.map((l) => l.text).join('\n'),
     };
+
+    // 2. Cache in SQLite translations table
+    if (trackId) {
+      try {
+        upsertLyricsTranslation({
+          id: `${trackId}_${resolvedLanguage}_${mode}`,
+          trackId,
+          lang: resolvedLanguage,
+          mode,
+          content: JSON.stringify(translatedLines),
+        });
+      } catch {
+        // Ignore cache write error
+      }
+    }
+
+    return result;
   }
 }
+
+// Export default singleton instance
+export const lyricsTranslator = new LyricsTranslator();

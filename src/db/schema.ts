@@ -125,6 +125,19 @@ export const lyrics = sqliteTable('lyrics', {
   createdAt: integer('created_at').default(sql`(unixepoch())`).notNull(),
 });
 
+/**
+ * 10. Lyrics Translations Table
+ * Cached AI translations and transliterations per track and target language
+ */
+export const lyricsTranslations = sqliteTable('lyrics_translations', {
+  id: text('id').primaryKey(), // `${trackId}_${lang}_${mode}`
+  trackId: text('track_id').notNull().references(() => tracks.id),
+  lang: text('lang').notNull(),
+  mode: text('mode').default('Translated').notNull(),
+  content: text('content').notNull(), // JSON array string of lines or translated LRC text
+  createdAt: integer('created_at').default(sql`(unixepoch())`).notNull(),
+});
+
 // Infer model types
 export type Track = typeof tracks.$inferSelect;
 export type NewTrack = typeof tracks.$inferInsert;
@@ -152,3 +165,7 @@ export type NewSyncQueueItem = typeof syncQueue.$inferInsert;
 
 export type LyricsItem = typeof lyrics.$inferSelect;
 export type NewLyricsItem = typeof lyrics.$inferInsert;
+
+export type LyricsTranslationItem = typeof lyricsTranslations.$inferSelect;
+export type NewLyricsTranslationItem = typeof lyricsTranslations.$inferInsert;
+

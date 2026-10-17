@@ -25,6 +25,8 @@ import HomePage from './app/page';
 import SearchPage from './app/search/page';
 import ArtistPage from './app/artist/[id]/page';
 import AlbumPage from './app/album/[id]/page';
+import { LyricsView } from './components/lyrics';
+import { parseLrc, SAMPLE_MIDNIGHT_CITY_LRC } from './lyrics/parser';
 import {
   AccentPalette,
   ACCENTS,
@@ -267,8 +269,22 @@ export default function App() {
       }
       mainContent={
         <MainContent>
-          {/* VIEW: HOME DASHBOARD */}
-          {route.view === 'home' && (
+          {isLyricsOpen ? (
+            <LyricsView
+              trackTitle={currentTrack.title}
+              artistName={currentTrack.artist}
+              albumName={currentTrack.album}
+              lyrics={parseLrc(SAMPLE_MIDNIGHT_CITY_LRC)}
+              progressSeconds={progress}
+              totalDurationSeconds={currentTrack.durationSeconds}
+              onSeek={(sec) => setProgress(sec)}
+              onClose={() => setIsLyricsOpen(false)}
+              trackId={currentTrack.id}
+            />
+          ) : (
+            <>
+              {/* VIEW: HOME DASHBOARD */}
+              {route.view === 'home' && (
             <HomePage
               onPlayTrack={handlePlayTrack}
               onPlayAlbum={() => handlePlayTrack(tracks[0])}
@@ -471,6 +487,8 @@ export default function App() {
                 </div>
               </div>
             </div>
+          )}
+            </>
           )}
         </MainContent>
       }
