@@ -8,11 +8,12 @@ import {
   Settings,
   Radio,
   Sliders,
+  Package,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AccentPalette, ACCENTS, setAccentPalette, getCurrentAccent } from '@/styles/tokens';
 
-export type NavItemKey = 'home' | 'search' | 'library' | 'playlists' | 'settings';
+export type NavItemKey = 'home' | 'search' | 'library' | 'playlists' | 'plugins' | 'settings';
 
 export interface SidebarProps {
   activeTab: NavItemKey;
@@ -32,6 +33,7 @@ const NAV_ITEMS: { key: NavItemKey; label: string; icon: typeof Home }[] = [
   { key: 'search', label: 'Search', icon: Search },
   { key: 'library', label: 'Library', icon: Library },
   { key: 'playlists', label: 'Playlists', icon: ListMusic },
+  { key: 'plugins', label: 'Plugins', icon: Package },
   { key: 'settings', label: 'Settings', icon: Settings },
 ];
 

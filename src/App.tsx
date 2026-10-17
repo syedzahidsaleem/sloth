@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   Search,
   Sparkles,
-  Check,
   Disc,
-  Cpu,
   ChevronLeft,
 } from 'lucide-react';
 import {
@@ -25,15 +23,15 @@ import HomePage from './app/page';
 import SearchPage from './app/search/page';
 import ArtistPage from './app/artist/[id]/page';
 import AlbumPage from './app/album/[id]/page';
+import SettingsPage from './app/settings/page';
+import PluginsPage from './app/plugins/page';
 import { LyricsView } from './components/lyrics';
 import { parseLrc, SAMPLE_MIDNIGHT_CITY_LRC } from './lyrics/parser';
 import {
   AccentPalette,
-  ACCENTS,
   setAccentPalette,
   getCurrentAccent,
 } from './styles/tokens';
-import { SourcesPanel } from './components/settings/SourcesPanel';
 
 const SAMPLE_TRACKS: Track[] = [
   {
@@ -95,7 +93,7 @@ const SAMPLE_TRACKS: Track[] = [
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavItemKey>('home');
   const [route, setRoute] = useState<{
-    view: 'home' | 'search' | 'artist' | 'album' | 'library' | 'playlists' | 'settings';
+    view: 'home' | 'search' | 'artist' | 'album' | 'library' | 'playlists' | 'plugins' | 'settings';
     id?: string;
   }>({ view: 'home' });
   const [currentAccent, setCurrentAccent] = useState<AccentPalette>('green');
@@ -405,88 +403,14 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 5: SETTINGS */}
+          {/* TAB 5: PLUGINS */}
+          {activeTab === 'plugins' && (
+            <PluginsPage />
+          )}
+
+          {/* TAB 6: SETTINGS */}
           {activeTab === 'settings' && (
-            <div className="space-y-6 max-w-3xl">
-              <div>
-                <h1 className="text-xl font-bold tracking-tight">Settings & Customization</h1>
-                <p className="text-xs text-[var(--text-muted)] font-mono mt-0.5">
-                  Configure OKLCH accent palettes, audio streaming buffer, and source credentials
-                </p>
-              </div>
-
-              {/* Accent Palette Selector Section */}
-              <div className="p-5 rounded-[4px] bg-[var(--surface)] border border-[var(--border)] space-y-4">
-                <div>
-                  <h3 className="text-sm font-bold text-[var(--text-primary)]">
-                    Theme Accent Color
-                  </h3>
-                  <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                    User-selectable via <code className="font-mono text-[var(--color-accent)]">--color-accent</code> CSS custom property.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  {(Object.keys(ACCENTS) as AccentPalette[]).map((paletteKey) => {
-                    const def = ACCENTS[paletteKey];
-                    const isSelected = currentAccent === paletteKey;
-
-                    return (
-                      <button
-                        key={paletteKey}
-                        type="button"
-                        onClick={() => handleAccentChange(paletteKey)}
-                        className={`flex items-center gap-3 p-3 rounded-[4px] border text-left cursor-pointer transition-all ${
-                          isSelected
-                            ? 'border-[var(--color-accent)] bg-[var(--surface-raised)] shadow-xs'
-                            : 'border-[var(--border)] bg-[var(--background)] hover:border-[var(--text-muted)]'
-                        }`}
-                      >
-                        <span
-                          className="size-6 rounded-[3px] border border-black/30 shrink-0 flex items-center justify-center"
-                          style={{ backgroundColor: def.hex }}
-                        >
-                          {isSelected && <Check size={14} className="text-black font-bold" />}
-                        </span>
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-xs font-semibold text-[var(--text-primary)] truncate">
-                            {def.label}
-                          </span>
-                          <span className="text-[10px] font-mono text-[var(--text-muted)] truncate">
-                            {def.hex}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Nuclear-Style Audio Source Fallback Registry */}
-              <SourcesPanel />
-
-              {/* Engine Status & Source Diagnostics */}
-              <div className="p-5 rounded-[4px] bg-[var(--surface)] border border-[var(--border)] space-y-3">
-                <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
-                  <Cpu size={16} className="text-[var(--color-accent)]" />
-                  Engine Diagnostics
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 font-mono text-xs">
-                  <div className="p-2.5 rounded-[4px] bg-[var(--background)] border border-[var(--border)]">
-                    <span className="text-[10px] text-[var(--text-muted)] block">FastAPI Engine</span>
-                    <span className="text-[var(--color-accent)] font-bold">127.0.0.1:8000</span>
-                  </div>
-                  <div className="p-2.5 rounded-[4px] bg-[var(--background)] border border-[var(--border)]">
-                    <span className="text-[10px] text-[var(--text-muted)] block">Piped Streams</span>
-                    <span className="text-[var(--color-accent)] font-bold">Connected</span>
-                  </div>
-                  <div className="p-2.5 rounded-[4px] bg-[var(--background)] border border-[var(--border)]">
-                    <span className="text-[10px] text-[var(--text-muted)] block">Audio Driver</span>
-                    <span className="text-[var(--text-primary)] font-bold">Web Audio API</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <SettingsPage />
           )}
             </>
           )}
