@@ -1,44 +1,42 @@
 import { useState, useEffect } from 'react';
 import {
-  Home,
   Search,
-  Library,
-  Heart,
-  Sun,
-  Moon,
   Sparkles,
   Sliders,
   Play,
-  Share2,
+  Check,
+  Disc,
+  Cpu,
 } from 'lucide-react';
 import {
   Button,
-  Box,
   Badge,
   Input,
-  Toggle,
-  Slider,
-  Tabs,
-  Modal,
-  ContextMenu,
-  ContextMenuItem,
-  ContextMenuSeparator,
   AlbumCard,
-  ArtistCard,
   TrackRow,
   Track,
-  Sidebar,
-  SidebarItem,
-  SidebarSection,
-  PlayerBar,
+  Modal,
 } from './components/ui';
+import {
+  AppShell,
+  Sidebar,
+  PlayerBar,
+  MainContent,
+  NavItemKey,
+} from './components/layout';
+import {
+  AccentPalette,
+  ACCENTS,
+  setAccentPalette,
+  getCurrentAccent,
+} from './styles/tokens';
 
 const SAMPLE_TRACKS: Track[] = [
   {
     id: '1',
     title: 'Midnight City',
     artist: 'M83',
-    album: 'Hurry Up, We\'re Dreaming',
+    album: "Hurry Up, We're Dreaming",
     durationSeconds: 243,
     coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80',
     isFavorite: true,
@@ -70,430 +68,533 @@ const SAMPLE_TRACKS: Track[] = [
     coverUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&q=80',
     isFavorite: false,
   },
+  {
+    id: '5',
+    title: 'Veridis Quo',
+    artist: 'Daft Punk',
+    album: 'Discovery',
+    durationSeconds: 344,
+    coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80',
+    isFavorite: true,
+  },
+  {
+    id: '6',
+    title: 'Days of Thunder',
+    artist: 'The Midnight',
+    album: 'Days of Thunder',
+    durationSeconds: 329,
+    coverUrl: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=300&q=80',
+    isFavorite: false,
+  },
 ];
 
 export default function App() {
-  const [isDark, setIsDark] = useState(true);
-  const [themeId, setThemeId] = useState('default');
-  const [isSidebarCompact, setIsSidebarCompact] = useState(false);
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useState<NavItemKey>('home');
+  const [currentAccent, setCurrentAccent] = useState<AccentPalette>('green');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Playback state
-  const [currentTrack, setCurrentTrack] = useState<Track>(SAMPLE_TRACKS[0]);
+  const [tracks, setTracks] = useState<Track[]>(SAMPLE_TRACKS);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+  const currentTrack = tracks[currentTrackIndex] || SAMPLE_TRACKS[0];
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(42);
-  const [volume, setVolume] = useState(75);
+  const [volume, setVolume] = useState(80);
   const [isMuted, setIsMuted] = useState(false);
-  const [tracks, setTracks] = useState(SAMPLE_TRACKS);
+  const [isShuffle, setIsShuffle] = useState(false);
+  const [repeatMode, setRepeatMode] = useState<'off' | 'all' | 'one'>('off');
+  const [isQueueOpen, setIsQueueOpen] = useState(false);
+  const [isLyricsOpen, setIsLyricsOpen] = useState(false);
 
-  // Playground interactive state
-  const [toggleVal, setToggleVal] = useState(true);
-  const [sliderVal, setSliderVal] = useState(65);
-  const [inputVal, setInputVal] = useState('Synthwave Vibes');
+  // Search input state
+  const [searchQuery, setSearchQuery] = useState('');
 
+  // Sync initial accent on mount
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-    if (themeId !== 'default') {
-      document.documentElement.setAttribute('data-theme-id', `nuclear:${themeId}`);
-    } else {
-      document.documentElement.removeAttribute('data-theme-id');
-    }
-  }, [isDark, themeId]);
+    const acc = getCurrentAccent();
+    setCurrentAccent(acc);
+    setAccentPalette(acc);
+  }, []);
+
+  // Simulated progress timer when playing
+  useEffect(() => {
+    if (!isPlaying) return;
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= currentTrack.durationSeconds) {
+          // Track ended, handle repeat or next
+          if (repeatMode === 'one') return 0;
+          handleNextTrack();
+          return 0;
+        }
+        return prev + 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isPlaying, currentTrack.durationSeconds, repeatMode]);
+
+  const handleAccentChange = (accent: AccentPalette) => {
+    setCurrentAccent(accent);
+    setAccentPalette(accent);
+  };
 
   const handleFavoriteToggle = (track: Track) => {
     setTracks((prev) =>
       prev.map((t) => (t.id === track.id ? { ...t, isFavorite: !t.isFavorite } : t)),
     );
-    if (currentTrack.id === track.id) {
-      setCurrentTrack((prev) => ({ ...prev, isFavorite: !prev.isFavorite }));
-    }
   };
 
   const handlePlayTrack = (track: Track) => {
-    setCurrentTrack(track);
+    const idx = tracks.findIndex((t) => t.id === track.id);
+    if (idx !== -1) {
+      setCurrentTrackIndex(idx);
+    }
+    setProgress(0);
     setIsPlaying(true);
   };
 
+  const handleNextTrack = () => {
+    if (isShuffle) {
+      const nextIdx = Math.floor(Math.random() * tracks.length);
+      setCurrentTrackIndex(nextIdx);
+    } else {
+      setCurrentTrackIndex((prev) => (prev + 1) % tracks.length);
+    }
+    setProgress(0);
+  };
+
+  const handlePreviousTrack = () => {
+    if (progress > 3) {
+      setProgress(0);
+    } else {
+      setCurrentTrackIndex((prev) => (prev - 1 + tracks.length) % tracks.length);
+      setProgress(0);
+    }
+  };
+
+  const handleRepeatToggle = () => {
+    const nextMode: Record<string, 'off' | 'all' | 'one'> = {
+      off: 'all',
+      all: 'one',
+      one: 'off',
+    };
+    setRepeatMode(nextMode[repeatMode]);
+  };
+
+  // Filtered tracks for search tab
+  const filteredTracks = tracks.filter((t) =>
+    t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    t.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (t.album || '').toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
   return (
-    <div className="surface-background text-foreground flex h-screen w-screen flex-col overflow-hidden font-sans">
-      {/* Top Header Bar */}
-      <header className="surface-topbar border-border grid h-14 shrink-0 grid-cols-[auto_1fr_auto] items-center gap-4 border-b-(length:--border-width) px-4 select-none">
-        <div className="flex items-center gap-3">
-          <div className="surface-primary border-border shadow-shadow flex size-9 items-center justify-center rounded-md border-(length:--border-width) font-heading text-lg font-extrabold">
-            🦥
-          </div>
-          <span className="font-heading hidden text-lg font-extrabold tracking-tight sm:inline">
-            Sloth
-          </span>
-          <Badge variant="pill" color="green" animated>
-            Ready
-          </Badge>
-        </div>
-
-        {/* Search Input */}
-        <div className="mx-auto w-full max-w-md">
-          <Input
-            placeholder="Search songs, artists, albums..."
-            startAddon={<Search size={16} />}
-            size="sm"
-            value={inputVal}
-            onChange={(e) => setInputVal(e.target.value)}
-          />
-        </div>
-
-        {/* Theme Selectors & Actions */}
-        <div className="flex items-center gap-2">
-          {/* Theme Pill Buttons */}
-          <div className="hidden items-center gap-1 sm:flex">
-            {(['default', 'aurora', 'ember'] as const).map((id) => (
-              <Button
-                key={id}
-                size="xs"
-                variant={themeId === id ? 'default' : 'text'}
-                onClick={() => setThemeId(id)}
-                className="capitalize"
-              >
-                {id}
-              </Button>
-            ))}
+    <>
+    <AppShell
+      topbar={
+        <div className="h-12 px-4 flex items-center justify-between bg-[var(--surface)] select-none">
+          {/* Search Bar in Topbar */}
+          <div className="flex items-center gap-3 w-80">
+            <Input
+              placeholder="Search tracks, artists, albums..."
+              size="sm"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              startAddon={<Search size={14} className="text-[var(--text-muted)]" />}
+              className="bg-[var(--background)] border-[var(--border)]"
+            />
           </div>
 
-          <Button
-            size="icon-sm"
-            variant="secondary"
-            onClick={() => setIsDark(!isDark)}
-            aria-label="Toggle theme mode"
-          >
-            {isDark ? <Sun size={15} /> : <Moon size={15} />}
-          </Button>
+          {/* Quick Stats & System Badges */}
+          <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-1.5 px-2 py-1 rounded-[3px] bg-[var(--background)] border border-[var(--border)] text-[10px] font-mono text-[var(--text-secondary)]">
+              <span className="size-1.5 rounded-full bg-[var(--color-accent)] animate-pulse" />
+              <span>OKLCH DESIGN TOKENS</span>
+            </div>
 
-          <Button
-            size="sm"
-            variant="default"
-            onClick={() => setIsModalOpen(true)}
-          >
-            <Sparkles size={14} className="mr-1.5" />
-            Tokens
-          </Button>
+            <Button
+              size="xs"
+              variant="secondary"
+              onClick={() => setIsModalOpen(true)}
+              className="font-mono text-[11px]"
+            >
+              <Sparkles size={12} className="mr-1 text-[var(--color-accent)]" />
+              Token Specs
+            </Button>
+          </div>
         </div>
-      </header>
-
-      {/* Workspace Area */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Collapsible Sidebar */}
+      }
+      sidebar={
         <Sidebar
-          isCompact={isSidebarCompact}
-          onToggleCompact={() => setIsSidebarCompact(!isSidebarCompact)}
-        >
-          <SidebarSection isCompact={isSidebarCompact}>
-            <SidebarItem
-              icon={<Home size={18} />}
-              label="Home"
-              isActive={activeTab === 'home'}
-              onClick={() => setActiveTab('home')}
-              isCompact={isSidebarCompact}
-            />
-            <SidebarItem
-              icon={<Library size={18} />}
-              label="Library"
-              isActive={activeTab === 'library'}
-              onClick={() => setActiveTab('library')}
-              isCompact={isSidebarCompact}
-            />
-            <SidebarItem
-              icon={<Heart size={18} />}
-              label="Favorites"
-              isActive={activeTab === 'favorites'}
-              onClick={() => setActiveTab('favorites')}
-              badge={<Badge variant="dot" color="red" />}
-              isCompact={isSidebarCompact}
-            />
-            <SidebarItem
-              icon={<Sliders size={18} />}
-              label="UI Playground"
-              isActive={activeTab === 'playground'}
-              onClick={() => setActiveTab('playground')}
-              isCompact={isSidebarCompact}
-            />
-          </SidebarSection>
-        </Sidebar>
-
-        {/* Main Content Area */}
-        <main className="surface-background flex-1 overflow-y-auto p-6">
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          currentAccent={currentAccent}
+          onAccentChange={handleAccentChange}
+        />
+      }
+      mainContent={
+        <MainContent>
+          {/* TAB 1: HOME */}
           {activeTab === 'home' && (
-            <div className="mx-auto max-w-6xl space-y-8">
-              {/* Featured Section */}
-              <div>
-                <div className="mb-4 flex items-center justify-between">
-                  <div>
-                    <h2 className="font-heading text-2xl font-extrabold tracking-tight">
-                      Featured Releases
-                    </h2>
-                    <p className="text-foreground/60 text-sm">
-                      Ported Nuclear AlbumCard with hover-action and OKLCH neobrutalist shadows
-                    </p>
+            <div className="space-y-8 animate-fadeIn">
+              {/* Hero Banner with Bento Highlights */}
+              <div className="p-6 rounded-[6px] bg-[var(--surface)] border border-[var(--border)] relative overflow-hidden">
+                <div className="relative z-10 max-w-2xl space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="pill" color="green">
+                      Nuclear Lineage
+                    </Badge>
+                    <span className="text-[11px] font-mono text-[var(--text-muted)] uppercase">
+                      Tactile Flat Neobrutalism
+                    </span>
+                  </div>
+                  <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+                    Unified Music Architecture
+                  </h1>
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                    Sloth combines Nuclear&apos;s modular source architecture, Meld&apos;s hypergraph recommendations,
+                    and Spotube&apos;s precise media streaming into a high-density, low-latency desktop player.
+                  </p>
+                  <div className="pt-2 flex items-center gap-3">
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() => handlePlayTrack(SAMPLE_TRACKS[0])}
+                    >
+                      <Play size={13} className="mr-1.5 fill-current" />
+                      Play Featured
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setActiveTab('settings')}
+                    >
+                      <Sliders size={13} className="mr-1.5" />
+                      Theme Accents
+                    </Button>
                   </div>
                 </div>
+              </div>
 
-                <div className="flex flex-wrap gap-4">
-                  <AlbumCard
-                    title="Odyssey"
-                    subtitle="HOME • 2014"
-                    coverUrl="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=80"
-                    badge={<Badge variant="pill" color="purple">Hi-Res</Badge>}
-                    onPlay={() => handlePlayTrack(SAMPLE_TRACKS[2])}
-                  />
-                  <AlbumCard
-                    title="Random Access Memories"
-                    subtitle="Daft Punk • 2013"
-                    coverUrl="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&q=80"
-                    badge={<Badge variant="pill" color="yellow">Lossless</Badge>}
-                    onPlay={() => handlePlayTrack(SAMPLE_TRACKS[3])}
-                  />
-                  <AlbumCard
-                    title="Hurry Up, We're Dreaming"
-                    subtitle="M83 • 2011"
-                    coverUrl="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=400&q=80"
-                    badge={<Badge variant="pill" color="cyan">Electronic</Badge>}
-                    onPlay={() => handlePlayTrack(SAMPLE_TRACKS[0])}
-                  />
-                  <AlbumCard
-                    title="Starboy"
-                    subtitle="The Weeknd • 2016"
-                    coverUrl="https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=400&q=80"
-                    onPlay={() => handlePlayTrack(SAMPLE_TRACKS[1])}
-                  />
+              {/* Featured Albums Bento Grid */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-base font-bold text-[var(--text-primary)] tracking-tight">
+                    Featured Releases
+                  </h2>
+                  <span className="text-[11px] font-mono text-[var(--text-muted)]">
+                    6 Curated Masters
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                  {tracks.map((t) => (
+                    <AlbumCard
+                      key={t.id}
+                      title={t.title}
+                      subtitle={`${t.artist} • ${t.album}`}
+                      coverUrl={t.coverUrl}
+                      badge={t.isFavorite ? <Badge variant="dot" color="red" /> : undefined}
+                      onPlay={() => handlePlayTrack(t)}
+                    />
+                  ))}
                 </div>
               </div>
 
-              {/* Popular Artists */}
-              <div>
-                <h2 className="font-heading mb-4 text-2xl font-extrabold tracking-tight">
-                  Popular Artists
-                </h2>
-                <div className="flex flex-wrap gap-4">
-                  <ArtistCard
-                    name="Daft Punk"
-                    role="Electronic Duo"
-                    imageUrl="https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=400&q=80"
-                  />
-                  <ArtistCard
-                    name="M83"
-                    role="Synthpop / Dream Pop"
-                    imageUrl="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=80"
-                  />
-                  <ArtistCard
-                    name="The Weeknd"
-                    role="R&B / Pop"
-                    imageUrl="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80"
-                  />
+              {/* Top Tracks High-Density Table */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-base font-bold text-[var(--text-primary)] tracking-tight">
+                    Recommended Queue
+                  </h2>
+                  <span className="text-[11px] font-mono text-[var(--text-muted)]">
+                    ISRC Level Matching
+                  </span>
+                </div>
+
+                <div className="rounded-[4px] border border-[var(--border)] bg-[var(--surface)] overflow-hidden divide-y divide-[var(--border)]">
+                  {tracks.map((t, idx) => (
+                    <TrackRow
+                      key={t.id}
+                      track={t}
+                      index={idx}
+                      isPlaying={isPlaying && currentTrack.id === t.id}
+                      onPlay={() => handlePlayTrack(t)}
+                      onFavoriteToggle={() => handleFavoriteToggle(t)}
+                    />
+                  ))}
                 </div>
               </div>
+            </div>
+          )}
 
-              {/* Top Tracks Table */}
+          {/* TAB 2: SEARCH */}
+          {activeTab === 'search' && (
+            <div className="space-y-6">
               <div>
-                <h2 className="font-heading mb-3 text-2xl font-extrabold tracking-tight">
-                  Queue & Top Tracks
+                <h1 className="text-xl font-bold tracking-tight">Search Catalog</h1>
+                <p className="text-xs text-[var(--text-muted)] font-mono mt-0.5">
+                  Query across YouTube Music, Piped, and local SQLite database
+                </p>
+              </div>
+
+              <div className="max-w-xl">
+                <Input
+                  placeholder="Filter track, artist, album name..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  startAddon={<Search size={16} />}
+                  className="bg-[var(--surface)] border-[var(--border)]"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="text-xs font-mono uppercase text-[var(--text-muted)]">
+                  Found {filteredTracks.length} Results
+                </div>
+
+                <div className="rounded-[4px] border border-[var(--border)] bg-[var(--surface)] overflow-hidden divide-y divide-[var(--border)]">
+                  {filteredTracks.map((t, idx) => (
+                    <TrackRow
+                      key={t.id}
+                      track={t}
+                      index={idx}
+                      isPlaying={isPlaying && currentTrack.id === t.id}
+                      onPlay={() => handlePlayTrack(t)}
+                      onFavoriteToggle={() => handleFavoriteToggle(t)}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: LIBRARY */}
+          {activeTab === 'library' && (
+            <div className="space-y-6">
+              <div>
+                <h1 className="text-xl font-bold tracking-tight">Music Library</h1>
+                <p className="text-xs text-[var(--text-muted)] font-mono mt-0.5">
+                  Saved albums, offline cache, and favorite tracks
+                </p>
+              </div>
+
+              {/* Favorites collection */}
+              <div className="space-y-3">
+                <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)] font-mono">
+                  Favorites ({tracks.filter((t) => t.isFavorite).length})
                 </h2>
-                <Box variant="tertiary" className="overflow-hidden p-0">
-                  <div className="w-full">
-                    {tracks.map((track, i) => (
+                <div className="rounded-[4px] border border-[var(--border)] bg-[var(--surface)] overflow-hidden divide-y divide-[var(--border)]">
+                  {tracks
+                    .filter((t) => t.isFavorite)
+                    .map((t, idx) => (
                       <TrackRow
-                        key={track.id}
-                        track={track}
-                        index={i}
-                        isPlaying={isPlaying && currentTrack.id === track.id}
-                        isCurrent={currentTrack.id === track.id}
-                        onPlay={handlePlayTrack}
-                        onFavoriteToggle={handleFavoriteToggle}
-                        onAddToQueue={(t) => console.log('Added to queue:', t.title)}
+                        key={t.id}
+                        track={t}
+                        index={idx}
+                        isPlaying={isPlaying && currentTrack.id === t.id}
+                        onPlay={() => handlePlayTrack(t)}
+                        onFavoriteToggle={() => handleFavoriteToggle(t)}
                       />
                     ))}
-                  </div>
-                </Box>
+                </div>
               </div>
             </div>
           )}
 
-          {activeTab === 'playground' && (
-            <div className="mx-auto max-w-4xl space-y-8">
+          {/* TAB 4: PLAYLISTS */}
+          {activeTab === 'playlists' && (
+            <div className="space-y-6">
               <div>
-                <h2 className="font-heading text-2xl font-extrabold">
-                  Nuclear UI Component Port Matrix
-                </h2>
-                <p className="text-foreground/70 text-sm">
-                  Interactive testing bench verifying exact OKLCH values, CVA variants, and Motion interactions
+                <h1 className="text-xl font-bold tracking-tight">Playlists</h1>
+                <p className="text-xs text-[var(--text-muted)] font-mono mt-0.5">
+                  Curated flows, AI smart-mixes, and station radios
                 </p>
               </div>
 
-              {/* Tabs Component */}
-              <Tabs
-                items={[
-                  {
-                    id: 'buttons',
-                    label: 'Buttons & Badges',
-                    content: (
-                      <div className="space-y-6 pt-4">
-                        <Box variant="secondary" className="flex flex-wrap items-center gap-3">
-                          <Button variant="default">Primary Button</Button>
-                          <Button variant="secondary">Secondary</Button>
-                          <Button variant="tertiary">Tertiary</Button>
-                          <Button variant="noShadow">No Shadow</Button>
-                          <Button variant="ghost">Ghost</Button>
-                          <Button variant="default" intent="danger">Danger</Button>
-                        </Box>
-
-                        <Box variant="secondary" className="flex flex-wrap items-center gap-3">
-                          <Badge variant="pill" color="green">Green Pill</Badge>
-                          <Badge variant="pill" color="cyan">Cyan Pill</Badge>
-                          <Badge variant="pill" color="orange">Orange Pill</Badge>
-                          <Badge variant="pill" color="red">Red Pill</Badge>
-                          <Badge variant="pill" color="yellow">Yellow Pill</Badge>
-                          <Badge variant="pill" color="purple">Purple Pill</Badge>
-                          <Badge variant="dot" color="green" animated />
-                          <Badge variant="dot" color="red" />
-                        </Box>
-                      </div>
-                    ),
-                  },
-                  {
-                    id: 'inputs',
-                    label: 'Inputs & Controls',
-                    content: (
-                      <div className="space-y-6 pt-4">
-                        <Box variant="secondary" className="max-w-md space-y-4">
-                          <Input
-                            label="Track Title"
-                            placeholder="Enter song name..."
-                            description="Will be cross-referenced with Meld ISRC matcher"
-                          />
-                          <Input
-                            label="Bitrate Limit (kbps)"
-                            variant="number"
-                            placeholder="320"
-                            endAddon="kbps"
-                          />
-                          <div className="flex items-center justify-between pt-2">
-                            <span className="text-sm font-semibold">Enable SponsorBlock skips</span>
-                            <Toggle
-                              checked={toggleVal}
-                              onChange={setToggleVal}
-                              label="SponsorBlock toggle"
-                            />
-                          </div>
-                        </Box>
-                      </div>
-                    ),
-                  },
-                  {
-                    id: 'sliders',
-                    label: 'Sliders & Feedback',
-                    content: (
-                      <div className="space-y-6 pt-4">
-                        <Box variant="secondary" className="max-w-md space-y-6">
-                          <Slider
-                            label="Equalizer Bass Boost"
-                            unit="dB"
-                            value={sliderVal}
-                            min={0}
-                            max={100}
-                            onValueChange={setSliderVal}
-                            startLabel="0 dB"
-                            endLabel="+12 dB"
-                          />
-
-                          <ContextMenu
-                            trigger={
-                              <Button variant="default">
-                                Right-Click or Click for Context Menu
-                              </Button>
-                            }
-                          >
-                            <ContextMenuItem icon={<Play size={14} />} label="Play Next" />
-                            <ContextMenuItem icon={<Share2 size={14} />} label="Share Track" />
-                            <ContextMenuSeparator />
-                            <ContextMenuItem label="Inspect Audio Stream" />
-                          </ContextMenu>
-                        </Box>
-                      </div>
-                    ),
-                  },
-                ]}
-              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {[
+                  { title: 'Synthwave Nightride', count: '48 tracks', badge: 'Synthesizer' },
+                  { title: 'Cyberpunk Lo-Fi', count: '32 tracks', badge: 'Focus' },
+                  { title: 'French Touch & Electro', count: '64 tracks', badge: 'High Energy' },
+                ].map((pl, i) => (
+                  <div
+                    key={i}
+                    className="p-4 rounded-[4px] bg-[var(--surface)] border border-[var(--border)] space-y-3 hover:border-[var(--color-accent)] transition-colors cursor-pointer group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono uppercase bg-[var(--surface-raised)] px-2 py-0.5 rounded text-[var(--color-accent)] border border-[var(--border)]">
+                        {pl.badge}
+                      </span>
+                      <Disc size={16} className="text-[var(--text-muted)] group-hover:text-[var(--color-accent)] transition-colors" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-[var(--text-primary)]">{pl.title}</h3>
+                      <p className="text-xs text-[var(--text-muted)] font-mono">{pl.count}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
-          {activeTab !== 'home' && activeTab !== 'playground' && (
-            <div className="flex h-96 items-center justify-center">
-              <Box variant="secondary" className="max-w-sm text-center">
-                <h3 className="font-heading text-lg font-bold">Section: {activeTab}</h3>
-                <p className="text-foreground/60 mt-1 text-sm">
-                  Navigate back to Home or UI Playground to test ported components.
+          {/* TAB 5: SETTINGS */}
+          {activeTab === 'settings' && (
+            <div className="space-y-6 max-w-3xl">
+              <div>
+                <h1 className="text-xl font-bold tracking-tight">Settings & Customization</h1>
+                <p className="text-xs text-[var(--text-muted)] font-mono mt-0.5">
+                  Configure OKLCH accent palettes, audio streaming buffer, and source credentials
                 </p>
-                <Button className="mt-4" onClick={() => setActiveTab('home')}>
-                  Return Home
-                </Button>
-              </Box>
+              </div>
+
+              {/* Accent Palette Selector Section */}
+              <div className="p-5 rounded-[4px] bg-[var(--surface)] border border-[var(--border)] space-y-4">
+                <div>
+                  <h3 className="text-sm font-bold text-[var(--text-primary)]">
+                    Theme Accent Color
+                  </h3>
+                  <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                    User-selectable via <code className="font-mono text-[var(--color-accent)]">--color-accent</code> CSS custom property.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {(Object.keys(ACCENTS) as AccentPalette[]).map((paletteKey) => {
+                    const def = ACCENTS[paletteKey];
+                    const isSelected = currentAccent === paletteKey;
+
+                    return (
+                      <button
+                        key={paletteKey}
+                        type="button"
+                        onClick={() => handleAccentChange(paletteKey)}
+                        className={`flex items-center gap-3 p-3 rounded-[4px] border text-left cursor-pointer transition-all ${
+                          isSelected
+                            ? 'border-[var(--color-accent)] bg-[var(--surface-raised)] shadow-xs'
+                            : 'border-[var(--border)] bg-[var(--background)] hover:border-[var(--text-muted)]'
+                        }`}
+                      >
+                        <span
+                          className="size-6 rounded-[3px] border border-black/30 shrink-0 flex items-center justify-center"
+                          style={{ backgroundColor: def.hex }}
+                        >
+                          {isSelected && <Check size={14} className="text-black font-bold" />}
+                        </span>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-xs font-semibold text-[var(--text-primary)] truncate">
+                            {def.label}
+                          </span>
+                          <span className="text-[10px] font-mono text-[var(--text-muted)] truncate">
+                            {def.hex}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Engine Status & Source Diagnostics */}
+              <div className="p-5 rounded-[4px] bg-[var(--surface)] border border-[var(--border)] space-y-3">
+                <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
+                  <Cpu size={16} className="text-[var(--color-accent)]" />
+                  Engine Diagnostics
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 font-mono text-xs">
+                  <div className="p-2.5 rounded-[4px] bg-[var(--background)] border border-[var(--border)]">
+                    <span className="text-[10px] text-[var(--text-muted)] block">FastAPI Engine</span>
+                    <span className="text-[var(--color-accent)] font-bold">127.0.0.1:8000</span>
+                  </div>
+                  <div className="p-2.5 rounded-[4px] bg-[var(--background)] border border-[var(--border)]">
+                    <span className="text-[10px] text-[var(--text-muted)] block">Piped Streams</span>
+                    <span className="text-[var(--color-accent)] font-bold">Connected</span>
+                  </div>
+                  <div className="p-2.5 rounded-[4px] bg-[var(--background)] border border-[var(--border)]">
+                    <span className="text-[10px] text-[var(--text-muted)] block">Audio Driver</span>
+                    <span className="text-[var(--text-primary)] font-bold">Web Audio API</span>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
-        </main>
-      </div>
+        </MainContent>
+      }
+      playerBar={
+        <PlayerBar
+          title={currentTrack.title}
+          artist={currentTrack.artist}
+          coverUrl={currentTrack.coverUrl}
+          isFavorite={currentTrack.isFavorite}
+          onFavoriteToggle={() => handleFavoriteToggle(currentTrack)}
+          isPlaying={isPlaying}
+          onPlayPause={() => setIsPlaying(!isPlaying)}
+          onNext={handleNextTrack}
+          onPrevious={handlePreviousTrack}
+          isShuffle={isShuffle}
+          onShuffleToggle={() => setIsShuffle(!isShuffle)}
+          repeatMode={repeatMode}
+          onRepeatToggle={handleRepeatToggle}
+          progressSeconds={progress}
+          totalDurationSeconds={currentTrack.durationSeconds}
+          onSeek={(sec) => setProgress(sec)}
+          volume={volume}
+          isMuted={isMuted}
+          onVolumeChange={setVolume}
+          onMuteToggle={() => setIsMuted(!isMuted)}
+          isQueueOpen={isQueueOpen}
+          onQueueToggle={() => setIsQueueOpen(!isQueueOpen)}
+          isLyricsOpen={isLyricsOpen}
+          onLyricsToggle={() => setIsLyricsOpen(!isLyricsOpen)}
+        />
+      }
+    />
 
-      {/* Bottom PlayerBar */}
-      <PlayerBar
-        title={currentTrack.title}
-        artist={currentTrack.artist}
-        coverUrl={currentTrack.coverUrl}
-        isFavorite={currentTrack.isFavorite}
-        onFavoriteToggle={() => handleFavoriteToggle(currentTrack)}
-        isPlaying={isPlaying}
-        onPlayPause={() => setIsPlaying(!isPlaying)}
-        progressSeconds={progress}
-        totalDurationSeconds={currentTrack.durationSeconds}
-        onSeek={(sec) => setProgress(sec)}
-        volume={volume}
-        isMuted={isMuted}
-        onVolumeChange={setVolume}
-        onMuteToggle={() => setIsMuted(!isMuted)}
-      />
-
-      {/* Modal Dialog */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Nuclear Design Tokens Extracted"
-        description="The full OKLCH color token schema, neobrutalist shadows, and typography standards have been ported directly from nuclear/packages/tailwind-config/global.css."
-        actions={
-          <>
-            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
-              Close
-            </Button>
-            <Button variant="default" onClick={() => setIsModalOpen(false)}>
-              Got it
-            </Button>
-          </>
-        }
-      >
-        <div className="space-y-3 text-xs">
-          <div className="flex items-center justify-between border-b pb-1">
-            <span className="font-mono">--background:</span>
-            <span className="font-mono text-primary">oklch(0.22 0.03 5)</span>
-          </div>
-          <div className="flex items-center justify-between border-b pb-1">
-            <span className="font-mono">--card:</span>
-            <span className="font-mono text-primary">oklch(0.5 0.1 5)</span>
-          </div>
-          <div className="flex items-center justify-between border-b pb-1">
-            <span className="font-mono">--shadow-shadow:</span>
-            <span className="font-mono text-primary">2px 2px 0px 0px var(--border)</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="font-mono">Spring physics:</span>
-            <span className="font-mono">stiffness: 400, damping: 24</span>
-          </div>
+    {/* Token Specifications Modal */}
+    <Modal
+      isOpen={isModalOpen}
+      onClose={() => setIsModalOpen(false)}
+      title="Sloth Nuclear Design Tokens"
+      description="Directly ported from Nuclear's visual layout and design system. Surface colors are encoded in OKLCH with user-selectable accent variables."
+      actions={
+        <>
+          <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+            Close
+          </Button>
+          <Button variant="default" onClick={() => setIsModalOpen(false)}>
+            Understood
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-3 font-mono text-xs">
+        <div className="flex items-center justify-between border-b border-[var(--border)] pb-1.5">
+          <span className="text-[var(--text-muted)]">--background:</span>
+          <span className="text-[var(--color-accent)] font-semibold">oklch(0.25 0.012 245) (#1e2327)</span>
         </div>
-      </Modal>
-    </div>
+        <div className="flex items-center justify-between border-b border-[var(--border)] pb-1.5">
+          <span className="text-[var(--text-muted)]">--surface:</span>
+          <span className="text-[var(--color-accent)] font-semibold">oklch(0.29 0.012 245) (#282d33)</span>
+        </div>
+        <div className="flex items-center justify-between border-b border-[var(--border)] pb-1.5">
+          <span className="text-[var(--text-muted)]">--surface-raised:</span>
+          <span className="text-[var(--color-accent)] font-semibold">oklch(0.33 0.012 245) (#31383f)</span>
+        </div>
+        <div className="flex items-center justify-between border-b border-[var(--border)] pb-1.5">
+          <span className="text-[var(--text-muted)]">--border:</span>
+          <span className="text-[var(--color-accent)] font-semibold">oklch(0.38 0.012 245) (#3d444c)</span>
+        </div>
+        <div className="flex items-center justify-between border-b border-[var(--border)] pb-1.5">
+          <span className="text-[var(--text-muted)]">--sidebar-width:</span>
+          <span className="text-[var(--text-primary)] font-semibold">220px (Fixed)</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-[var(--text-muted)]">--player-height:</span>
+          <span className="text-[var(--text-primary)] font-semibold">72px (Fixed)</span>
+        </div>
+      </div>
+    </Modal>
+    </>
   );
 }
