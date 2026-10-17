@@ -267,7 +267,15 @@ class Downloader:
         duration = float(info.get("duration", 0.0))
 
         clean_name = sanitize_filename(f"{raw_title} - {uploader}")
-        target_stem = str(out_dir / clean_name)
+        target_path = (out_dir / clean_name).resolve()
+
+        # Enforce directory traversal security
+        try:
+            target_path.relative_to(out_dir)
+        except ValueError:
+            raise PermissionError("Directory traversal detected in destination path")
+
+        target_stem = str(target_path)
         final_file_path = f"{target_stem}.{opts.format.value}"
 
         # Resolve skip segments
@@ -302,6 +310,9 @@ class Downloader:
             opts.format.value,
             "--audio-quality",
             audio_quality_val,
+            "--max-filesize",
+            "300M",
+            "--newline",
             "--output",
             f"{target_stem}.%(ext)s",
             "--no-check-certificates",
@@ -309,13 +320,38 @@ class Downloader:
             video_url,
         ]
 
-        proc = subprocess.run(
+        # Execute yt-dlp with progress parsing
+        proc = subprocess.Popen(
             args,
             shell=False,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True,
-            timeout=300,
+            bufsize=1,
+            universal_newlines=True,
         )
+
+        output_lines = []
+        if proc.stdout:
+            for line in iter(proc.stdout.readline, ""):
+                output_lines.append(line)
+                if progress_callback:
+                    m = re.search(r"(\d+(?:\.\d+)?)%", line)
+                    if m:
+                        try:
+                            pct = float(m.group(1)) / 100.0
+                            spd = re.search(r"at\s+([~0-9\.]+[kMG]?i?B/s)", line)
+                            eta = re.search(r"ETA\s+(\d+:\d+)", line)
+                            speed_str = spd.group(1) if spd else None
+                            eta_str = eta.group(1) if eta else None
+                            try:
+                                progress_callback({"progress": pct, "speed": speed_str, "eta": eta_str})
+                            except TypeError:
+                                progress_callback(pct)
+                        except Exception:
+                            pass
+            proc.stdout.close()
+        proc.wait(timeout=300)
 
         if proc.returncode != 0:
             return DownloadResult(
@@ -325,7 +361,7 @@ class Downloader:
                 format=opts.format.value,
                 duration=duration,
                 success=False,
-                error=proc.stderr.strip(),
+                error="".join(output_lines).strip() or "yt-dlp process returned non-zero code",
             )
 
         # Ensure file exists
@@ -335,6 +371,24 @@ class Downloader:
                 if file_name.startswith(clean_name):
                     final_file_path = str(out_dir / file_name)
                     break
+
+        # Check 300MB maximum file size limit
+        if os.path.exists(final_file_path):
+            file_size = os.path.getsize(final_file_path)
+            if file_size > 300 * 1024 * 1024:
+                try:
+                    os.remove(final_file_path)
+                except OSError:
+                    pass
+                return DownloadResult(
+                    video_id=video_id,
+                    title=raw_title,
+                    file_path="",
+                    format=opts.format.value,
+                    duration=duration,
+                    success=False,
+                    error="File size exceeds maximum allowed 300MB limit",
+                )
 
         return DownloadResult(
             video_id=video_id,

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AccentPalette, ACCENTS, setAccentPalette, getCurrentAccent } from '@/styles/tokens';
+import { DownloadManager } from '@/features/download';
 
 export type NavItemKey = 'home' | 'search' | 'library' | 'playlists' | 'plugins' | 'settings';
 
@@ -130,6 +131,11 @@ export const Sidebar: FC<SidebarProps> = ({
             );
           })}
         </nav>
+      </div>
+
+      {/* Middle Scrollable Section: Download Manager Panel */}
+      <div className="flex-1 flex flex-col gap-2 my-2 min-h-0 overflow-y-auto">
+        <DownloadManager />
       </div>
 
       {/* Footer Area: Accent Palettes & Source Status */}

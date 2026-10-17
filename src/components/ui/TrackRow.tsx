@@ -1,8 +1,9 @@
 import { FC, ReactNode, MouseEvent } from 'react';
-import { Heart, Play, Pause, MoreVertical, Plus, Music } from 'lucide-react';
+import { Heart, Play, Pause, MoreVertical, Plus, Music, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './Button';
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from './ContextMenu';
+import { DownloadButton } from '@/features/download';
 
 export type Track = {
   id: string;
@@ -22,6 +23,8 @@ export type TrackRowProps = {
   onPlay?: (track: Track) => void;
   onFavoriteToggle?: (track: Track) => void;
   onAddToQueue?: (track: Track) => void;
+  onDownload?: (track: Track) => void;
+  showDownload?: boolean;
   contextMenuActions?: ReactNode;
   className?: string;
 };
@@ -40,6 +43,8 @@ export const TrackRow: FC<TrackRowProps> = ({
   onPlay,
   onFavoriteToggle,
   onAddToQueue,
+  onDownload,
+  showDownload = true,
   contextMenuActions,
   className,
 }) => {
@@ -133,6 +138,21 @@ export const TrackRow: FC<TrackRowProps> = ({
           </Button>
         )}
 
+        {showDownload && (
+          <DownloadButton
+            payload={{
+              urlOrId: track.id,
+              title: track.title,
+              artist: track.artist,
+              album: track.album,
+              coverUrl: track.coverUrl,
+            }}
+            size="icon-sm"
+            variant="ghost"
+            className="opacity-0 transition-opacity group-hover:opacity-100 text-foreground/60 hover:text-foreground"
+          />
+        )}
+
         {onFavoriteToggle && (
           <Button
             size="icon-sm"
@@ -187,6 +207,16 @@ export const TrackRow: FC<TrackRowProps> = ({
                 label={track.isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
                 onClick={() => onFavoriteToggle?.(track)}
               />
+              {onDownload && (
+                <>
+                  <ContextMenuSeparator />
+                  <ContextMenuItem
+                    icon={<Download size={14} />}
+                    label="Download Track"
+                    onClick={() => onDownload?.(track)}
+                  />
+                </>
+              )}
             </>
           )}
         </ContextMenu>
