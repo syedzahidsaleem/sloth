@@ -19,6 +19,11 @@ Sloth references and adapts architectural patterns, algorithms, and designs from
 - **License**: GNU General Public License v3.0 (GPL-3.0)
 - **Copyright**: (c) Francesco Grazioso and contributors
 - **Referenced Scope**: Recommendation engine scoring algorithm, ISRC + fuzzy track matching pipeline, multi-tier cache architecture, and music provider integrations.
+- **Ported Files in Sloth**:
+  - `server/engine/scoring/meld_scorer.py` (SpotifyRecommendationEngine.kt scoring formula, 4 signals, diversification)
+  - `server/engine/scoring/meld_matcher.py` (SpotifyMapper.kt Bigram Dice, duration thresholds, ISRC + Qobuz matching)
+  - `server/engine/cache.py` (StreamUrlCache.kt & SpotifyProfileCache.kt 3-tier cache, generation tracking, TTLs)
+  - *Original logic by FrancescoGrazioso. Adapted to Python under GPL-3.0.*
 
 ---
 
