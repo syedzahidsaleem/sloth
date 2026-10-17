@@ -33,6 +33,12 @@ Sloth references and adapts architectural patterns, algorithms, and designs from
 - **License**: GNU General Public License v3.0 (GPL-3.0)
 - **Copyright**: (c) MetrolistGroup and contributors
 - **Referenced Scope**: YouTube InnerTube client patterns, LRCLib lyrics integration pipeline, and metroserver WebSocket listen-together communication protocol.
+- **Ported Files in Sloth**:
+  - `src/sources/youtube/innertube-client.ts`: InnerTube client request building, visitor data resolution, search/browse/next/player endpoints, cipher deobfuscation, and multi-client stream resolution (WEB_REMIX, ANDROID_MUSIC, TVHTML5).
+  - `src/lyrics/metrolist-fetcher.ts`: 5-strategy search cascade to LRCLib, title and artist sanitization, relaxed duration matching (±5s), Levenshtein string similarity, and synchronized [mm:ss.xx] LRC parser.
+  - `src/lyrics/translator.ts`: AI lyrics translation integration supporting Translated, Romanized, and Transcribed modes using Anthropic Claude API with strict JSON line count preservation.
+  - `server/listen-together/main.py`: FastAPI WebSocket listen-together server replicating Metrolist's metroserver protocol, peer session management, NTP clock drift compensation, and playback synchronization.
+  - *Original logic by MetrolistGroup. Adapted to TypeScript and Python under GPL-3.0.*
 
 ---
 
