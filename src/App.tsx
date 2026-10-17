@@ -27,6 +27,8 @@ import SettingsPage from './app/settings/page';
 import PluginsPage from './app/plugins/page';
 import { LyricsView } from './components/lyrics';
 import { parseLrc, SAMPLE_MIDNIGHT_CITY_LRC } from './lyrics/parser';
+import { GenreQuizModal } from './components/onboarding';
+import { getSlothSettings } from './services/settingsStore';
 import {
   AccentPalette,
   setAccentPalette,
@@ -88,6 +90,17 @@ const SAMPLE_TRACKS: Track[] = [
     coverUrl: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=300&q=80',
     isFavorite: false,
   },
+  {
+    id: '7',
+    title: 'Neon Drift (Discovery Gem)',
+    artist: 'Lorn & Kavinsky',
+    album: 'Underground Electronic Archives',
+    durationSeconds: 274,
+    coverUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=300&q=80',
+    isFavorite: false,
+    isDiscoverySlot: true,
+    badge: 'New',
+  },
 ];
 
 export default function App() {
@@ -98,6 +111,7 @@ export default function App() {
   }>({ view: 'home' });
   const [currentAccent, setCurrentAccent] = useState<AccentPalette>('green');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
 
   const handleTabChange = (tab: NavItemKey) => {
     setActiveTab(tab);
@@ -121,11 +135,16 @@ export default function App() {
   // Search input state
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Sync initial accent on mount
+  // Sync initial accent and check onboarding on mount
   useEffect(() => {
     const acc = getCurrentAccent();
     setCurrentAccent(acc);
     setAccentPalette(acc);
+
+    const userSettings = getSlothSettings();
+    if (!userSettings.onboardingCompleted) {
+      setIsOnboardingOpen(true);
+    }
   }, []);
 
   // Simulated progress timer when playing
@@ -509,6 +528,15 @@ export default function App() {
         </div>
       </div>
     </Modal>
+
+    {/* First-Launch Coldstart Genre Quiz Modal */}
+    <GenreQuizModal
+      isOpen={isOnboardingOpen}
+      onClose={() => setIsOnboardingOpen(false)}
+      onComplete={() => {
+        setIsOnboardingOpen(false);
+      }}
+    />
     </>
   );
 }

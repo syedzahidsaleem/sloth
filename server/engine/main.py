@@ -35,6 +35,7 @@ from .graph import (
     LightHGCN,
     SQLiteGraphBuilder,
 )
+from .coldstart import onboarding_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("sloth-engine-api")
@@ -44,6 +45,9 @@ app = FastAPI(
     description="Heterogeneous Hypergraph Convolution, BERT4Rec Sequential, and Diffusion Audio Engine",
     version="0.1.0",
 )
+
+app.include_router(onboarding_router, prefix="/api/engine/coldstart/onboarding", tags=["coldstart"])
+app.include_router(onboarding_router, prefix="/engine/onboarding", tags=["coldstart"])
 
 app.add_middleware(
     CORSMiddleware,

@@ -101,15 +101,25 @@ export const QueueTrack: FC<QueueTrackProps> = ({
 
       {/* Track Metadata (Title & Artist) */}
       <div className="min-w-0 flex-1 flex flex-col justify-center">
-        <span
-          className={cn(
-            'truncate font-medium text-xs leading-tight',
-            isCurrent ? 'text-[var(--color-accent)] font-semibold' : 'text-[var(--text-primary)]'
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span
+            className={cn(
+              'truncate font-medium text-xs leading-tight',
+              isCurrent ? 'text-[var(--color-accent)] font-semibold' : 'text-[var(--text-primary)]'
+            )}
+            title={track.title}
+          >
+            {track.title}
+          </span>
+          {(track.badge || track.isDiscoverySlot) && (
+            <span
+              data-testid="discovery-slot-badge"
+              className="shrink-0 px-1.5 py-0.2 rounded-[3px] text-[9px] font-mono font-bold uppercase tracking-wider bg-[var(--color-accent)] text-black select-none shadow-xs"
+            >
+              {track.badge || 'New'}
+            </span>
           )}
-          title={track.title}
-        >
-          {track.title}
-        </span>
+        </div>
         <span className="truncate text-[11px] text-[var(--text-muted)] leading-tight mt-0.5" title={track.artist}>
           {track.artist}
         </span>

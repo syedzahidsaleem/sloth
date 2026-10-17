@@ -11,12 +11,16 @@ export interface PlayerTrack {
   coverUrl?: string;
   sourceUrl?: string;
   isFavorite?: boolean;
+  isDiscoverySlot?: boolean;
+  badge?: string;
 }
 
 export interface QueueTrackItem extends PlayerTrack {
   addedAt?: number;
   score?: number;
   recommendationSource?: string;
+  isDiscoverySlot?: boolean;
+  badge?: string;
 }
 
 export type RepeatMode = 'off' | 'all' | 'one';

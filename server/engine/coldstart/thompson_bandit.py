@@ -104,3 +104,35 @@ class ThompsonBandit:
             "uncertainty": math.sqrt(variance),
             "pulls": arm.total_pulls,
         }
+
+    def record_genre_feedback(self, genre: str, liked: bool, rating: Optional[float] = None) -> None:
+        """
+        Updates genre arm with user feedback:
+        liked=True (or high rating) increases alpha, liked=False increases beta.
+        """
+        if rating is not None:
+            r = float(np.clip(rating, 0.0, 1.0))
+        else:
+            r = 1.0 if liked else 0.0
+        self.update(genre.lower().strip(), r)
+
+    def sample_genre_weights(self, genres: Optional[List[str]] = None) -> Dict[str, float]:
+        """
+        Draws Thompson Samples for each specified genre arm (or all arms).
+        """
+        arm_keys = [g.lower().strip() for g in genres] if genres else list(self.arms.keys())
+        if not arm_keys:
+            return {}
+
+        samples = {g: self.sample_arm(g) for g in arm_keys}
+        # Normalize weights so sum equals 1.0
+        total = sum(samples.values()) + 1e-9
+        return {g: float(v / total) for g, v in samples.items()}
+
+    def rank_genres(self, genres: Optional[List[str]] = None) -> List[Tuple[str, float]]:
+        """
+        Returns genres ordered by sampled preference probability.
+        """
+        weights = self.sample_genre_weights(genres)
+        ranked = sorted(weights.items(), key=lambda x: x[1], reverse=True)
+        return ranked

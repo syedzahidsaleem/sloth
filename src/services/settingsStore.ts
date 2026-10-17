@@ -50,6 +50,8 @@ export interface SlothSettings {
   volumeNormalization: boolean;
   skipSilence: boolean;
   audioQuality: AudioQualityPreference;
+  discoveryAlpha: number; // 0.0 (Familiar) to 1.0 (Discovery), default 0.5
+  onboardingCompleted: boolean;
   equalizer: {
     enabled: boolean;
     preAmp: number; // -12 to +12 dB
@@ -85,6 +87,8 @@ export const DEFAULT_SETTINGS: SlothSettings = {
   volumeNormalization: true,
   skipSilence: false,
   audioQuality: 'lossless',
+  discoveryAlpha: 0.5,
+  onboardingCompleted: false,
   equalizer: {
     enabled: true,
     preAmp: 0,

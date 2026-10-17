@@ -54,6 +54,37 @@ class IPSDebiaser:
 
         return self.propensities
 
+    def debias_candidate_scores(
+        self,
+        raw_scores: Dict[str, float],
+        play_counts: Dict[str, int],
+        alpha: float = 0.5,
+        min_propensity: float = 0.01,
+    ) -> Dict[str, float]:
+        """
+        Direct test-time score debiasing:
+        debiased_score[i] = raw[i] / (play_count[i] / max_count) ^ alpha
+        where alpha is user-controlled (0.0 = Familiar, 1.0 = Discovery).
+        """
+        if not raw_scores:
+            return {}
+
+        max_count = max(play_counts.values()) if play_counts else 1
+        max_count = max(1, max_count)
+
+        debiased = {}
+        for track_id, raw_score in raw_scores.items():
+            count = max(0, play_counts.get(track_id, 0))
+            if alpha <= 0.0:
+                propensity = 1.0
+            else:
+                ratio = float(count + self.config.smoothing) / float(max_count + self.config.smoothing)
+                propensity = max(min_propensity, math.pow(ratio, alpha))
+
+            debiased[track_id] = float(raw_score / propensity)
+
+        return debiased
+
     def fit_from_sqlite(
         self,
         db_path_or_conn: Union[str, sqlite3.Connection],

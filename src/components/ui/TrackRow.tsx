@@ -13,6 +13,8 @@ export type Track = {
   durationSeconds: number;
   coverUrl?: string;
   isFavorite?: boolean;
+  isDiscoverySlot?: boolean;
+  badge?: string;
 };
 
 export type TrackRowProps = {

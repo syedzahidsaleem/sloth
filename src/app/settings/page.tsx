@@ -460,6 +460,41 @@ export const SettingsPage: FC = () => {
                       <option value="lossy">Lossy (320kbps MP3 / Opus)</option>
                     </select>
                   </div>
+
+                  <hr className="border-[var(--border)]/60" />
+
+                  {/* Algorithmic Discovery Balance (IPS Debiasing Exponent) */}
+                  <div className="space-y-2" data-testid="discovery-slider-section">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-xs font-semibold text-[var(--text-primary)]">
+                          Discovery vs Familiarity Balance
+                        </span>
+                        <p className="text-[11px] text-[var(--text-muted)]">
+                          Controls Inverse Propensity Scoring (IPS) debiasing exponent (α). Balances charting hits against long-tail discovery gems.
+                        </p>
+                      </div>
+                      <Badge variant="pill" color="green" className="font-mono text-xs font-semibold">
+                        {(settings.discoveryAlpha ?? 0.5) <= 0.25
+                          ? 'Familiar'
+                          : (settings.discoveryAlpha ?? 0.5) >= 0.75
+                          ? 'Discovery'
+                          : 'Balanced'}{' '}
+                        (α = {(settings.discoveryAlpha ?? 0.5).toFixed(2)})
+                      </Badge>
+                    </div>
+                    <div className="max-w-md pt-1">
+                      <Slider
+                        min={0}
+                        max={1}
+                        step={0.05}
+                        value={settings.discoveryAlpha ?? 0.5}
+                        onValueChange={(v) => updateSetting('discoveryAlpha', v)}
+                        startLabel="Familiar (α=0.0)"
+                        endLabel="Discovery (α=1.0)"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* 10-Band Equalizer (Nuclear Style) */}
