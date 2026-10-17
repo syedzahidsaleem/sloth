@@ -13,6 +13,7 @@ __pycache__/
 *$py.class
 # Local Database & Cache
 *.db
+*.db-*
 *.sqlite
 *.sqlite3
 .sloth_cache/
