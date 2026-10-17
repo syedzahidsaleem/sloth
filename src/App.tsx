@@ -20,10 +20,10 @@ import {
 import {
   AppShell,
   Sidebar,
-  PlayerBar,
   MainContent,
   NavItemKey,
 } from './components/layout';
+import { NowPlayingBar, QueuePanel } from './components/player';
 import {
   AccentPalette,
   ACCENTS,
@@ -526,12 +526,8 @@ export default function App() {
         </MainContent>
       }
       playerBar={
-        <PlayerBar
-          title={currentTrack.title}
-          artist={currentTrack.artist}
-          coverUrl={currentTrack.coverUrl}
-          isFavorite={currentTrack.isFavorite}
-          onFavoriteToggle={() => handleFavoriteToggle(currentTrack)}
+        <NowPlayingBar
+          currentTrack={currentTrack}
           isPlaying={isPlaying}
           onPlayPause={() => setIsPlaying(!isPlaying)}
           onNext={handleNextTrack}
@@ -551,8 +547,31 @@ export default function App() {
           onQueueToggle={() => setIsQueueOpen(!isQueueOpen)}
           isLyricsOpen={isLyricsOpen}
           onLyricsToggle={() => setIsLyricsOpen(!isLyricsOpen)}
+          onFavoriteToggle={() => handleFavoriteToggle(currentTrack)}
         />
       }
+    />
+
+    {/* Draggable Queue Drawer Panel */}
+    <QueuePanel
+      isOpen={isQueueOpen}
+      onClose={() => setIsQueueOpen(false)}
+      queue={tracks}
+      currentTrackId={currentTrack.id}
+      isPlaying={isPlaying}
+      onTrackSelect={(track) => {
+        const idx = tracks.findIndex((t) => t.id === track.id);
+        if (idx !== -1) {
+          setCurrentTrackIndex(idx);
+        }
+        setIsPlaying(true);
+      }}
+      onRemoveTrack={(trackId) => {
+        setTracks((prev) => prev.filter((t) => t.id !== trackId));
+      }}
+      onClearQueue={() => setTracks([])}
+      onReorderQueue={(newQueue) => setTracks(newQueue)}
+      onAddPickToQueue={(pick) => setTracks((prev) => [...prev, pick])}
     />
 
     {/* Token Specifications Modal */}
