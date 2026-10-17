@@ -54,3 +54,40 @@ Sloth references and adapts architectural patterns, algorithms, and designs from
   - `src/sources/piped/index.ts`: Piped and Invidious proxy client with dynamic instance health scoring, latency ranking, failover rotation, and Spotube `PipedSourceMap` stream mapping.
   - `src/player/web-audio-player.ts`: Web Audio Player architecture porting Spotube's `media_kit`/`mpv` pipeline, dual-channel equal-power crossfade, `dynaudnorm=g=5:f=250:r=0.9:p=0.5` dynamic compressor normalization, playlist queue management, and OS `navigator.mediaSession` / SMTC synchronization.
   - *Original logic by Kingkor Roy Tirtho and Spotube contributors. Adapted to TypeScript and Python under GPL-3.0.*
+
+---
+
+### 5. Recommendation & AI Core Algorithms
+Sloth adapts open-source implementations and formulations from the following peer-reviewed works:
+- **LightHGCN**:
+  - *Source*: "LightGCN: Simplifying and Powering Graph Convolution Network for Recommendation", Xiangnan He et al. (SIGIR 2020)
+  - *Reference*: https://github.com/gusye1234/LightGCN-PyTorch (MIT)
+  - *Target*: `server/engine/graph/light_hgcn.py` (5-node heterogeneous hypergraph convolution)
+- **BERT4Rec**:
+  - *Source*: "BERT4Rec: Sequential Recommendation with Bidirectional Encoder Representations from Transformer", Fei Sun et al. (CIKM 2019)
+  - *Reference*: https://github.com/jaywonchung/BERT4Rec-VAE-Pytorch (MIT)
+  - *Target*: `server/engine/sequential/bert4rec.py` (Bidirectional Transformer sequential recommender)
+- **ACT-R Cognitive Memory Decay**:
+  - *Source*: "Transformers Meet ACT-R: Repeat-Aware and Sequential Listening Session Recommendation", Viet-Anh Tran et al. (ACM RecSys 2024 / Deezer Research)
+  - *Reference*: https://github.com/deezer/recsys24-pisa (MIT)
+  - *Target*: `server/engine/sequential/actr_memory.py` (Base-level activation decay, spreading activation, partial matching)
+- **DiffRec / L-DiffRec**:
+  - *Source*: "Diffusion Recommender Model", Yiyan Xu et al. (SIGIR 2023)
+  - *Reference*: https://github.com/YiyanXu/DiffRec (MIT)
+  - *Target*: `server/engine/generator/playlist_diffusion.py` (Latent diffusion playlist generation in MERT space)
+- **IPS Debiasing**:
+  - *Source*: "Recommendations as Treatments: Debiasing Learning and Evaluation", Tobias Schnabel et al. (ICML 2016)
+  - *Reference*: https://github.com/jiawei-chen/RecDebiasing (MIT)
+  - *Target*: `server/engine/coldstart/ips_debiasing.py` (Inverse propensity scoring derived from SQLite play_count)
+- **Thompson Sampling Bandit**:
+  - *Source*: "Analysis of Thompson Sampling for the Multi-armed Bandit Problem", Shipra Agrawal & Navin Goyal (COLT 2012)
+  - *Target*: `server/engine/coldstart/thompson_bandit.py` (Beta-Bernoulli bandit for cold start exploration/exploitation)
+- **MERT**:
+  - *Source*: "MERT: Acoustic Music Understanding Model with Large-Scale Self-supervised Training", Yizhi Li et al. (ICLR 2024)
+  - *Reference*: https://github.com/yizhilll/MERT (Apache-2.0)
+  - *Target*: `server/engine/audio/mert_extractor.py` (24kHz audio hidden state extraction to 768-dim embeddings)
+- **CLAP**:
+  - *Source*: "Large-Scale Contrastive Language-Audio Pretraining with Feature Fusion and Keyword-to-Caption Augmentation", Yusong Wu et al. (ICASSP 2023)
+  - *Reference*: https://github.com/LAION-AI/CLAP (MIT)
+  - *Target*: `server/engine/audio/clap_extractor.py` (48kHz audio and text joint multimodal embedding for semantic search)
+
