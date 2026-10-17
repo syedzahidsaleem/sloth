@@ -47,4 +47,10 @@ Sloth references and adapts architectural patterns, algorithms, and designs from
 - **Repository**: https://github.com/team-spotube/spotube
 - **License**: GNU General Public License v3.0 (GPL-3.0)
 - **Copyright**: (c) Kingkor Roy Tirtho and Spotube contributors
-- **Referenced Scope**: Cross-platform audio playback pipeline, SponsorBlock chapter segment handling, and yt-dlp download orchestration logic.
+- **Referenced Scope**: Cross-platform audio playback pipeline, SponsorBlock chapter segment handling, yt-dlp download orchestration, Piped proxy routing, audio normalization, and local file metadata tagging.
+- **Ported Files in Sloth**:
+  - `server/downloader/downloader.py`: `yt-dlp` audio download manager, format selection (`mp3`, `flac`, `opus`, `m4a`), concurrency queue, and SponsorBlock bug fix prioritizing official creator chapters with sub-second float accuracy.
+  - `server/downloader/tagger.py`: Mutagen-powered universal audio metadata tagger embedding ID3v2.4 / Vorbis / MP4 tags, cover art, ISRC (`TSRC`), USLT unsynchronized lyrics, and SYLT synchronized lyrics.
+  - `src/sources/piped/index.ts`: Piped and Invidious proxy client with dynamic instance health scoring, latency ranking, failover rotation, and Spotube `PipedSourceMap` stream mapping.
+  - `src/player/web-audio-player.ts`: Web Audio Player architecture porting Spotube's `media_kit`/`mpv` pipeline, dual-channel equal-power crossfade, `dynaudnorm=g=5:f=250:r=0.9:p=0.5` dynamic compressor normalization, playlist queue management, and OS `navigator.mediaSession` / SMTC synchronization.
+  - *Original logic by Kingkor Roy Tirtho and Spotube contributors. Adapted to TypeScript and Python under GPL-3.0.*
