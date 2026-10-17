@@ -8,6 +8,7 @@ import { motion, useReducedMotion } from 'motion/react';
 import { ListMusic, Mic2, Sliders } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { playerControlVariants } from '../variants';
+import { ListenTogetherBar } from '@/features/listen-together';
 
 export interface SecondaryControlsProps {
   isQueueOpen?: boolean;
@@ -78,7 +79,10 @@ export const SecondaryControls: FC<SecondaryControlsProps> = ({
         </motion.button>
       )}
 
-      {/* 3. Queue Drawer Toggle Button */}
+      {/* 3. Listen Together Live Indicator & Drawer */}
+      <ListenTogetherBar />
+
+      {/* 4. Queue Drawer Toggle Button */}
       {onQueueToggle && (
         <motion.button
           type="button"

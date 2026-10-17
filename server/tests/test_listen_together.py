@@ -34,6 +34,7 @@ class TestListenTogether(unittest.TestCase):
         manager.rooms.clear()
         manager.user_sessions.clear()
         manager.user_to_room.clear()
+        manager.rate_limiter.reset()
 
     def test_status_endpoint(self):
         response = self.client.get("/status")
@@ -158,6 +159,98 @@ class TestListenTogether(unittest.TestCase):
                 self.assertEqual(sync_guest["payload"]["position"], 42000)
                 self.assertEqual(sync_guest["payload"]["revision"], 1)
 
+    def test_chat_broadcasting(self):
+        with self.client.websocket_connect("/ws") as host_ws:
+            host_ws.send_text(
+                json.dumps({"type": MessageTypes.CREATE_ROOM, "payload": {"username": "HostAlice"}})
+            )
+            created = json.loads(host_ws.receive_text())
+            room_code = created["payload"]["room_code"]
+
+            # Enable auto-approve for testing convenience
+            room = manager.get_room(room_code)
+            self.assertIsNotNone(room)
+            room.auto_approve = True
+
+            with self.client.websocket_connect("/ws") as guest_ws:
+                guest_ws.send_text(
+                    json.dumps(
+                        {"type": MessageTypes.JOIN_ROOM, "payload": {"room_code": room_code, "username": "Bob"}}
+                    )
+                )
+                approved = json.loads(guest_ws.receive_text())
+                self.assertEqual(approved["type"], MessageTypes.JOIN_APPROVED)
+                _ = host_ws.receive_text()  # consume user_joined event
+
+                # Bob sends a chat message
+                guest_ws.send_text(
+                    json.dumps(
+                        {
+                            "type": MessageTypes.CHAT,
+                            "payload": {"message": "Hello everyone! Great tune."},
+                        }
+                    )
+                )
+
+                # Both host and Bob receive the chat message
+                chat_host = json.loads(host_ws.receive_text())
+                chat_bob = json.loads(guest_ws.receive_text())
+
+                self.assertEqual(chat_host["type"], MessageTypes.CHAT_MESSAGE)
+                self.assertEqual(chat_bob["type"], MessageTypes.CHAT_MESSAGE)
+                self.assertEqual(chat_host["payload"]["username"], "Bob")
+                self.assertEqual(chat_host["payload"]["message"], "Hello everyone! Great tune.")
+                self.assertIn("timestamp_ms", chat_host["payload"])
+
+    def test_rate_limiter_exceeded(self):
+        # Reset limiter
+        manager.rate_limiter.reset()
+
+        # Connect and exhaust 10 join requests
+        with self.client.websocket_connect("/ws") as ws:
+            for i in range(10):
+                ws.send_text(
+                    json.dumps(
+                        {"type": MessageTypes.JOIN_ROOM, "payload": {"room_code": f"ROOM{i}"}}
+                    )
+                )
+                resp = json.loads(ws.receive_text())
+                self.assertEqual(resp["type"], MessageTypes.JOIN_REJECTED)
+                self.assertEqual(resp["payload"]["reason"], "Room not found")
+
+            # 11th request must be rejected by the rate limiter
+            ws.send_text(
+                json.dumps(
+                    {"type": MessageTypes.JOIN_ROOM, "payload": {"room_code": "ROOM11"}}
+                )
+            )
+            rate_limited_resp = json.loads(ws.receive_text())
+            self.assertEqual(rate_limited_resp["type"], MessageTypes.JOIN_REJECTED)
+            self.assertIn("Rate limit exceeded", rate_limited_resp["payload"]["reason"])
+
+    def test_ws_session_endpoint_and_direct_json(self):
+        # Create a room first
+        dummy_ws = None
+        host_user = ConnectedUser("host_x", "HostX", dummy_ws)
+        room = manager.create_room(host_user, session_id="rock-session")
+        room.auto_approve = True
+
+        # Connect to /ws/session/rock-session
+        with self.client.websocket_connect("/ws/session/rock-session") as ws:
+            # Send direct JSON "join"
+            ws.send_text(json.dumps({"type": "join", "username": "SessionGuest"}))
+            resp = json.loads(ws.receive_text())
+            self.assertEqual(resp["type"], MessageTypes.JOIN_APPROVED)
+            self.assertEqual(resp["payload"]["session_id"], "rock-session")
+
+            # Send direct JSON "seek"
+            ws.send_text(json.dumps({"type": "seek", "position": 88000}))
+            sync_resp = json.loads(ws.receive_text())
+            self.assertEqual(sync_resp["type"], MessageTypes.SYNC_PLAYBACK)
+            self.assertEqual(sync_resp["payload"]["action"], "seek")
+            self.assertEqual(sync_resp["payload"]["position"], 88000)
+
 
 if __name__ == "__main__":
     unittest.main()
+
