@@ -2,17 +2,14 @@ import { useState, useEffect } from 'react';
 import {
   Search,
   Sparkles,
-  Sliders,
-  Play,
   Check,
   Disc,
   Cpu,
+  ChevronLeft,
 } from 'lucide-react';
 import {
   Button,
-  Badge,
   Input,
-  AlbumCard,
   TrackRow,
   Track,
   Modal,
@@ -24,6 +21,10 @@ import {
   NavItemKey,
 } from './components/layout';
 import { NowPlayingBar, QueuePanel } from './components/player';
+import HomePage from './app/page';
+import SearchPage from './app/search/page';
+import ArtistPage from './app/artist/[id]/page';
+import AlbumPage from './app/album/[id]/page';
 import {
   AccentPalette,
   ACCENTS,
@@ -91,8 +92,17 @@ const SAMPLE_TRACKS: Track[] = [
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavItemKey>('home');
+  const [route, setRoute] = useState<{
+    view: 'home' | 'search' | 'artist' | 'album' | 'library' | 'playlists' | 'settings';
+    id?: string;
+  }>({ view: 'home' });
   const [currentAccent, setCurrentAccent] = useState<AccentPalette>('green');
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleTabChange = (tab: NavItemKey) => {
+    setActiveTab(tab);
+    setRoute({ view: tab });
+  };
 
   // Playback state
   const [tracks, setTracks] = useState<Track[]>(SAMPLE_TRACKS);
@@ -183,28 +193,49 @@ export default function App() {
     setRepeatMode(nextMode[repeatMode]);
   };
 
-  // Filtered tracks for search tab
-  const filteredTracks = tracks.filter((t) =>
-    t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (t.album || '').toLowerCase().includes(searchQuery.toLowerCase()),
-  );
 
   return (
     <>
     <AppShell
       topbar={
         <div className="h-12 px-4 flex items-center justify-between bg-[var(--surface)] select-none">
-          {/* Search Bar in Topbar */}
-          <div className="flex items-center gap-3 w-80">
-            <Input
-              placeholder="Search tracks, artists, albums..."
-              size="sm"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              startAddon={<Search size={14} className="text-[var(--text-muted)]" />}
-              className="bg-[var(--background)] border-[var(--border)]"
-            />
+          {/* Back button + Search Bar */}
+          <div className="flex items-center gap-3">
+            {(route.view === 'artist' || route.view === 'album') && (
+              <button
+                type="button"
+                onClick={() => {
+                  setRoute({ view: 'home' });
+                  setActiveTab('home');
+                }}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-[4px] bg-[var(--surface-raised)] hover:bg-[var(--surface-raised)]/80 border border-[var(--border)] text-xs text-[var(--text-secondary)] hover:text-white cursor-pointer transition-colors"
+                title="Back to Dashboard"
+              >
+                <ChevronLeft size={14} />
+                <span>Back</span>
+              </button>
+            )}
+
+            <div className="w-72 md:w-80">
+              <Input
+                placeholder="Search tracks, artists, albums..."
+                size="sm"
+                value={searchQuery}
+                onFocus={() => {
+                  setRoute({ view: 'search' });
+                  setActiveTab('search');
+                }}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  if (route.view !== 'search') {
+                    setRoute({ view: 'search' });
+                    setActiveTab('search');
+                  }
+                }}
+                startAddon={<Search size={14} className="text-[var(--text-muted)]" />}
+                className="bg-[var(--background)] border-[var(--border)]"
+              />
+            </div>
           </div>
 
           {/* Quick Stats & System Badges */}
@@ -229,146 +260,64 @@ export default function App() {
       sidebar={
         <Sidebar
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={handleTabChange}
           currentAccent={currentAccent}
           onAccentChange={handleAccentChange}
         />
       }
       mainContent={
         <MainContent>
-          {/* TAB 1: HOME */}
-          {activeTab === 'home' && (
-            <div className="space-y-8 animate-fadeIn">
-              {/* Hero Banner with Bento Highlights */}
-              <div className="p-6 rounded-[6px] bg-[var(--surface)] border border-[var(--border)] relative overflow-hidden">
-                <div className="relative z-10 max-w-2xl space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="pill" color="green">
-                      Nuclear Lineage
-                    </Badge>
-                    <span className="text-[11px] font-mono text-[var(--text-muted)] uppercase">
-                      Tactile Flat Neobrutalism
-                    </span>
-                  </div>
-                  <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
-                    Unified Music Architecture
-                  </h1>
-                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                    Sloth combines Nuclear&apos;s modular source architecture, Meld&apos;s hypergraph recommendations,
-                    and Spotube&apos;s precise media streaming into a high-density, low-latency desktop player.
-                  </p>
-                  <div className="pt-2 flex items-center gap-3">
-                    <Button
-                      size="sm"
-                      variant="default"
-                      onClick={() => handlePlayTrack(SAMPLE_TRACKS[0])}
-                    >
-                      <Play size={13} className="mr-1.5 fill-current" />
-                      Play Featured
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => setActiveTab('settings')}
-                    >
-                      <Sliders size={13} className="mr-1.5" />
-                      Theme Accents
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Featured Albums Bento Grid */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-base font-bold text-[var(--text-primary)] tracking-tight">
-                    Featured Releases
-                  </h2>
-                  <span className="text-[11px] font-mono text-[var(--text-muted)]">
-                    6 Curated Masters
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                  {tracks.map((t) => (
-                    <AlbumCard
-                      key={t.id}
-                      title={t.title}
-                      subtitle={`${t.artist} • ${t.album}`}
-                      coverUrl={t.coverUrl}
-                      badge={t.isFavorite ? <Badge variant="dot" color="red" /> : undefined}
-                      onPlay={() => handlePlayTrack(t)}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Top Tracks High-Density Table */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-base font-bold text-[var(--text-primary)] tracking-tight">
-                    Recommended Queue
-                  </h2>
-                  <span className="text-[11px] font-mono text-[var(--text-muted)]">
-                    ISRC Level Matching
-                  </span>
-                </div>
-
-                <div className="rounded-[4px] border border-[var(--border)] bg-[var(--surface)] overflow-hidden divide-y divide-[var(--border)]">
-                  {tracks.map((t, idx) => (
-                    <TrackRow
-                      key={t.id}
-                      track={t}
-                      index={idx}
-                      isPlaying={isPlaying && currentTrack.id === t.id}
-                      onPlay={() => handlePlayTrack(t)}
-                      onFavoriteToggle={() => handleFavoriteToggle(t)}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
+          {/* VIEW: HOME DASHBOARD */}
+          {route.view === 'home' && (
+            <HomePage
+              onPlayTrack={handlePlayTrack}
+              onPlayAlbum={() => handlePlayTrack(tracks[0])}
+              onSelectArtist={(artistId) => setRoute({ view: 'artist', id: artistId })}
+              onSelectAlbum={(albumId) => setRoute({ view: 'album', id: albumId })}
+              currentTrackId={currentTrack.id}
+              isPlaying={isPlaying}
+            />
           )}
 
-          {/* TAB 2: SEARCH */}
-          {activeTab === 'search' && (
-            <div className="space-y-6">
-              <div>
-                <h1 className="text-xl font-bold tracking-tight">Search Catalog</h1>
-                <p className="text-xs text-[var(--text-muted)] font-mono mt-0.5">
-                  Query across YouTube Music, Piped, and local SQLite database
-                </p>
-              </div>
+          {/* VIEW: SEARCH CATALOG */}
+          {route.view === 'search' && (
+            <SearchPage
+              onPlayTrack={handlePlayTrack}
+              onSelectArtist={(artistId) => setRoute({ view: 'artist', id: artistId })}
+              onSelectAlbum={(albumId) => setRoute({ view: 'album', id: albumId })}
+              currentTrackId={currentTrack.id}
+              isPlaying={isPlaying}
+            />
+          )}
 
-              <div className="max-w-xl">
-                <Input
-                  placeholder="Filter track, artist, album name..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  startAddon={<Search size={16} />}
-                  className="bg-[var(--surface)] border-[var(--border)]"
-                />
-              </div>
+          {/* VIEW: ARTIST PAGE */}
+          {route.view === 'artist' && (
+            <ArtistPage
+              artistId={route.id || 'm83'}
+              onPlayTrack={handlePlayTrack}
+              onPlayArtist={() => handlePlayTrack(tracks[0])}
+              onSelectAlbum={(albumId) => setRoute({ view: 'album', id: albumId })}
+              onSelectArtist={(artistId) => setRoute({ view: 'artist', id: artistId })}
+              currentTrackId={currentTrack.id}
+              isPlaying={isPlaying}
+            />
+          )}
 
-              <div className="space-y-2">
-                <div className="text-xs font-mono uppercase text-[var(--text-muted)]">
-                  Found {filteredTracks.length} Results
-                </div>
-
-                <div className="rounded-[4px] border border-[var(--border)] bg-[var(--surface)] overflow-hidden divide-y divide-[var(--border)]">
-                  {filteredTracks.map((t, idx) => (
-                    <TrackRow
-                      key={t.id}
-                      track={t}
-                      index={idx}
-                      isPlaying={isPlaying && currentTrack.id === t.id}
-                      onPlay={() => handlePlayTrack(t)}
-                      onFavoriteToggle={() => handleFavoriteToggle(t)}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
+          {/* VIEW: ALBUM PAGE */}
+          {route.view === 'album' && (
+            <AlbumPage
+              albumId={route.id || 'alb-1'}
+              onPlayTrack={handlePlayTrack}
+              onPlayAll={(albumTracks) => {
+                setTracks(albumTracks);
+                setCurrentTrackIndex(0);
+                setProgress(0);
+                setIsPlaying(true);
+              }}
+              onSelectArtist={(artistId) => setRoute({ view: 'artist', id: artistId })}
+              currentTrackId={currentTrack.id}
+              isPlaying={isPlaying}
+            />
           )}
 
           {/* TAB 3: LIBRARY */}
