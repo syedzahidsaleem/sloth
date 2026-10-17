@@ -1,0 +1,39 @@
+# LICENSE NOTICES & ATTRIBUTIONS
+
+Sloth references and adapts architectural patterns, algorithms, and designs from the following open-source projects. This file documents the respective authors, licenses, and boundaries of reference material.
+
+---
+
+### 1. Nuclear
+- **Project**: Nuclear (Music Player)
+- **Repository**: https://github.com/nukeop/nuclear
+- **License**: GNU Affero General Public License v3.0 (AGPL-3.0)
+- **Copyright**: (c) 2016-present Jakub "nukeop" Młokosiewicz and contributors
+- **Referenced Scope**: UI component architecture, design token schema (OKLCH tokens, CSS variables), source registry/plugin system, and local library scanner patterns.
+
+---
+
+### 2. Meld
+- **Project**: Meld Music Player
+- **Repository**: https://github.com/FrancescoGrazioso/Meld
+- **License**: GNU General Public License v3.0 (GPL-3.0)
+- **Copyright**: (c) Francesco Grazioso and contributors
+- **Referenced Scope**: Recommendation engine scoring algorithm, ISRC + fuzzy track matching pipeline, multi-tier cache architecture, and music provider integrations.
+
+---
+
+### 3. Metrolist
+- **Project**: Metrolist
+- **Repository**: https://github.com/MetrolistGroup/Metrolist
+- **License**: GNU General Public License v3.0 (GPL-3.0)
+- **Copyright**: (c) MetrolistGroup and contributors
+- **Referenced Scope**: YouTube InnerTube client patterns, LRCLib lyrics integration pipeline, and metroserver WebSocket listen-together communication protocol.
+
+---
+
+### 4. Spotube
+- **Project**: Spotube
+- **Repository**: https://github.com/team-spotube/spotube
+- **License**: GNU General Public License v3.0 (GPL-3.0)
+- **Copyright**: (c) Kingkor Roy Tirtho and Spotube contributors
+- **Referenced Scope**: Cross-platform audio playback pipeline, SponsorBlock chapter segment handling, and yt-dlp download orchestration logic.
