@@ -8,6 +8,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "lhci": "lhci autorun --config=./lighthouserc.cjs",
     "sloth-mcp": "tsx src/mcp-server/index.ts"
   },
   "dependencies": {
