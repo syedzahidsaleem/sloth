@@ -8,6 +8,11 @@ dist/
 build/
 out/
 target/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.sloth_cache/
 
 # Logs
 npm-debug.log*
