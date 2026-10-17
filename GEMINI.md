@@ -63,3 +63,11 @@
 - `cloudinary`
 - `sequential-thinking`
 - `vercel`
+
+---
+
+## Sloth Model Context Protocol (MCP) Server
+Sloth MCP: run pnpm sloth-mcp to start.
+OpenCode config: { mcp: { sloth: { type: 'remote', url: 'http://127.0.0.1:8801/mcp' } } }
+Claude Code: claude mcp add sloth --transport http http://127.0.0.1:8801/mcp
+
