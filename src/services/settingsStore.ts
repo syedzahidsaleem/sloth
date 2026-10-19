@@ -181,9 +181,16 @@ export function applyTheme(themeId: string) {
   
   if (themeId === 'dark') {
     root.setAttribute('data-theme', 'dark');
-    root.setAttribute('data-theme-id', 'dark');
-  } else {
+  } else if (themeId === 'light') {
     root.removeAttribute('data-theme');
+  } else {
+    // Preserve current dark mode state when switching basic themes
+    const wasDark = root.getAttribute('data-theme') === 'dark';
+    if (wasDark) {
+      root.setAttribute('data-theme', 'dark');
+    } else {
+      root.removeAttribute('data-theme');
+    }
     const fullId = themeId.startsWith('nuclear:') ? themeId : `nuclear:${themeId}`;
     root.setAttribute('data-theme-id', fullId);
     const cleanId = themeId.replace('nuclear:', '').replace('sloth:', '');
