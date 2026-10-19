@@ -25,6 +25,8 @@
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius: var(--radius);
 
   --font-sans: var(--font-family);
   --font-mono: var(--font-family-mono);
@@ -34,21 +36,18 @@
 }
 
 :root {
-  /* Sloth Nuclear-Derived Exact Surfaces (OKLCH) */
-  --background: oklch(0.25 0.012 245);          /* #1e2327 */
-  --surface: oklch(0.29 0.012 245);             /* #282d33 */
-  --surface-raised: oklch(0.33 0.012 245);      /* #31383f */
-  --border: oklch(0.38 0.012 245);              /* #3d444c */
+  /* Sloth Neobrutalist Surfaces (Default: Dark Charcoal & Tactical Green) */
+  --surface: var(--muted);
+  --surface-raised: var(--card);
 
   /* Text & Foreground */
-  --text-primary: oklch(0.93 0.005 240);        /* #e8eaed */
-  --text-secondary: oklch(0.70 0.008 240);      /* #9aa0a6 */
-  --text-muted: oklch(0.52 0.015 250);          /* #666c7a */
-  --foreground: var(--text-primary);
+  --text-primary: var(--foreground);
+  --text-secondary: var(--muted-foreground);
+  --text-muted: var(--muted-foreground);
 
-  /* User-Selectable Accent System (Default: Green #4ade80) */
-  --color-accent: oklch(0.74 0.20 145);
-  --color-accent-foreground: oklch(0.15 0.02 145);
+  /* User-Selectable Accent System */
+  --color-accent: var(--primary);
+  --color-accent-foreground: var(--primary-foreground);
 
   /* Swappable Accent Palettes */
   --accent-green: oklch(0.74 0.20 145);         /* #4ade80 */
@@ -58,31 +57,41 @@
   --accent-red: oklch(0.69 0.18 22);            /* #f87171 */
 
   /* Compatibility bindings */
-  --card: var(--surface);
-  --card-foreground: var(--text-primary);
-  --popover: var(--surface-raised);
-  --popover-foreground: var(--text-primary);
-  --input: var(--surface);
-  --input-foreground: var(--text-primary);
-  --primary: var(--color-accent);
-  --primary-foreground: var(--color-accent-foreground);
-  --muted: var(--surface);
-  --muted-foreground: var(--text-muted);
-  --ring: var(--color-accent);
-
-  /* Layout Dimensions */
   --sidebar-width: 220px;
   --player-height: 72px;
 
-  /* Border Radius (Desktop App Tight Radii) */
-  --radius-sm: 2px;
-  --radius-md: 4px;
-  --radius-lg: 6px;
-  --radius: 4px;
+  /* Border Radius (Strict Nuclear Architecture) */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 12px;
+  --radius: 8px;
 
   /* Typography */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-family-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+[data-theme='dark'],
+[data-theme-id='dark'] {
+  --background: oklch(0.24 0.015 240);
+  --foreground: oklch(0.95 0.008 240);
+  --muted: oklch(0.27 0.015 240);
+  --muted-foreground: oklch(0.75 0.008 240);
+  --surface: oklch(0.27 0.015 240);
+  --surface-raised: oklch(0.30 0.015 240);
+  --card: oklch(0.29 0.015 240);
+  --popover: oklch(0.29 0.015 240);
+  --input: oklch(0.20 0.015 240);
+  --primary: oklch(0.72 0.19 145);
+  --primary-foreground: oklch(0.12 0.02 145);
+  --border: oklch(0.38 0.015 240);
+  --border-width: 2px;
+  --text-primary: oklch(0.95 0.008 240);
+  --text-secondary: oklch(0.75 0.008 240);
+  --text-muted: oklch(0.65 0.010 240);
+  --color-accent: oklch(0.72 0.19 145);
+  --color-accent-foreground: oklch(0.12 0.02 145);
 }
 
 /* User Accent Variations */
