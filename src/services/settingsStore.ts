@@ -178,19 +178,16 @@ export function getSlothSettings(): SlothSettings {
 export function applyTheme(themeId: string) {
   if (typeof document === 'undefined') return;
   const root = document.documentElement;
-  root.removeAttribute('data-theme-id');
   
-  // Sloth is a dark-first player: ensure data-theme='dark' is set
-  root.setAttribute('data-theme', 'dark');
-
-  if (themeId && themeId !== 'default' && themeId !== 'dark') {
-    const cleanId = themeId.replace('nuclear:', '').replace('sloth:', '');
-    root.setAttribute('data-theme-id', themeId);
-    root.setAttribute('data-theme-variant', cleanId);
-  } else if (themeId === 'dark') {
+  if (themeId === 'dark') {
+    root.setAttribute('data-theme', 'dark');
     root.setAttribute('data-theme-id', 'dark');
   } else {
-    root.setAttribute('data-theme-id', 'nuclear:default');
+    root.removeAttribute('data-theme');
+    const fullId = themeId.startsWith('nuclear:') ? themeId : `nuclear:${themeId}`;
+    root.setAttribute('data-theme-id', fullId);
+    const cleanId = themeId.replace('nuclear:', '').replace('sloth:', '');
+    root.setAttribute('data-theme-variant', cleanId);
   }
 }
 

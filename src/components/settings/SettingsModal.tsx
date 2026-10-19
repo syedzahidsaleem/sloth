@@ -1,25 +1,21 @@
 import { FC, useState, useEffect } from 'react';
 import {
-  Sliders,
-  Palette,
   Keyboard,
   Package,
   ScrollText,
   Sparkles,
-  History,
-  Radio,
-  Volume2,
-  RefreshCw,
+  Palette,
   X,
-  Check,
   Globe,
   CheckCircle2,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Toggle } from '@/components/ui/Toggle';
 import { Slider } from '@/components/ui/Slider';
-import { Input } from '@/components/ui/Input';
-import { KeyCombo } from '@/components/ui/KeyCombo';
+import { Select } from '@/components/ui/Select';
+import { SlothLogo } from '@/components/ui/SlothLogo';
 import { cn } from '@/lib/utils';
 import {
   getSlothSettings,
@@ -54,62 +50,52 @@ export type SettingsModalProps = {
 export const BUILTIN_THEMES = [
   {
     id: 'default',
-    name: 'Sloth Classic',
+    name: 'Default',
     palette: [
-      'oklch(0.72 0.19 145)', // Sloth Tactical Green
-      'oklch(0.24 0.015 240)', // Charcoal Background
-      'oklch(0.27 0.015 240)', // Muted Surface
-      'oklch(0.38 0.015 240)', // Border
+      '#ffffff',
+      '#fce4ec',
+      '#f06292',
+      '#000000',
     ],
   },
   {
     id: 'nuclear:aurora',
     name: 'Aurora',
     palette: [
-      'oklch(0.72 0.18 305)', // Neon Magenta/Violet
-      'oklch(0.22 0.03 305)',  // Deep Purple Charcoal
-      'oklch(0.27 0.035 305)', // Violet Surface
-      'oklch(0.42 0.05 305)',  // Violet Border
+      '#ffffff',
+      '#e8d5f5',
+      '#ab47bc',
+      '#000000',
     ],
   },
   {
     id: 'nuclear:ember',
     name: 'Ember',
     palette: [
-      'oklch(0.74 0.18 35)',  // Fiery Amber/Orange
-      'oklch(0.22 0.03 20)',   // Warm Charcoal
-      'oklch(0.27 0.035 20)',  // Amber Surface
-      'oklch(0.44 0.05 25)',   // Amber Border
+      '#ffffff',
+      '#ffe0b2',
+      '#ff7043',
+      '#000000',
     ],
   },
   {
     id: 'nuclear:lagoon',
     name: 'Lagoon',
     palette: [
-      'oklch(0.68 0.16 205)', // Luminous Cyan
-      'oklch(0.20 0.025 205)', // Ocean Charcoal
-      'oklch(0.25 0.03 205)',  // Cyan Surface
-      'oklch(0.42 0.04 205)',  // Cyan Border
+      '#ffffff',
+      '#b2ebf2',
+      '#00acc1',
+      '#000000',
     ],
   },
   {
     id: 'nuclear:arctic-moss',
     name: 'Moss',
     palette: [
-      'oklch(0.70 0.14 175)', // Vivid Emerald
-      'oklch(0.20 0.02 175)',  // Forest Charcoal
-      'oklch(0.25 0.025 175)', // Moss Surface
-      'oklch(0.42 0.035 175)', // Moss Border
-    ],
-  },
-  {
-    id: 'dark',
-    name: 'Midnight Dark',
-    palette: [
-      'oklch(0.74 0.20 145)', // Bright Green
-      'oklch(0.18 0.01 240)',  // Deep Pitch Black
-      'oklch(0.22 0.012 240)', // Charcoal Surface
-      'oklch(0.32 0.012 240)', // Border
+      '#ffffff',
+      '#c8e6c9',
+      '#43a047',
+      '#000000',
     ],
   },
 ];
@@ -123,6 +109,9 @@ export const SettingsModal: FC<SettingsModalProps> = ({
   const [activeTab, setActiveTab] = useState<SettingsTabId>(initialTab);
   const [settings, setSettings] = useState<SlothSettings>(getSlothSettings());
   const [currentThemeId, setCurrentThemeId] = useState<string>('default');
+  const [themeSubTab, setThemeSubTab] = useState<'my' | 'store'>('my');
+  const [selectedAdvancedTheme, setSelectedAdvancedTheme] = useState<string>('none');
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   // Track settings changes
   useEffect(() => {
@@ -148,12 +137,18 @@ export const SettingsModal: FC<SettingsModalProps> = ({
     updateSetting('themeId', themeId);
   };
 
+  const handleCopy = (text: string, key: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 1500);
+  };
+
   return (
     <div
       data-testid="settings-modal"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 sm:p-8 md:p-12 font-sans select-none"
     >
-      <div className="surface-muted text-foreground border-border shadow-nav relative flex h-full max-h-[820px] w-full max-w-5xl rounded-lg border-(length:--border-width) overflow-hidden">
+      <div className="surface-background text-foreground border-border shadow-nav relative flex h-full max-h-[820px] w-full max-w-5xl rounded-lg border-(length:--border-width) overflow-hidden">
         {/* Close Button top-right */}
         <Button
           size="icon-sm"
@@ -168,7 +163,7 @@ export const SettingsModal: FC<SettingsModalProps> = ({
         {/* LEFT COLUMN: Navigation Sidebar */}
         <nav className="border-border flex w-56 shrink-0 flex-col border-r-(length:--border-width) bg-muted p-3 justify-between">
           <div className="flex flex-col gap-1 overflow-y-auto">
-            {/* SETTINGS Category */}
+            {/* SETTINGS Category (Matches Screenshot 2: Clean bold text, no icons) */}
             <div className="font-heading text-foreground/60 px-2 pt-2 pb-1 text-xs font-extrabold tracking-wider uppercase">
               Settings
             </div>
@@ -176,67 +171,81 @@ export const SettingsModal: FC<SettingsModalProps> = ({
             <Button
               variant={activeTab === 'appearance' ? 'default' : 'text'}
               onClick={() => setActiveTab('appearance')}
-              className="w-full justify-start text-xs font-bold gap-2.5 h-9"
+              className={cn(
+                'w-full justify-start text-xs font-bold h-9 rounded-md',
+                activeTab === 'appearance' && 'shadow-shadow border-border border-(length:--border-width)'
+              )}
             >
-              <Sliders size={15} />
               Appearance
             </Button>
 
             <Button
               variant={activeTab === 'general' ? 'default' : 'text'}
               onClick={() => setActiveTab('general')}
-              className="w-full justify-start text-xs font-bold gap-2.5 h-9"
+              className={cn(
+                'w-full justify-start text-xs font-bold h-9 rounded-md',
+                activeTab === 'general' && 'shadow-shadow border-border border-(length:--border-width)'
+              )}
             >
-              <Sliders size={15} />
               General
             </Button>
 
             <Button
               variant={activeTab === 'history' ? 'default' : 'text'}
               onClick={() => setActiveTab('history')}
-              className="w-full justify-start text-xs font-bold gap-2.5 h-9"
+              className={cn(
+                'w-full justify-start text-xs font-bold h-9 rounded-md',
+                activeTab === 'history' && 'shadow-shadow border-border border-(length:--border-width)'
+              )}
             >
-              <History size={15} />
               History
             </Button>
 
             <Button
               variant={activeTab === 'integrations' ? 'default' : 'text'}
               onClick={() => setActiveTab('integrations')}
-              className="w-full justify-start text-xs font-bold gap-2.5 h-9"
+              className={cn(
+                'w-full justify-start text-xs font-bold h-9 rounded-md',
+                activeTab === 'integrations' && 'shadow-shadow border-border border-(length:--border-width)'
+              )}
             >
-              <Radio size={15} />
               Integrations
             </Button>
 
             <Button
               variant={activeTab === 'playback' ? 'default' : 'text'}
               onClick={() => setActiveTab('playback')}
-              className="w-full justify-start text-xs font-bold gap-2.5 h-9"
+              className={cn(
+                'w-full justify-start text-xs font-bold h-9 rounded-md',
+                activeTab === 'playback' && 'shadow-shadow border-border border-(length:--border-width)'
+              )}
             >
-              <Volume2 size={15} />
               Playback
             </Button>
 
             <Button
               variant={activeTab === 'plugins-settings' ? 'default' : 'text'}
               onClick={() => setActiveTab('plugins-settings')}
-              className="w-full justify-start text-xs font-bold gap-2.5 h-9"
+              className={cn(
+                'w-full justify-start text-xs font-bold h-9 rounded-md',
+                activeTab === 'plugins-settings' && 'shadow-shadow border-border border-(length:--border-width)'
+              )}
             >
-              <Package size={15} />
               Plugins
             </Button>
 
             <Button
               variant={activeTab === 'updates' ? 'default' : 'text'}
               onClick={() => setActiveTab('updates')}
-              className="w-full justify-start text-xs font-bold gap-2.5 h-9"
+              className={cn(
+                'w-full justify-start text-xs font-bold h-9 rounded-md',
+                activeTab === 'updates' && 'shadow-shadow border-border border-(length:--border-width)'
+              )}
             >
-              <RefreshCw size={15} />
               Updates
             </Button>
 
-            {/* APP Category */}
+            {/* APP Category (Matches Screenshot 2: Icons present) */}
             <div className="font-heading text-foreground/60 px-2 pt-4 pb-1 text-xs font-extrabold tracking-wider uppercase">
               App
             </div>
@@ -244,7 +253,10 @@ export const SettingsModal: FC<SettingsModalProps> = ({
             <Button
               variant={activeTab === 'shortcuts' ? 'default' : 'text'}
               onClick={() => setActiveTab('shortcuts')}
-              className="w-full justify-start text-xs font-bold gap-2.5 h-9"
+              className={cn(
+                'w-full justify-start text-xs font-bold gap-2.5 h-9 rounded-md',
+                activeTab === 'shortcuts' && 'shadow-shadow border-border border-(length:--border-width)'
+              )}
             >
               <Keyboard size={15} />
               Key Shortcuts
@@ -253,7 +265,10 @@ export const SettingsModal: FC<SettingsModalProps> = ({
             <Button
               variant={activeTab === 'app-plugins' ? 'default' : 'text'}
               onClick={() => setActiveTab('app-plugins')}
-              className="w-full justify-start text-xs font-bold gap-2.5 h-9"
+              className={cn(
+                'w-full justify-start text-xs font-bold gap-2.5 h-9 rounded-md',
+                activeTab === 'app-plugins' && 'shadow-shadow border-border border-(length:--border-width)'
+              )}
             >
               <Package size={15} />
               Plugins
@@ -262,7 +277,10 @@ export const SettingsModal: FC<SettingsModalProps> = ({
             <Button
               variant={activeTab === 'themes' ? 'default' : 'text'}
               onClick={() => setActiveTab('themes')}
-              className="w-full justify-start text-xs font-bold gap-2.5 h-9"
+              className={cn(
+                'w-full justify-start text-xs font-bold gap-2.5 h-9 rounded-md',
+                activeTab === 'themes' && 'shadow-shadow border-border border-(length:--border-width)'
+              )}
             >
               <Palette size={15} />
               Themes
@@ -271,7 +289,10 @@ export const SettingsModal: FC<SettingsModalProps> = ({
             <Button
               variant={activeTab === 'logs' ? 'default' : 'text'}
               onClick={() => setActiveTab('logs')}
-              className="w-full justify-start text-xs font-bold gap-2.5 h-9"
+              className={cn(
+                'w-full justify-start text-xs font-bold gap-2.5 h-9 rounded-md',
+                activeTab === 'logs' && 'shadow-shadow border-border border-(length:--border-width)'
+              )}
             >
               <ScrollText size={15} />
               Logs
@@ -280,20 +301,23 @@ export const SettingsModal: FC<SettingsModalProps> = ({
             <Button
               variant={activeTab === 'whats-new' ? 'default' : 'text'}
               onClick={() => setActiveTab('whats-new')}
-              className="w-full justify-start text-xs font-bold gap-2.5 h-9"
+              className={cn(
+                'w-full justify-start text-xs font-bold gap-2.5 h-9 rounded-md',
+                activeTab === 'whats-new' && 'shadow-shadow border-border border-(length:--border-width)'
+              )}
             >
               <Sparkles size={15} />
               What's New
             </Button>
           </div>
 
-          {/* Navigation Footer */}
+          {/* Navigation Footer with Social Icons + Custom Sloth Logo */}
           <div className="mt-auto pt-3 border-t-(length:--border-width) border-border/20 flex flex-col items-center gap-1.5">
             <div className="flex items-center gap-2">
               <Button
                 variant="text"
                 size="icon-sm"
-                onClick={() => window.open('https://discord.gg/JqPjKxE', '_blank')}
+                onClick={() => window.open('https://discord.gg/sloth', '_blank')}
                 title="Discord"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -318,115 +342,156 @@ export const SettingsModal: FC<SettingsModalProps> = ({
               >
                 <Globe size={15} />
               </Button>
+              <Button
+                variant="text"
+                size="icon-sm"
+                title="Sloth"
+                className="p-0.5"
+              >
+                <SlothLogo size={16} />
+              </Button>
             </div>
             <span className="text-[11px] text-foreground/50 font-mono">
-              Sloth v0.1.0
+              v1.51.0 (sloth-edition)
             </span>
           </div>
         </nav>
 
         {/* RIGHT COLUMN: Settings Content Panel */}
         <div className="surface-background flex-1 min-w-0 overflow-y-auto p-8 text-foreground font-sans">
-          {/* TAB: APPEARANCE (matches Screenshot 2) */}
+          {/* TAB: APPEARANCE (Exact match to Screenshot 2) */}
           {activeTab === 'appearance' && (
             <div className="flex flex-col gap-6 max-w-2xl">
               <h2 className="text-2xl font-bold tracking-tight">Appearance</h2>
 
-              {/* Frameless window */}
-              <div className="flex items-center justify-between py-2 border-b-(length:--border-width) border-border/10">
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-bold">Frameless window</span>
-                  <span className="text-xs text-foreground/60">
-                    Requires restart to take effect
-                  </span>
-                </div>
+              {/* Frameless window: Toggle on LEFT */}
+              <div className="flex items-start gap-3 py-2">
                 <Toggle
                   checked={settings.framelessWindow ?? false}
                   onChange={(checked) => updateSetting('framelessWindow', checked)}
                 />
-              </div>
-
-              {/* Custom title bar */}
-              <div className="flex items-center justify-between py-2 border-b-(length:--border-width) border-border/10">
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-bold">Custom title bar</span>
+                  <span className="text-sm font-bold">Frameless window</span>
                   <span className="text-xs text-foreground/60">
-                    Enable custom title bar across all operating systems
+                    Hide the native title bar. Drag the top bar to move the window.
                   </span>
                 </div>
+              </div>
+
+              {/* Custom title bar: Toggle on LEFT */}
+              <div className="flex items-start gap-3 py-2">
                 <Toggle
                   checked={settings.customTitleBar ?? true}
                   onChange={(checked) => updateSetting('customTitleBar', checked)}
                 />
-              </div>
-
-              {/* Title bar style */}
-              <div className="flex items-center justify-between py-2 border-b-(length:--border-width) border-border/10">
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-bold">Title bar style</span>
+                  <span className="text-sm font-bold">Custom title bar</span>
                   <span className="text-xs text-foreground/60">
-                    Auto, native, or custom styled window decorations
+                    Replace the native title bar with a styled one that matches the app.
                   </span>
                 </div>
-                <select
+              </div>
+
+              {/* Title bar style: Full width Salmon Neobrutalist Select */}
+              <div className="flex flex-col gap-1.5 py-2">
+                <span className="text-sm font-bold">Title bar style</span>
+                <Select
                   value={settings.titleBarStyle ?? 'Auto'}
-                  onChange={(e) => updateSetting('titleBarStyle', e.target.value)}
-                  className="surface-input border-border text-foreground rounded border-(length:--border-width) px-3 py-1.5 text-xs font-semibold outline-none cursor-pointer"
-                >
-                  <option value="Auto">Auto</option>
-                  <option value="Native">Native</option>
-                  <option value="Custom">Custom</option>
-                </select>
+                  onChange={(val) => updateSetting('titleBarStyle', val)}
+                  options={[
+                    { id: 'Auto', label: 'Auto' },
+                    { id: 'Native', label: 'Native' },
+                    { id: 'Custom', label: 'Custom' },
+                  ]}
+                />
+                <span className="text-xs text-foreground/60">
+                  Choose the visual style for the custom title bar controls.
+                </span>
               </div>
             </div>
           )}
 
-          {/* TAB: GENERAL */}
+          {/* TAB: GENERAL (Exact match to Screenshot 4) */}
           {activeTab === 'general' && (
             <div className="flex flex-col gap-6 max-w-2xl">
               <h2 className="text-2xl font-bold tracking-tight">General</h2>
-              <div className="flex items-center justify-between py-2 border-b-(length:--border-width) border-border/10">
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-bold">Language</span>
-                  <span className="text-xs text-foreground/60">
-                    Application interface language
-                  </span>
+
+              {/* Language: Full width Salmon Neobrutalist Select */}
+              <div className="flex flex-col gap-1.5 py-2">
+                <span className="text-sm font-bold">Language</span>
+                <Select
+                  value={settings.language || 'English'}
+                  onChange={(val) => updateSetting('language', val)}
+                  options={[
+                    { id: 'English', label: 'English' },
+                    { id: 'Spanish', label: 'Spanish' },
+                    { id: 'German', label: 'German' },
+                    { id: 'French', label: 'French' },
+                  ]}
+                />
+                <span className="text-xs text-foreground/60">
+                  Select your preferred language
+                </span>
+              </div>
+
+              {/* History Section: Toggle on LEFT */}
+              <div className="flex flex-col gap-2 pt-2">
+                <h3 className="text-base font-bold">History</h3>
+                <div className="flex items-start gap-3 py-1">
+                  <Toggle
+                    checked={settings.recordHistory ?? true}
+                    onChange={(checked) => updateSetting('recordHistory', checked)}
+                  />
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-bold">Record listening history</span>
+                    <span className="text-xs text-foreground/60">
+                      Keep a local record of the music you play.
+                    </span>
+                  </div>
                 </div>
-                <select
-                  value="English"
-                  onChange={() => {}}
-                  className="surface-input border-border text-foreground rounded border-(length:--border-width) px-3 py-1.5 text-xs font-semibold outline-none cursor-pointer"
-                >
-                  <option value="English">English</option>
-                  <option value="Spanish">Spanish</option>
-                  <option value="German">German</option>
-                  <option value="French">French</option>
-                </select>
+              </div>
+
+              {/* Integrations Section preview */}
+              <div className="flex flex-col gap-3 pt-2">
+                <h3 className="text-base font-bold">Integrations</h3>
+                <div className="flex items-start gap-3 py-1">
+                  <Toggle
+                    checked={settings.enableNuclearJam ?? false}
+                    onChange={(checked) => updateSetting('enableNuclearJam', checked)}
+                  />
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-bold">Sloth Jam</span>
+                    <span className="text-xs text-foreground/60">
+                      Start a local web server that lets you control Sloth from other devices on your network.
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           )}
 
-          {/* TAB: HISTORY (matches Screenshot 4) */}
+          {/* TAB: HISTORY */}
           {activeTab === 'history' && (
             <div className="flex flex-col gap-6 max-w-2xl">
               <h2 className="text-2xl font-bold tracking-tight">History</h2>
-              <div className="flex items-center justify-between py-2 border-b-(length:--border-width) border-border/10">
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-bold">Record listening history</span>
-                  <span className="text-xs text-foreground/60">
-                    Track songs you play to improve recommendations and library logs
-                  </span>
-                </div>
+              <div className="flex items-start gap-3 py-2">
                 <Toggle
                   checked={settings.recordHistory ?? true}
                   onChange={(checked) => updateSetting('recordHistory', checked)}
                 />
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-sm font-bold">Record listening history</span>
+                  <span className="text-xs text-foreground/60">
+                    Keep a local record of the music you play.
+                  </span>
+                </div>
               </div>
 
               <div>
                 <Button
                   variant="default"
                   onClick={() => alert('Listening history cleared.')}
+                  className="font-bold shadow-shadow"
                 >
                   Clear history
                 </Button>
@@ -434,83 +499,165 @@ export const SettingsModal: FC<SettingsModalProps> = ({
             </div>
           )}
 
-          {/* TAB: INTEGRATIONS (matches Screenshot 3) */}
+          {/* TAB: INTEGRATIONS (Exact match to Screenshot 3 & 10) */}
           {activeTab === 'integrations' && (
             <div className="flex flex-col gap-6 max-w-2xl">
               <h2 className="text-2xl font-bold tracking-tight">Integrations</h2>
 
               {/* Sloth Jam */}
-              <div className="flex flex-col gap-3 py-2 border-b-(length:--border-width) border-border/10">
-                <h3 className="text-base font-bold">Sloth Jam (Listen Together)</h3>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold">Enable Sloth Jam</span>
+              <div className="flex flex-col gap-3 py-2">
+                <div className="flex items-start gap-3">
                   <Toggle
                     checked={settings.enableNuclearJam ?? false}
                     onChange={(checked) => updateSetting('enableNuclearJam', checked)}
                   />
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-bold">Sloth Jam</span>
+                    <span className="text-xs text-foreground/60">
+                      Start a local web server that lets you control Sloth from other devices on your network.
+                    </span>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs text-foreground/70">Remote URL</label>
-                  <Input
-                    value={settings.remoteUrl ?? ''}
-                    onChange={(e) => updateSetting('remoteUrl', e.target.value)}
-                    placeholder="https://jam.example.com"
-                    size="sm"
-                  />
+
+                <div className="flex flex-col gap-1.5 pt-1">
+                  <label className="text-xs font-bold">Remote URL</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      readOnly
+                      value={settings.remoteUrl || 'http://127.0.0.1:8801/jam'}
+                      className="surface-input border-border text-foreground shadow-shadow flex-1 h-10 px-3 rounded-md border-(length:--border-width) font-mono text-xs outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(settings.remoteUrl || 'http://127.0.0.1:8801/jam', 'remoteUrl')}
+                      className="surface-input border-border shadow-shadow size-10 flex items-center justify-center rounded-md border-(length:--border-width) cursor-pointer hover:bg-foreground/10 shrink-0"
+                      title="Copy"
+                    >
+                      {copiedKey === 'remoteUrl' ? <Check size={16} className="text-emerald-600" /> : <Copy size={16} />}
+                    </button>
+                  </div>
+                  <span className="text-[11px] text-foreground/60">
+                    Open this URL on another device to control Sloth.
+                  </span>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs text-foreground/70">API URL</label>
-                  <Input
-                    value={settings.apiUrl ?? ''}
-                    onChange={(e) => updateSetting('apiUrl', e.target.value)}
-                    placeholder="https://jam.example.com/api"
-                    size="sm"
-                  />
+
+                <div className="flex flex-col gap-1.5 pt-1">
+                  <label className="text-xs font-bold">API URL</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      readOnly
+                      value={settings.apiUrl || 'http://127.0.0.1:8801/api'}
+                      className="surface-input border-border text-foreground shadow-shadow flex-1 h-10 px-3 rounded-md border-(length:--border-width) font-mono text-xs outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(settings.apiUrl || 'http://127.0.0.1:8801/api', 'apiUrl')}
+                      className="surface-input border-border shadow-shadow size-10 flex items-center justify-center rounded-md border-(length:--border-width) cursor-pointer hover:bg-foreground/10 shrink-0"
+                      title="Copy"
+                    >
+                      {copiedKey === 'apiUrl' ? <Check size={16} className="text-emerald-600" /> : <Copy size={16} />}
+                    </button>
+                  </div>
+                  <span className="text-[11px] text-foreground/60">
+                    HTTP API base URL for programmatic access.
+                  </span>
                 </div>
               </div>
 
               {/* Model Context Protocol (MCP) */}
-              <div className="flex flex-col gap-3 py-2 border-b-(length:--border-width) border-border/10">
-                <h3 className="text-base font-bold">Model Context Protocol (MCP)</h3>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold">Enable MCP Server</span>
+              <div className="flex flex-col gap-3 py-2 border-t-(length:--border-width) border-border/10">
+                <div className="flex items-start gap-3">
                   <Toggle
                     checked={settings.mcpServerEnabled ?? true}
                     onChange={(checked) => updateSetting('mcpServerEnabled', checked)}
                   />
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-bold">Enable MCP Server</span>
+                    <span className="text-xs text-foreground/60">
+                      Start a local MCP server that allows AI tools to control Sloth.
+                    </span>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs text-foreground/70">Server URL</label>
-                  <Input
-                    value="http://127.0.0.1:8800/mcp"
-                    readOnly
-                    size="sm"
-                  />
+
+                <div className="flex flex-col gap-1.5 pt-1">
+                  <label className="text-xs font-bold">MCP Server URL</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      readOnly
+                      value="http://127.0.0.1:8800/mcp"
+                      className="surface-input border-border text-foreground shadow-shadow flex-1 h-10 px-3 rounded-md border-(length:--border-width) font-mono text-xs outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleCopy('http://127.0.0.1:8800/mcp', 'mcp')}
+                      className="surface-input border-border shadow-shadow size-10 flex items-center justify-center rounded-md border-(length:--border-width) cursor-pointer hover:bg-foreground/10 shrink-0"
+                      title="Copy"
+                    >
+                      {copiedKey === 'mcp' ? <Check size={16} className="text-emerald-600" /> : <Copy size={16} />}
+                    </button>
+                  </div>
+                  <span className="text-[11px] text-foreground/60">
+                    Point your AI tool to this URL to connect to Sloth.
+                  </span>
                 </div>
               </div>
 
               {/* Music Player Daemon (MPD) */}
-              <div className="flex flex-col gap-3 py-2 border-b-(length:--border-width) border-border/10">
-                <h3 className="text-base font-bold">Music Player Daemon (MPD)</h3>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold">Enable MPD Server</span>
+              <div className="flex flex-col gap-3 py-2 border-t-(length:--border-width) border-border/10">
+                <div className="flex items-start gap-3">
                   <Toggle
                     checked={settings.mpdEnabled ?? false}
                     onChange={(checked) => updateSetting('mpdEnabled', checked)}
                   />
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-bold">Enable MPD Server</span>
+                    <span className="text-xs text-foreground/60">
+                      Start a local MPD-compatible server so MPD clients can control Sloth.
+                    </span>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs text-foreground/70">Server URL</label>
-                  <Input
-                    value="mpd://127.0.0.1:6600"
-                    readOnly
-                    size="sm"
+
+                <div className="flex flex-col gap-1.5 pt-1">
+                  <label className="text-xs font-bold">MPD Server URL</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      readOnly
+                      value="mpd://127.0.0.1:6600"
+                      className="surface-input border-border text-foreground shadow-shadow flex-1 h-10 px-3 rounded-md border-(length:--border-width) font-mono text-xs outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleCopy('mpd://127.0.0.1:6600', 'mpd')}
+                      className="surface-input border-border shadow-shadow size-10 flex items-center justify-center rounded-md border-(length:--border-width) cursor-pointer hover:bg-foreground/10 shrink-0"
+                      title="Copy"
+                    >
+                      {copiedKey === 'mpd' ? <Check size={16} className="text-emerald-600" /> : <Copy size={16} />}
+                    </button>
+                  </div>
+                  <span className="text-[11px] text-foreground/60">
+                    Point your MPD client to this address to connect to Sloth.
+                  </span>
+                </div>
+              </div>
+
+              {/* Discord Rich Presence */}
+              <div className="flex flex-col gap-3 py-2 border-t-(length:--border-width) border-border/10">
+                <div className="flex items-start gap-3">
+                  <Toggle
+                    checked={settings.discordRpcEnabled ?? true}
+                    onChange={(checked) => updateSetting('discordRpcEnabled', checked)}
                   />
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-bold">Discord Rich Presence</span>
+                    <span className="text-xs text-foreground/60">
+                      Show what you're listening to on your Discord profile.
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* Sloth Neural Engine */}
-              <div className="flex flex-col gap-3 py-2">
+              <div className="flex flex-col gap-3 py-2 border-t-(length:--border-width) border-border/10">
                 <h3 className="text-base font-bold">SLOTH Neural Engine</h3>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -525,18 +672,23 @@ export const SettingsModal: FC<SettingsModalProps> = ({
             </div>
           )}
 
-          {/* TAB: PLAYBACK (matches Screenshot 8) */}
+          {/* TAB: PLAYBACK (Exact match to Screenshot 8) */}
           {activeTab === 'playback' && (
             <div className="flex flex-col gap-6 max-w-2xl">
               <h2 className="text-2xl font-bold tracking-tight">Playback</h2>
 
-              {/* Discovery Variety Slider */}
-              <div className="flex flex-col gap-2 py-2 border-b-(length:--border-width) border-border/10">
-                <h3 className="text-base font-bold">Discovery</h3>
-                <span className="text-xs font-semibold">Discovery variety</span>
-                <div className="pt-2 pb-1">
+              {/* Discovery Section */}
+              <div className="flex flex-col gap-1 py-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold">Discovery variety</span>
+                  <span className="text-xs font-mono">{settings.discoveryVariety ?? 0}</span>
+                </div>
+                <span className="text-xs text-foreground/60">
+                  How far recommendations deviate from your current listening. Lower is closer.
+                </span>
+                <div className="py-2">
                   <Slider
-                    value={settings.discoveryVariety ?? 50}
+                    value={settings.discoveryVariety ?? 0}
                     min={0}
                     max={100}
                     step={1}
@@ -551,133 +703,194 @@ export const SettingsModal: FC<SettingsModalProps> = ({
                 </div>
               </div>
 
-              {/* Playback Controls */}
-              <div className="flex flex-col gap-4 py-2">
-                <h3 className="text-base font-bold">Playback</h3>
+              {/* Skip Duration */}
+              <div className="flex flex-col gap-1.5 py-1">
+                <span className="text-sm font-bold">Skip duration</span>
+                <input
+                  type="number"
+                  value={settings.skipDurationSeconds ?? 5}
+                  onChange={(e) => updateSetting('skipDurationSeconds', parseInt(e.target.value) || 5)}
+                  className="surface-input border-border text-foreground shadow-shadow h-10 px-3 rounded-md border-(length:--border-width) text-sm font-bold w-full outline-none"
+                />
+                <span className="text-xs text-foreground/60">
+                  Number of seconds to skip forward/backward
+                </span>
+              </div>
 
-                {/* Skip duration */}
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-sm font-bold">Skip duration</span>
-                    <span className="text-xs text-foreground/60">Seconds to seek forward or backward</span>
-                  </div>
-                  <input
-                    type="number"
-                    value={settings.skipDurationSeconds ?? 5}
-                    onChange={(e) => updateSetting('skipDurationSeconds', parseInt(e.target.value) || 5)}
-                    className="surface-input border-border text-foreground rounded border-(length:--border-width) px-3 py-1 text-xs font-bold w-20 text-center outline-none"
-                  />
-                </div>
-
-                {/* Crossfade */}
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-sm font-bold">Crossfade</span>
-                    <span className="text-xs text-foreground/60">Transition overlap duration in seconds</span>
-                  </div>
-                  <input
-                    type="number"
-                    value={settings.crossfadeSeconds ?? 0}
-                    onChange={(e) => updateSetting('crossfadeSeconds', parseInt(e.target.value) || 0)}
-                    className="surface-input border-border text-foreground rounded border-(length:--border-width) px-3 py-1 text-xs font-bold w-20 text-center outline-none"
-                  />
-                </div>
+              {/* Crossfade */}
+              <div className="flex flex-col gap-1.5 py-1">
+                <span className="text-sm font-bold">Crossfade</span>
+                <input
+                  type="number"
+                  value={settings.crossfadeSeconds ?? 0}
+                  onChange={(e) => updateSetting('crossfadeSeconds', parseInt(e.target.value) || 0)}
+                  className="surface-input border-border text-foreground shadow-shadow h-10 px-3 rounded-md border-(length:--border-width) text-sm font-bold w-full outline-none"
+                />
+                <span className="text-xs text-foreground/60">
+                  Crossfade duration between tracks in milliseconds
+                </span>
               </div>
             </div>
           )}
 
-          {/* TAB: KEY SHORTCUTS (matches Screenshot 5) */}
+          {/* TAB: KEY SHORTCUTS (Exact match to Screenshot 5) */}
           {activeTab === 'shortcuts' && (
             <div className="flex flex-col gap-6 max-w-2xl">
               <h2 className="text-2xl font-bold tracking-tight">Key Shortcuts</h2>
 
-              <div className="flex flex-col divide-y-(length:--border-width) divide-border/10">
-                <div className="flex items-center justify-between py-2.5">
-                  <span className="text-sm font-semibold">Play / Pause</span>
-                  <KeyCombo shortcut="Space" />
+              <div className="flex flex-col gap-4">
+                <h3 className="text-base font-bold">Playback</h3>
+                <div className="flex flex-col divide-y-(length:--border-width) divide-border/10">
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-xs font-semibold">Play / Pause</span>
+                    <span className="surface-input border-border text-foreground shadow-shadow inline-flex px-2.5 py-0.5 rounded border-(length:--border-width) text-xs font-mono font-bold">
+                      Space
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-xs font-semibold">Next track</span>
+                    <div className="flex items-center gap-1">
+                      <span className="surface-input border-border text-foreground shadow-shadow inline-flex px-2 py-0.5 rounded border-(length:--border-width) text-xs font-mono font-bold">Ctrl</span>
+                      <span className="surface-input border-border text-foreground shadow-shadow inline-flex px-2 py-0.5 rounded border-(length:--border-width) text-xs font-mono font-bold">→</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-xs font-semibold">Previous track</span>
+                    <div className="flex items-center gap-1">
+                      <span className="surface-input border-border text-foreground shadow-shadow inline-flex px-2 py-0.5 rounded border-(length:--border-width) text-xs font-mono font-bold">Ctrl</span>
+                      <span className="surface-input border-border text-foreground shadow-shadow inline-flex px-2 py-0.5 rounded border-(length:--border-width) text-xs font-mono font-bold">←</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-xs font-semibold">Seek forward</span>
+                    <span className="surface-input border-border text-foreground shadow-shadow inline-flex px-2 py-0.5 rounded border-(length:--border-width) text-xs font-mono font-bold">→</span>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-xs font-semibold">Seek backward</span>
+                    <span className="surface-input border-border text-foreground shadow-shadow inline-flex px-2 py-0.5 rounded border-(length:--border-width) text-xs font-mono font-bold">←</span>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-xs font-semibold">Volume up</span>
+                    <div className="flex items-center gap-1">
+                      <span className="surface-input border-border text-foreground shadow-shadow inline-flex px-2 py-0.5 rounded border-(length:--border-width) text-xs font-mono font-bold">Ctrl</span>
+                      <span className="surface-input border-border text-foreground shadow-shadow inline-flex px-2 py-0.5 rounded border-(length:--border-width) text-xs font-mono font-bold">↑</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-xs font-semibold">Volume down</span>
+                    <div className="flex items-center gap-1">
+                      <span className="surface-input border-border text-foreground shadow-shadow inline-flex px-2 py-0.5 rounded border-(length:--border-width) text-xs font-mono font-bold">Ctrl</span>
+                      <span className="surface-input border-border text-foreground shadow-shadow inline-flex px-2 py-0.5 rounded border-(length:--border-width) text-xs font-mono font-bold">↓</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-xs font-semibold">Mute / Unmute</span>
+                    <div className="flex items-center gap-1">
+                      <span className="surface-input border-border text-foreground shadow-shadow inline-flex px-2 py-0.5 rounded border-(length:--border-width) text-xs font-mono font-bold">Ctrl</span>
+                      <span className="surface-input border-border text-foreground shadow-shadow inline-flex px-2 py-0.5 rounded border-(length:--border-width) text-xs font-mono font-bold">M</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between py-2.5">
-                  <span className="text-sm font-semibold">Next track</span>
-                  <KeyCombo shortcut="Ctrl+Right" />
-                </div>
-                <div className="flex items-center justify-between py-2.5">
-                  <span className="text-sm font-semibold">Previous track</span>
-                  <KeyCombo shortcut="Ctrl+Left" />
-                </div>
-                <div className="flex items-center justify-between py-2.5">
-                  <span className="text-sm font-semibold">Volume up</span>
-                  <KeyCombo shortcut="Ctrl+Up" />
-                </div>
-                <div className="flex items-center justify-between py-2.5">
-                  <span className="text-sm font-semibold">Volume down</span>
-                  <KeyCombo shortcut="Ctrl+Down" />
-                </div>
-                <div className="flex items-center justify-between py-2.5">
-                  <span className="text-sm font-semibold">Toggle queue</span>
-                  <KeyCombo shortcut="Ctrl+Q" />
-                </div>
-                <div className="flex items-center justify-between py-2.5">
-                  <span className="text-sm font-semibold">Search</span>
-                  <KeyCombo shortcut="Ctrl+F" />
-                </div>
-                <div className="flex items-center justify-between py-2.5">
-                  <span className="text-sm font-semibold">Ask Sloth AI</span>
-                  <KeyCombo shortcut="Ctrl+K" />
+
+                <h3 className="text-base font-bold pt-2">General</h3>
+                <div className="flex items-center justify-between py-2 border-t-(length:--border-width) border-border/10">
+                  <span className="text-xs font-semibold">Open settings</span>
+                  <div className="flex items-center gap-1">
+                    <span className="surface-input border-border text-foreground shadow-shadow inline-flex px-2 py-0.5 rounded border-(length:--border-width) text-xs font-mono font-bold">Ctrl</span>
+                    <span className="surface-input border-border text-foreground shadow-shadow inline-flex px-2 py-0.5 rounded border-(length:--border-width) text-xs font-mono font-bold">,</span>
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* TAB: THEMES (matches Screenshot 9) */}
+          {/* TAB: THEMES (Exact match to Screenshot 9) */}
           {activeTab === 'themes' && (
             <div className="flex flex-col gap-6 max-w-2xl">
               <h2 className="text-2xl font-bold tracking-tight">Themes</h2>
 
-              <div className="flex items-center gap-4 border-b-(length:--border-width) border-border pb-2">
-                <span className="text-sm font-extrabold border-b-2 border-primary pb-1 cursor-pointer">
+              {/* Subtabs: My themes / Store */}
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => setThemeSubTab('my')}
+                  className={cn(
+                    'px-4 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer',
+                    themeSubTab === 'my'
+                      ? 'surface-primary border-border border-(length:--border-width) shadow-shadow text-foreground'
+                      : 'text-foreground/60 hover:text-foreground'
+                  )}
+                >
                   My themes
-                </span>
-                <span className="text-sm font-medium opacity-60 hover:opacity-100 cursor-pointer">
-                  Theme store
-                </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setThemeSubTab('store')}
+                  className={cn(
+                    'px-4 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer',
+                    themeSubTab === 'store'
+                      ? 'surface-primary border-border border-(length:--border-width) shadow-shadow text-foreground'
+                      : 'text-foreground/60 hover:text-foreground'
+                  )}
+                >
+                  Store
+                </button>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {BUILTIN_THEMES.map((theme) => {
-                  const isActive = currentThemeId === theme.id;
+              {/* Basic themes */}
+              <div className="flex flex-col gap-3">
+                <h3 className="text-base font-bold">Basic themes</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                  {BUILTIN_THEMES.map((theme) => {
+                    const isActive = currentThemeId === theme.id;
 
-                  return (
-                    <Button
-                      key={theme.id}
-                      variant={isActive ? 'default' : 'tertiary'}
-                      size="flexible"
-                      onClick={() => handleSelectTheme(theme.id)}
-                      className={cn(
-                        'flex flex-col justify-between items-start gap-3 p-4 rounded-md text-left transition-all',
-                        isActive
-                          ? 'border-border shadow-shadow ring-2 ring-primary/40'
-                          : 'border-border shadow-shadow hover:scale-[1.02]',
-                      )}
-                    >
-                      <div className="flex w-full items-center justify-between">
-                        <span className="text-sm font-bold">{theme.name}</span>
-                        {isActive && <Check size={16} className="text-foreground shrink-0" />}
-                      </div>
+                    return (
+                      <button
+                        key={theme.id}
+                        type="button"
+                        onClick={() => handleSelectTheme(theme.id)}
+                        className={cn(
+                          'flex flex-col justify-between items-start gap-3 p-3 rounded-md border-(length:--border-width) border-border shadow-shadow cursor-pointer transition-all text-left',
+                          isActive
+                            ? 'surface-primary'
+                            : 'surface-input hover:scale-[1.02]'
+                        )}
+                      >
+                        <span className="text-xs font-bold">{theme.name}</span>
 
-                      {/* 4 Palette Circles */}
-                      <div className="flex items-center gap-1.5">
-                        {theme.palette.map((color, idx) => (
-                          <span
-                            key={idx}
-                            aria-hidden
-                            className="ring-border inline-block size-5 rounded-full ring-2 shadow-xs"
-                            style={{ backgroundColor: color }}
-                          />
-                        ))}
-                      </div>
-                    </Button>
-                  );
-                })}
+                        {/* 4 Palette Dots */}
+                        <div className="flex items-center gap-1">
+                          {theme.palette.map((color, idx) => (
+                            <span
+                              key={idx}
+                              aria-hidden
+                              className="size-4 rounded-full border border-black shadow-xs shrink-0"
+                              style={{ backgroundColor: color }}
+                            />
+                          ))}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Advanced themes */}
+              <div className="flex flex-col gap-2 pt-2">
+                <h3 className="text-base font-bold">Advanced themes</h3>
+                <Select
+                  value={selectedAdvancedTheme}
+                  onChange={setSelectedAdvancedTheme}
+                  options={[
+                    { id: 'none', label: 'Select a theme' },
+                    { id: 'cyberpunk', label: 'Cyberpunk Neon' },
+                    { id: 'retro', label: '80s Retro Wave' },
+                    { id: 'catppuccin', label: 'Catppuccin Mocha' },
+                  ]}
+                />
+                <span className="text-xs text-foreground/60">
+                  Themes found in your app data themes directory
+                </span>
               </div>
             </div>
           )}
@@ -688,7 +901,7 @@ export const SettingsModal: FC<SettingsModalProps> = ({
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-bold tracking-tight">Plugins</h2>
-                  <p className="text-xs opacity-70 mt-0.5">
+                  <p className="text-xs text-foreground/60 mt-0.5">
                     Extend Sloth with streaming, metadata, and lyrics providers.
                   </p>
                 </div>
@@ -700,7 +913,7 @@ export const SettingsModal: FC<SettingsModalProps> = ({
                       onClose();
                       onNavigateToPlugins();
                     }}
-                    className="font-bold gap-1.5"
+                    className="font-bold gap-1.5 shadow-shadow"
                   >
                     <Package size={15} />
                     Open Marketplace
@@ -710,13 +923,12 @@ export const SettingsModal: FC<SettingsModalProps> = ({
 
               <div className="flex flex-col gap-3">
                 {[
-                  { id: 'youtube', name: 'YouTube Music', category: 'Streaming & Metadata', active: true },
-                  { id: 'piped', name: 'Piped Engine', category: 'Streaming (Privacy)', active: true },
-                  { id: 'qobuz', name: 'Qobuz Hi-Res', category: 'Lossless Streaming', active: true },
-                  { id: 'soundcloud', name: 'SoundCloud', category: 'Discovery', active: true },
-                  { id: 'bandcamp', name: 'Bandcamp', category: 'Discovery', active: true },
-                  { id: 'musicbrainz', name: 'MusicBrainz', category: 'Metadata', active: true },
-                  { id: 'lrclib', name: 'LRCLIB Synced Lyrics', category: 'Lyrics', active: true },
+                  { id: 'youtube', name: 'YouTube Music Source', category: 'Streaming & Metadata', active: true },
+                  { id: 'piped', name: 'Piped Stream Resolver', category: 'Streaming (Privacy)', active: true },
+                  { id: 'qobuz', name: 'Qobuz Hi-Res Metadata', category: 'Lossless Streaming', active: true },
+                  { id: 'soundcloud', name: 'SoundCloud Stream & Search', category: 'Discovery', active: true },
+                  { id: 'lrclib', name: 'LRCLib Synced Lyrics', category: 'Lyrics', active: true },
+                  { id: 'listenbrainz', name: 'ListenBrainz Scrobbler', category: 'Scrobbling', active: true },
                 ].map((plugin) => (
                   <div
                     key={plugin.id}
@@ -724,7 +936,7 @@ export const SettingsModal: FC<SettingsModalProps> = ({
                   >
                     <div>
                       <div className="text-sm font-bold">{plugin.name}</div>
-                      <div className="text-xs opacity-60">{plugin.category}</div>
+                      <div className="text-xs text-foreground/60">{plugin.category}</div>
                     </div>
                     <Toggle defaultChecked={plugin.active} />
                   </div>
@@ -737,8 +949,8 @@ export const SettingsModal: FC<SettingsModalProps> = ({
           {activeTab === 'logs' && (
             <div className="flex flex-col gap-6 max-w-2xl">
               <h2 className="text-2xl font-bold tracking-tight">Logs</h2>
-              <div className="surface-input border-border rounded-md border-(length:--border-width) p-4 font-mono text-xs max-h-96 overflow-y-auto flex flex-col gap-1">
-                <span className="text-green-500">[INFO] Application initialized successfully.</span>
+              <div className="surface-input border-border text-foreground shadow-shadow rounded-md border-(length:--border-width) p-4 font-mono text-xs max-h-96 overflow-y-auto flex flex-col gap-1">
+                <span className="text-green-600 font-bold">[INFO] Application initialized successfully.</span>
                 <span>[INFO] Loaded audio plugins: youtube, piped, qobuz, soundcloud, bandcamp</span>
                 <span>[INFO] SQLite database connected: sloth.db</span>
                 <span>[INFO] Fast-API Recommender Engine connected at 127.0.0.1:8001</span>
@@ -753,8 +965,8 @@ export const SettingsModal: FC<SettingsModalProps> = ({
               <h2 className="text-2xl font-bold tracking-tight">What's New</h2>
               <div className="flex flex-col gap-4">
                 <div className="surface-card border-border shadow-shadow rounded-md border-(length:--border-width) p-4">
-                  <div className="text-sm font-bold">Sloth v0.1.0</div>
-                  <div className="text-xs opacity-70 mt-1">
+                  <div className="text-sm font-bold">Sloth v1.51.0 (sloth-edition)</div>
+                  <div className="text-xs opacity-70 mt-1 leading-relaxed">
                     • Exact neobrutalist UI design tokens & dual collapsible sidebars
                     <br />• Universal source matching pipeline (YouTube, Piped, Bandcamp, Qobuz)
                     <br />• Full Model Context Protocol (MCP) server integration
@@ -772,10 +984,10 @@ export const SettingsModal: FC<SettingsModalProps> = ({
               <h2 className="text-2xl font-bold tracking-tight">Updates</h2>
               <div className="surface-card border-border shadow-shadow flex items-center justify-between rounded-md border-(length:--border-width) p-4">
                 <div>
-                  <div className="text-sm font-bold">Sloth v0.1.0 is installed</div>
-                  <div className="text-xs opacity-60 mt-0.5">Your application is up to date.</div>
+                  <div className="text-sm font-bold">Sloth v1.51.0 is installed</div>
+                  <div className="text-xs text-foreground/60 mt-0.5">Your application is up to date.</div>
                 </div>
-                <Button size="sm" variant="default" onClick={() => alert('Checking for updates...')}>
+                <Button size="sm" variant="default" onClick={() => alert('Checking for updates...')} className="font-bold shadow-shadow">
                   Check for updates
                 </Button>
               </div>
@@ -786,3 +998,5 @@ export const SettingsModal: FC<SettingsModalProps> = ({
     </div>
   );
 };
+
+export default SettingsModal;

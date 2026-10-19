@@ -2,6 +2,7 @@ import { FC } from 'react';
 import { ChevronLeft, ChevronRight, Search, X, Sparkles, Settings as SettingsIcon, Radio } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { SlothLogo } from '@/components/ui/SlothLogo';
 import { cn } from '@/lib/utils';
 
 export type TopBarProps = {
@@ -47,25 +48,8 @@ export const TopBar: FC<TopBarProps> = ({
           className="flex items-center gap-2 cursor-pointer ml-0.5 group"
           title={`Sloth ${version}`}
         >
-          <div className="size-6.5 rounded bg-primary text-primary-foreground flex items-center justify-center border-(length:--border-width) border-border shadow-xs group-hover:scale-105 transition-transform">
-            <svg
-              width="17"
-              height="17"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M4 13a8 8 0 0 1 16 0" />
-              <rect x="2" y="12" width="3.5" height="6" rx="1.5" fill="currentColor" />
-              <rect x="18.5" y="12" width="3.5" height="6" rx="1.5" fill="currentColor" />
-              <circle cx="12" cy="14" r="5" />
-              <path d="M9.5 13.5a1.2 1.2 0 1 0 0 .1" fill="currentColor" />
-              <path d="M14.5 13.5a1.2 1.2 0 1 0 0 .1" fill="currentColor" />
-              <ellipse cx="12" cy="15.5" rx="1.2" ry="0.8" fill="currentColor" />
-            </svg>
+          <div className="size-8 rounded-lg bg-white text-black flex items-center justify-center border-2 border-black shadow-[2px_2px_0px_#000] group-hover:scale-105 transition-transform">
+            <SlothLogo size={20} />
           </div>
           <span className="font-heading font-extrabold text-sm tracking-tight text-foreground hidden sm:inline">
             Sloth
@@ -76,19 +60,21 @@ export const TopBar: FC<TopBarProps> = ({
         <div className="flex flex-row items-center gap-1.5">
           <Button
             size="icon-sm"
-            variant="secondary"
+            variant="default"
             disabled={!canGoBack}
             onClick={onBack}
             aria-label="Back"
+            className="size-7.5 rounded p-0 flex items-center justify-center"
           >
             <ChevronLeft size={16} />
           </Button>
           <Button
             size="icon-sm"
-            variant="secondary"
+            variant="default"
             disabled={!canGoForward}
             onClick={onForward}
             aria-label="Forward"
+            className="size-7.5 rounded p-0 flex items-center justify-center"
           >
             <ChevronRight size={16} />
           </Button>
@@ -100,7 +86,7 @@ export const TopBar: FC<TopBarProps> = ({
           variant="pill"
           color="green"
           animated
-          className="cursor-pointer"
+          className="cursor-pointer font-bold border-2 border-black text-black"
         >
           Click to update
         </Badge>
@@ -115,7 +101,7 @@ export const TopBar: FC<TopBarProps> = ({
           }}
           className="relative w-full"
         >
-          <Search className="text-foreground/60 pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+          <Search className="text-black/60 pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
           <input
             data-testid="search-box"
             type="text"
@@ -127,8 +113,8 @@ export const TopBar: FC<TopBarProps> = ({
                 onSearchSubmit?.();
               }
             }}
-            placeholder="Search..."
-            className="surface-input border-border text-foreground placeholder:text-foreground/50 h-8 w-full rounded border-(length:--border-width) pl-9 pr-8 text-sm outline-none focus:ring-1 focus:ring-border"
+            placeholder="Search"
+            className="surface-background border-2 border-black text-black placeholder:text-black/50 h-8 w-full rounded-lg pl-9 pr-8 text-sm outline-none shadow-[2px_2px_0px_#000] font-medium"
           />
           {searchQuery.length > 0 && (
             <button

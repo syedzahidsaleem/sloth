@@ -20,3 +20,5 @@ export * from './ScrollableArea';
 export * from './EmptyState';
 export * from './ViewShell';
 export * from './KeyCombo';
+export * from './Select';
+export * from './SlothLogo';

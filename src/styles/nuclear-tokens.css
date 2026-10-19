@@ -67,47 +67,61 @@
 }
 
 :root {
-  /* Surfaces and their foregrounds (Default: Sloth Dark Charcoal & Tactical Green) */
-  --background: oklch(0.24 0.015 240);
-  --foreground: oklch(0.95 0.008 240);
+  /* Surfaces and their foregrounds (Default: Nuclear Pastel Pink & Neobrutalist Depth) */
+  --background: oklch(0.9163 0.0361 7.16);
+  --foreground: oklch(0% 0 0);
 
-  --muted: oklch(0.27 0.015 240);
-  --muted-foreground: oklch(0.75 0.008 240);
+  --muted: oklch(100% 0 0);
+  --muted-foreground: oklch(0% 0 0);
 
-  --card: oklch(0.29 0.015 240);
-  --card-foreground: oklch(0.95 0 0);
+  --card: oklch(0.8 0.12 4.56);
+  --card-foreground: oklch(0% 0 0);
 
-  --popover: oklch(0.29 0.015 240);
-  --popover-foreground: oklch(0.95 0 0);
+  --popover: oklch(0.8 0.12 4.56);
+  --popover-foreground: oklch(0% 0 0);
 
-  --input: oklch(0.20 0.015 240);
-  --input-foreground: oklch(0.95 0 0);
+  --input: oklch(100% 0 0);
+  --input-foreground: oklch(0% 0 0);
 
-  --primary: oklch(0.72 0.19 145);
-  --primary-foreground: oklch(0.12 0.02 145);
+  --primary: oklch(0.8 0.12 4.56);
+  --primary-foreground: oklch(0% 0 0);
 
   /* Accents and their foregrounds */
-  --accent-green: oklch(0.74 0.20 145);
-  --accent-yellow: oklch(0.82 0.16 95);
-  --accent-purple: oklch(0.72 0.15 300);
-  --accent-blue: oklch(0.70 0.14 250);
-  --accent-orange: oklch(0.74 0.16 50);
-  --accent-cyan: oklch(0.76 0.14 200);
-  --accent-red: oklch(0.68 0.18 22);
+  --accent-green: oklch(0.88 0.13 145);
+  --accent-yellow: oklch(0.8882 0.15 95);
+  --accent-purple: oklch(0.82 0.1 300);
+  --accent-blue: oklch(0.84 0.083 250);
+  --accent-orange: oklch(0.88 0.085 65);
+  --accent-cyan: oklch(0.88 0.09 200);
+  --accent-red: oklch(0.7327 0.2428 18);
 
-  --accent-green-foreground: oklch(0.12 0.02 145);
+  --accent-green-foreground: oklch(0% 0 0);
   --accent-yellow-foreground: oklch(0% 0 0);
-  --accent-purple-foreground: oklch(100% 0 0);
-  --accent-blue-foreground: oklch(100% 0 0);
+  --accent-purple-foreground: oklch(0% 0 0);
+  --accent-blue-foreground: oklch(0% 0 0);
   --accent-orange-foreground: oklch(0% 0 0);
   --accent-cyan-foreground: oklch(0% 0 0);
   --accent-red-foreground: oklch(100% 0 0);
 
+  /* Dedicated layout surfaces */
+  --topbar: oklch(100% 0 0);
+  --topbar-foreground: oklch(0% 0 0);
+  --bottombar: oklch(100% 0 0);
+  --bottombar-foreground: oklch(0% 0 0);
+  --sidebar-left: oklch(100% 0 0);
+  --sidebar-left-foreground: oklch(0% 0 0);
+  --sidebar-right: oklch(100% 0 0);
+  --sidebar-right-foreground: oklch(0% 0 0);
+  --seekbar-track: oklch(100% 0 0);
+  --seekbar-track-foreground: oklch(0% 0 0);
+  --seekbar: oklch(0.8 0.12 4.56);
+  --seekbar-foreground: oklch(0% 0 0);
+
   /* Borders, rings, overlays */
-  --border: oklch(0.38 0.015 240);
+  --border: oklch(0% 0 0);
   --border-width: 2px;
-  --ring: oklch(0.72 0.19 145 / 0.5);
-  --overlay: oklch(0% 0 0 / 0.6);
+  --ring: oklch(0% 0 0);
+  --overlay: oklch(0% 0 0 / 0.4);
 
   /* Surface gradients */
   --background-gradient: none;
@@ -135,11 +149,11 @@
 
   /* Typography */
   --font-size-base: 16px;
-  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  --default-font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-family-heading: 'Inter', var(--default-font-family);
+  --font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --default-font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-family-heading: 'Bricolage Grotesque', var(--default-font-family);
   --font-family-mono:
-    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     monospace;
   --font-weight-normal: 400;
   --font-weight-bold: 700;

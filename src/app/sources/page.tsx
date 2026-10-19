@@ -1,176 +1,128 @@
-import { FC, useState } from 'react';
+import { FC } from 'react';
 import {
   Search,
   Headphones,
-  Radio,
+  BoomBox,
   Gauge,
   ListMusic,
   MicVocal,
-  Check,
 } from 'lucide-react';
 import { ViewShell } from '@/components/ui/ViewShell';
 import { ScrollableArea } from '@/components/ui/ScrollableArea';
 import { Badge } from '@/components/ui/Badge';
-import { cn } from '@/lib/utils';
+import { getInstalledPlugins } from '@/services/pluginStore';
 
 export const SourcesPage: FC = () => {
-  const [activeMetadata, setActiveMetadata] = useState('youtube');
-  const [activeStreaming, setActiveStreaming] = useState('youtube');
-  const [activeDiscovery, setActiveDiscovery] = useState('bandcamp');
+  const installedPlugins = getInstalledPlugins();
+  const pluginList = Object.values(installedPlugins);
 
-  const metadataProviders = [
-    { id: 'youtube', name: 'YouTube Music', desc: 'Comprehensive track and album metadata' },
-    { id: 'musicbrainz', name: 'MusicBrainz', desc: 'Open music encyclopedia' },
-    { id: 'discogs', name: 'Discogs', desc: 'Community-built database of audio recordings' },
-  ];
+  const metadataProviders = pluginList.filter((p) => p.manifest.category === 'metadata' || p.manifest.categories?.includes('metadata'));
+  const streamingProviders = pluginList.filter((p) => p.manifest.category === 'streaming' || p.manifest.categories?.includes('streaming'));
+  const discoveryProviders = pluginList.filter((p) => p.manifest.category === 'discovery' || p.manifest.categories?.includes('discovery'));
+  const dashboardProviders = pluginList.filter((p) => p.manifest.category === 'dashboard' || p.manifest.categories?.includes('dashboard'));
+  const playlistProviders = pluginList.filter((p) => p.manifest.category === 'playlists' || p.manifest.categories?.includes('playlists'));
+  const lyricsProviders = pluginList.filter((p) => p.manifest.category === 'lyrics' || p.manifest.categories?.includes('lyrics'));
 
-  const streamingProviders = [
-    { id: 'youtube', name: 'YouTube Music', desc: 'High quality audio stream extraction' },
-    { id: 'piped', name: 'Piped Engine', desc: 'Privacy-focused alternative frontend stream' },
-    { id: 'invidious', name: 'Invidious', desc: 'Decentralized video and audio stream' },
-  ];
-
-  const discoveryProviders = [
-    { id: 'bandcamp', name: 'Bandcamp', desc: 'Independent artists and underground releases' },
-    { id: 'soundcloud', name: 'SoundCloud', desc: 'Creator music streams and remixes' },
+  const sections = [
+    {
+      id: 'metadata',
+      title: 'Metadata',
+      Icon: Search,
+      description:
+        'Metadata sources provide information about artists, albums, and tracks. Search results, artist pages, and album details come from the active metadata source.',
+      providers: metadataProviders,
+      color: 'blue' as const,
+    },
+    {
+      id: 'streaming',
+      title: 'Streaming',
+      Icon: Headphones,
+      description:
+        'Streaming sources provide audio. When you play a track, the streaming source finds and delivers the audio stream.',
+      providers: streamingProviders,
+      color: 'red' as const,
+    },
+    {
+      id: 'discovery',
+      title: 'Discovery',
+      Icon: BoomBox,
+      description:
+        "Discovery sources recommend new tracks based on what you're listening to. Enable music discovery by using the boombox icon in the bottom bar.",
+      providers: discoveryProviders,
+      color: 'orange' as const,
+    },
+    {
+      id: 'dashboard',
+      title: 'Dashboard',
+      Icon: Gauge,
+      description:
+        'Dashboard sources provide personalized content like top tracks, new releases, and recommendations on the home screen.',
+      providers: dashboardProviders,
+      color: 'purple' as const,
+    },
+    {
+      id: 'playlists',
+      title: 'Playlists',
+      Icon: ListMusic,
+      description:
+        'Playlist sources let you import playlists from external services by URL.',
+      providers: playlistProviders,
+      color: 'green' as const,
+    },
+    {
+      id: 'lyrics',
+      title: 'Lyrics',
+      Icon: MicVocal,
+      description:
+        'Lyrics sources provide lyrics for the current track. Sloth gets lyrics from all lyrics sources at the same time and shows the best result. You can select the lyrics of a different source in the Lyrics view.',
+      providers: lyricsProviders,
+      color: 'yellow' as const,
+    },
   ];
 
   return (
     <ViewShell data-testid="sources-view" title="Sources">
-      <div className="flex h-full w-full items-start justify-center pb-12">
-        <ScrollableArea className="max-w-[560px] w-full flex-1 flex flex-col gap-6">
-          {/* Metadata Section */}
-          <div className="surface-card border-border shadow-shadow rounded-lg border-(length:--border-width) p-4 flex flex-col gap-3">
-            <div className="flex items-center gap-2">
-              <div className="size-8 rounded-md bg-foreground/10 flex items-center justify-center text-foreground">
-                <Search size={18} />
-              </div>
-              <h3 className="text-base font-bold text-foreground">Metadata</h3>
-            </div>
-            <div className="flex flex-col gap-2">
-              {metadataProviders.map((p) => {
-                const isActive = activeMetadata === p.id;
-                return (
-                  <div
-                    key={p.id}
-                    onClick={() => setActiveMetadata(p.id)}
-                    className={cn(
-                      'flex items-center justify-between p-3 rounded-md border-(length:--border-width) cursor-pointer transition-all',
-                      isActive
-                        ? 'surface-primary border-border font-bold shadow-xs'
-                        : 'surface-muted border-border/40 hover:border-border',
-                    )}
-                  >
-                    <div>
-                      <div className="text-sm font-bold text-foreground">{p.name}</div>
-                      <div className="text-xs text-foreground/70">{p.desc}</div>
-                    </div>
-                    {isActive && <Check size={16} className="text-foreground shrink-0" />}
+      <div className="flex h-full w-full items-start justify-center pt-2 pb-12">
+        <ScrollableArea className="max-w-xl w-full flex-1 gap-4 overflow-hidden">
+          {sections.map((section) => {
+            const Icon = section.Icon;
+            return (
+              <div
+                key={section.id}
+                data-testid={`sources-section-${section.id}`}
+                className="mb-6 px-2"
+              >
+                <h3 className="text-foreground mb-1 flex items-center gap-2 text-sm font-bold">
+                  <Icon size={16} />
+                  {section.title}
+                </h3>
+                <p className="text-foreground/70 mb-3 text-sm leading-relaxed">
+                  {section.description}
+                </p>
+                {section.providers.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {section.providers.map((p) => (
+                      <Badge
+                        key={p.manifest.id}
+                        variant="pill"
+                        color={section.color}
+                        className="cursor-pointer font-bold"
+                      >
+                        {p.manifest.name}
+                      </Badge>
+                    ))}
                   </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Streaming Section */}
-          <div className="surface-card border-border shadow-shadow rounded-lg border-(length:--border-width) p-4 flex flex-col gap-3">
-            <div className="flex items-center gap-2">
-              <div className="size-8 rounded-md bg-foreground/10 flex items-center justify-center text-foreground">
-                <Headphones size={18} />
-              </div>
-              <h3 className="text-base font-bold text-foreground">Streaming</h3>
-            </div>
-            <div className="flex flex-col gap-2">
-              {streamingProviders.map((p) => {
-                const isActive = activeStreaming === p.id;
-                return (
-                  <div
-                    key={p.id}
-                    onClick={() => setActiveStreaming(p.id)}
-                    className={cn(
-                      'flex items-center justify-between p-3 rounded-md border-(length:--border-width) cursor-pointer transition-all',
-                      isActive
-                        ? 'surface-primary border-border font-bold shadow-xs'
-                        : 'surface-muted border-border/40 hover:border-border',
-                    )}
+                ) : (
+                  <p
+                    className="text-foreground/60 text-sm italic"
+                    data-testid="no-providers-message"
                   >
-                    <div>
-                      <div className="text-sm font-bold text-foreground">{p.name}</div>
-                      <div className="text-xs text-foreground/70">{p.desc}</div>
-                    </div>
-                    {isActive && <Check size={16} className="text-foreground shrink-0" />}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Discovery Section */}
-          <div className="surface-card border-border shadow-shadow rounded-lg border-(length:--border-width) p-4 flex flex-col gap-3">
-            <div className="flex items-center gap-2">
-              <div className="size-8 rounded-md bg-foreground/10 flex items-center justify-center text-foreground">
-                <Radio size={18} />
+                    No providers installed
+                  </p>
+                )}
               </div>
-              <h3 className="text-base font-bold text-foreground">Discovery</h3>
-            </div>
-            <div className="flex flex-col gap-2">
-              {discoveryProviders.map((p) => {
-                const isActive = activeDiscovery === p.id;
-                return (
-                  <div
-                    key={p.id}
-                    onClick={() => setActiveDiscovery(p.id)}
-                    className={cn(
-                      'flex items-center justify-between p-3 rounded-md border-(length:--border-width) cursor-pointer transition-all',
-                      isActive
-                        ? 'surface-primary border-border font-bold shadow-xs'
-                        : 'surface-muted border-border/40 hover:border-border',
-                    )}
-                  >
-                    <div>
-                      <div className="text-sm font-bold text-foreground">{p.name}</div>
-                      <div className="text-xs text-foreground/70">{p.desc}</div>
-                    </div>
-                    {isActive && <Check size={16} className="text-foreground shrink-0" />}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Info Sections: Dashboard, Playlists, Lyrics */}
-          <div className="surface-muted border-border shadow-shadow rounded-lg border-(length:--border-width) p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Gauge size={20} className="text-purple-500" />
-              <div>
-                <div className="text-sm font-bold text-foreground">Dashboard</div>
-                <div className="text-xs text-foreground/60">Widgets and picks powered by active plugins</div>
-              </div>
-            </div>
-            <Badge variant="pill" color="purple">Active</Badge>
-          </div>
-
-          <div className="surface-muted border-border shadow-shadow rounded-lg border-(length:--border-width) p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <ListMusic size={20} className="text-green-500" />
-              <div>
-                <div className="text-sm font-bold text-foreground">Playlists</div>
-                <div className="text-xs text-foreground/60">Local and imported cloud playlists synced</div>
-              </div>
-            </div>
-            <Badge variant="pill" color="green">Active</Badge>
-          </div>
-
-          <div className="surface-muted border-border shadow-shadow rounded-lg border-(length:--border-width) p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <MicVocal size={20} className="text-yellow-500" />
-              <div>
-                <div className="text-sm font-bold text-foreground">Lyrics</div>
-                <div className="text-xs text-foreground/60">Real-time synchronized LRC lyrics provider</div>
-              </div>
-            </div>
-            <Badge variant="pill" color="yellow">Active</Badge>
-          </div>
+            );
+          })}
         </ScrollableArea>
       </div>
     </ViewShell>
