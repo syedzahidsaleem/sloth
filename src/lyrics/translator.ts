@@ -219,8 +219,7 @@ export class LyricsTranslator {
     }
 
     const envKey =
-      (typeof process !== 'undefined' && process.env?.ANTHROPIC_API_KEY) ||
-      (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_ANTHROPIC_API_KEY) ||
+      (typeof globalThis !== 'undefined' && (globalThis as any).process?.env?.ANTHROPIC_API_KEY) ||
       '';
 
     return envKey.trim();
