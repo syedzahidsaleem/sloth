@@ -108,19 +108,19 @@ export const LyricLine = React.forwardRef<HTMLDivElement, LyricLineProps>(
         animate={state}
         initial={false}
         onClick={handleClick}
-        className={`group relative w-full max-w-2xl py-3 px-4 rounded-[6px] text-center cursor-pointer transition-colors duration-150 select-none ${
+        className={`group relative w-full max-w-2xl py-3 px-4 rounded-md text-center cursor-pointer transition-colors duration-150 select-none ${
           isCurrent
-            ? 'text-[var(--color-accent)] font-extrabold tracking-tight text-xl sm:text-2xl md:text-3xl'
+            ? 'text-foreground font-heading font-black tracking-tight text-2xl sm:text-3xl md:text-4xl'
             : isNext
-            ? 'text-[var(--text-secondary)] font-semibold text-lg sm:text-xl md:text-2xl hover:opacity-80'
+            ? 'text-foreground/60 font-heading font-semibold text-lg sm:text-xl md:text-2xl hover:text-foreground/80'
             : isPrevious
-            ? 'text-[var(--text-muted)] font-medium text-base sm:text-lg md:text-xl hover:opacity-60'
-            : 'text-[var(--text-muted)]/70 font-normal text-sm sm:text-base md:text-lg hover:opacity-50'
+            ? 'text-foreground/35 font-heading font-medium text-base sm:text-lg md:text-xl hover:text-foreground/60'
+            : 'text-foreground/20 font-heading font-normal text-sm sm:text-base md:text-lg hover:text-foreground/40'
         } ${className}`}
         style={{ transformOrigin: 'center center' }}
       >
         {karaokeMode && isCurrent && words.length > 0 ? (
-          <span className="inline-flex flex-wrap justify-center gap-x-2 gap-y-1">
+          <span className="inline-flex flex-wrap justify-center gap-x-2.5 gap-y-1">
             {words.map((w, idx) => {
               const isWordPassed = currentPositionMs >= w.startMs;
               const isWordActive =
@@ -130,12 +130,12 @@ export const LyricLine = React.forwardRef<HTMLDivElement, LyricLineProps>(
               return (
                 <span
                   key={idx}
-                  className={`transition-all duration-150 inline-block ${
+                  className={`transition-colors duration-150 inline-block ${
                     isWordActive
-                      ? 'text-[var(--color-accent)] font-extrabold brightness-125 drop-shadow-[0_0_8px_var(--color-accent)]'
+                      ? 'text-primary font-black'
                       : isWordPassed
-                      ? 'text-[var(--color-accent)] font-bold'
-                      : 'text-[var(--text-secondary)] opacity-60 font-medium'
+                      ? 'text-primary/80 font-bold'
+                      : 'text-foreground/40 font-semibold'
                   }`}
                 >
                   {w.word}
