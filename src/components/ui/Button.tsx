@@ -1,9 +1,16 @@
+/**
+ * Ensure any repository we take reference from or code from isn't referenced or spoken about anywhere either in files or readme or code
+ * Original: packages/ui/src/components/Button/Button.tsx
+ * Adapted for Sloth by syedzahidsaleem2@gmail.com
+ * Changes: [styling system, data layer, routing]
+ */
+
 import { cva, type VariantProps } from 'class-variance-authority';
 import { ComponentPropsWithoutRef, forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 
 export const buttonVariants = cva(
-  'inline-flex cursor-pointer items-center justify-center rounded-md whitespace-nowrap font-medium transition-all outline-none disabled:cursor-not-allowed disabled:opacity-50 select-none',
+  'inline-flex cursor-pointer items-center justify-center rounded whitespace-nowrap font-medium transition-all outline-none disabled:cursor-not-allowed disabled:opacity-50 select-none',
   {
     variants: {
       variant: {
