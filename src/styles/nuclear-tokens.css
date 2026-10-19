@@ -103,20 +103,6 @@
   --accent-cyan-foreground: oklch(0% 0 0);
   --accent-red-foreground: oklch(100% 0 0);
 
-  /* Dedicated layout surfaces */
-  --topbar: oklch(100% 0 0);
-  --topbar-foreground: oklch(0% 0 0);
-  --bottombar: oklch(100% 0 0);
-  --bottombar-foreground: oklch(0% 0 0);
-  --sidebar-left: oklch(100% 0 0);
-  --sidebar-left-foreground: oklch(0% 0 0);
-  --sidebar-right: oklch(100% 0 0);
-  --sidebar-right-foreground: oklch(0% 0 0);
-  --seekbar-track: oklch(100% 0 0);
-  --seekbar-track-foreground: oklch(0% 0 0);
-  --seekbar: oklch(0.8 0.12 4.56);
-  --seekbar-foreground: oklch(0% 0 0);
-
   /* Borders, rings, overlays */
   --border: oklch(0% 0 0);
   --border-width: 2px;
@@ -238,9 +224,9 @@
 }
 
 @utility surface-topbar {
-  background-color: var(--topbar, var(--muted));
-  background-image: var(--topbar-gradient, var(--muted-gradient, none));
-  color: var(--topbar-foreground, var(--muted-foreground));
+  background-color: var(--topbar, var(--background));
+  background-image: var(--topbar-gradient, var(--background-gradient, none));
+  color: var(--topbar-foreground, var(--foreground));
 }
 
 @utility surface-bottombar {
@@ -256,9 +242,9 @@
 }
 
 @utility surface-sidebar-right {
-  background-color: var(--sidebar-right, var(--muted));
-  background-image: var(--sidebar-right-gradient, var(--muted-gradient, none));
-  color: var(--sidebar-right-foreground, var(--muted-foreground));
+  background-color: var(--sidebar-right, var(--background));
+  background-image: var(--sidebar-right-gradient, var(--background-gradient, none));
+  color: var(--sidebar-right-foreground, var(--foreground));
 }
 
 @utility surface-seekbar-track {

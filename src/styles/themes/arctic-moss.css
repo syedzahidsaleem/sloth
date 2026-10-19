@@ -43,7 +43,12 @@
 }
 
 :root[data-theme-id='nuclear:arctic-moss'][data-theme='dark'],
-:root[data-theme-id='arctic-moss'][data-theme='dark'] {
+:root[data-theme-id='sloth:arctic-moss'][data-theme='dark'],
+:root[data-theme-id='arctic-moss'][data-theme='dark'],
+:root[data-theme-id='moss'][data-theme='dark'],
+:root[data-theme-variant='arctic-moss'][data-theme='dark'],
+:root[data-theme-variant='moss'][data-theme='dark'],
+:root[data-theme='moss'][data-theme='dark'] {
   --background: oklch(0.2 0.02 175);
   --muted: oklch(0.25 0.025 175);
   --input: oklch(0.13 0.012 175);

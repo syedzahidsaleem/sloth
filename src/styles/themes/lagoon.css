@@ -38,7 +38,10 @@
 }
 
 :root[data-theme-id='nuclear:lagoon'][data-theme='dark'],
-:root[data-theme-id='lagoon'][data-theme='dark'] {
+:root[data-theme-id='sloth:lagoon'][data-theme='dark'],
+:root[data-theme-id='lagoon'][data-theme='dark'],
+:root[data-theme-variant='lagoon'][data-theme='dark'],
+:root[data-theme='lagoon'][data-theme='dark'] {
   --background: oklch(0.2 0.025 205);
   --muted: oklch(0.25 0.03 205);
   --input: oklch(0.13 0.015 205);

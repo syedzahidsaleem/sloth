@@ -42,7 +42,10 @@
 }
 
 :root[data-theme-id='nuclear:aurora'][data-theme='dark'],
-:root[data-theme-id='aurora'][data-theme='dark'] {
+:root[data-theme-id='sloth:aurora'][data-theme='dark'],
+:root[data-theme-id='aurora'][data-theme='dark'],
+:root[data-theme-variant='aurora'][data-theme='dark'],
+:root[data-theme='aurora'][data-theme='dark'] {
   --background: oklch(0.22 0.03 305);
   --muted: oklch(0.27 0.035 305);
   --input: oklch(0.15 0.02 305);

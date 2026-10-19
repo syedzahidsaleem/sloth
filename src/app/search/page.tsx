@@ -361,10 +361,10 @@ export const SearchPage: FC<SearchPageProps> = ({
         </div>
       </div>
 
-      {/* Main Track Table (Image 2) */}
-      <div className="rounded-md border-2 border-border surface-card overflow-hidden shadow-[2px_2px_0px_var(--border)]">
-        {/* Table Header with Pink background & 2px border */}
-        <div className="grid grid-cols-[44px_48px_minmax(140px,1.2fr)_minmax(160px,2fr)_80px] items-center bg-[var(--primary)] text-foreground border-b-2 border-border px-3 py-2 text-xs font-bold select-none">
+      {/* Main Track Table (Image 2 & Image 4) */}
+      <div className="rounded-md border-2 border-border bg-muted overflow-hidden shadow-[2px_2px_0px_var(--border)]">
+        {/* Table Header with Pink/Wine background & 2px border */}
+        <div className="grid grid-cols-[44px_48px_minmax(140px,1.2fr)_minmax(160px,2fr)_80px] items-center surface-primary text-foreground border-b-2 border-border px-3 py-2 text-xs font-bold select-none">
           <div className="flex justify-center">
             <Heart size={15} />
           </div>
@@ -388,7 +388,7 @@ export const SearchPage: FC<SearchPageProps> = ({
             <span>No matching tracks found</span>
           </div>
         ) : (
-          <div className="divide-y divide-border/20">
+          <div className="divide-y divide-border">
             {filteredTracks.map((track) => {
               const isCurrent = track.id === currentTrackId;
               const isFav = favoriteIds.has(track.id) || track.isFavorite;
@@ -398,10 +398,10 @@ export const SearchPage: FC<SearchPageProps> = ({
                   key={track.id}
                   onClick={() => onPlayTrack?.(track)}
                   className={cn(
-                    'grid grid-cols-[44px_48px_minmax(140px,1.2fr)_minmax(160px,2fr)_80px] items-center px-3 py-2 text-xs cursor-pointer transition-colors group select-none',
+                    'grid grid-cols-[44px_48px_minmax(140px,1.2fr)_minmax(160px,2fr)_80px] items-center px-3 py-2 text-xs cursor-pointer transition-colors group select-none bg-muted text-foreground',
                     isCurrent
-                      ? 'bg-black/10 dark:bg-white/10 font-bold'
-                      : 'hover:bg-black/5 dark:hover:bg-white/5',
+                      ? 'surface-primary font-bold'
+                      : 'hover:bg-foreground/5',
                   )}
                 >
                   {/* Heart / Favorite button */}

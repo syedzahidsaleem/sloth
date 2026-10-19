@@ -115,7 +115,7 @@ export const TopBar: FC<TopBarProps> = ({
               }
             }}
             placeholder="Search"
-            className="surface-background border-2 border-border text-foreground placeholder:text-foreground/50 h-8 w-full rounded-lg pl-9 pr-8 text-sm outline-none shadow-[2px_2px_0px_var(--border)] font-medium"
+            className="surface-input border-2 border-border text-foreground placeholder:text-foreground/50 h-8 w-full rounded-lg pl-9 pr-8 text-sm outline-none shadow-[2px_2px_0px_var(--border)] font-medium"
           />
           {searchQuery.length > 0 && (
             <button

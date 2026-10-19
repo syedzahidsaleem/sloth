@@ -38,7 +38,10 @@
 }
 
 :root[data-theme-id='nuclear:ember'][data-theme='dark'],
-:root[data-theme-id='ember'][data-theme='dark'] {
+:root[data-theme-id='sloth:ember'][data-theme='dark'],
+:root[data-theme-id='ember'][data-theme='dark'],
+:root[data-theme-variant='ember'][data-theme='dark'],
+:root[data-theme='ember'][data-theme='dark'] {
   --background: oklch(0.22 0.03 20);
   --muted: oklch(0.27 0.035 20);
   --input: oklch(0.14 0.02 20);
