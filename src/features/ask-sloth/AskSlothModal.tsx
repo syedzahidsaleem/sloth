@@ -144,11 +144,11 @@ export const AskSlothModal: FC<AskSlothModalProps> = ({
               stiffness: 420,
               damping: 28,
             }}
-            className="relative z-10 w-full max-w-2xl bg-[var(--surface)] border border-[var(--border)] border-t-2 border-t-[var(--color-accent)] rounded-[4px] shadow-2xl overflow-hidden flex flex-col max-h-[75vh]"
+            className="relative z-10 w-full max-w-2xl surface-card border-(length:--border-width) border-border rounded-lg shadow-nav overflow-hidden flex flex-col max-h-[75vh] font-sans text-foreground"
           >
             {/* Top Bar: Search Input */}
-            <div className="flex items-center gap-3 px-4 py-3 bg-[var(--surface)]">
-              <div className="flex items-center justify-center text-[var(--color-accent)] shrink-0">
+            <div className="flex items-center gap-3 px-4 py-3 surface-input border-b-(length:--border-width) border-border">
+              <div className="flex items-center justify-center text-primary shrink-0">
                 <Sparkles size={18} />
               </div>
               <input
@@ -158,12 +158,12 @@ export const AskSlothModal: FC<AskSlothModalProps> = ({
                 value={query}
                 onChange={(e) => onQueryChange(e.target.value)}
                 placeholder="Ask Sloth... (e.g. 'rainy late night jazz' or '140 bpm synthwave')"
-                className="flex-1 bg-transparent text-sm md:text-base font-medium text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none min-w-0"
+                className="flex-1 bg-transparent text-sm md:text-base font-medium text-foreground placeholder:text-foreground/40 outline-none min-w-0"
               />
               {isLoading && (
                 <Loader2
                   size={16}
-                  className="animate-spin text-[var(--color-accent)] shrink-0"
+                  className="animate-spin text-primary shrink-0"
                   data-testid="ask-sloth-loading-spinner"
                 />
               )}
@@ -171,14 +171,14 @@ export const AskSlothModal: FC<AskSlothModalProps> = ({
                 <button
                   type="button"
                   onClick={() => onQueryChange('')}
-                  className="text-[var(--text-muted)] hover:text-white transition-colors cursor-pointer p-0.5"
+                  className="text-foreground/50 hover:text-foreground transition-colors cursor-pointer p-0.5"
                   title="Clear input"
                 >
                   <X size={14} />
                 </button>
               )}
-              <div className="hidden sm:flex items-center gap-1.5 pl-2 border-l border-[var(--border)]/60 text-[10px] font-mono text-[var(--text-muted)]">
-                <kbd className="px-1.5 py-0.5 bg-[var(--surface-raised)] border border-[var(--border)] rounded-[3px] text-[var(--text-secondary)]">
+              <div className="hidden sm:flex items-center gap-1.5 pl-2 border-l-(length:--border-width) border-border/40 text-xs font-sans text-foreground/60">
+                <kbd className="px-2 py-0.5 surface-input border-(length:--border-width) border-border rounded text-[11px] font-mono font-bold text-foreground shadow-xs">
                   ESC
                 </kbd>
                 <span>close</span>
@@ -189,10 +189,10 @@ export const AskSlothModal: FC<AskSlothModalProps> = ({
             {interpretation && (
               <div
                 data-testid="ask-sloth-interpretation"
-                className="px-4 py-2 bg-[var(--surface-raised)]/50 border-t border-b border-[var(--border)]/60 text-xs text-[var(--text-secondary)] font-mono flex items-center justify-between gap-3"
+                className="px-4 py-2 surface-input border-b-(length:--border-width) border-border text-xs text-foreground/80 font-sans flex items-center justify-between gap-3"
               >
                 <div className="flex items-center gap-2 min-w-0 truncate">
-                  <span className="size-1.5 rounded-full bg-[var(--color-accent)] shrink-0" />
+                  <span className="size-2 rounded-full surface-primary shrink-0 shadow-xs" />
                   <span className="truncate">{interpretation}</span>
                 </div>
                 {parsedQuery?.filters && (parsedQuery.filters.bpm_min || parsedQuery.filters.bpm_max) && (
@@ -207,17 +207,17 @@ export const AskSlothModal: FC<AskSlothModalProps> = ({
 
             {/* Quick Suggestion Pills (when input is empty or fresh) */}
             {!query && (
-              <div className="p-4 space-y-2 border-t border-[var(--border)]/40 bg-[var(--background)]/40">
-                <div className="text-[11px] font-mono uppercase tracking-wider text-[var(--text-muted)] font-semibold">
+              <div className="p-5 space-y-3 border-t-(length:--border-width) border-border/20 surface-card">
+                <div className="text-xs font-heading font-extrabold uppercase tracking-wider text-foreground/60">
                   Suggested Prompts
                 </div>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2">
                   {QUICK_PROMPT_SUGGESTIONS.map((suggestion) => (
                     <button
                       key={suggestion}
                       type="button"
                       onClick={() => onQueryChange(suggestion)}
-                      className="px-2.5 py-1 text-xs font-medium rounded-[3px] bg-[var(--surface-raised)] hover:bg-[var(--surface-raised)]/80 border border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--color-accent)]/50 transition-colors cursor-pointer text-left"
+                      className="px-3.5 py-1.5 text-xs font-semibold rounded-md border-(length:--border-width) border-border surface-input shadow-shadow hover:translate-x-0.5 hover:translate-y-0.5 text-foreground transition-all cursor-pointer text-left"
                     >
                       {suggestion}
                     </button>
@@ -230,22 +230,22 @@ export const AskSlothModal: FC<AskSlothModalProps> = ({
             <div
               ref={listRef}
               data-testid="ask-sloth-results-list"
-              className="flex-1 min-h-0 overflow-y-auto max-h-[50vh] divide-y divide-[var(--border)]/40 bg-[var(--background)]"
+              className="flex-1 min-h-0 overflow-y-auto max-h-[50vh] divide-y-(length:--border-width) divide-border/20 surface-background"
             >
               {isLoading && results.length === 0 && (
                 <div className="p-6 space-y-3">
                   {[1, 2, 3, 4].map((i) => (
                     <div
                       key={i}
-                      className="h-12 w-full bg-[var(--surface-raised)]/40 animate-pulse rounded-[3px] border border-[var(--border)]/30"
+                      className="h-12 w-full surface-input animate-pulse rounded-md border-(length:--border-width) border-border/40"
                     />
                   ))}
                 </div>
               )}
 
               {!isLoading && query && results.length === 0 && (
-                <div className="p-8 text-center text-xs text-[var(--text-muted)] space-y-1">
-                  <p>No matching tracks found for &quot;{query}&quot;.</p>
+                <div className="p-8 text-center text-xs text-foreground/60 space-y-1">
+                  <p className="font-semibold text-foreground/80">No matching tracks found for &quot;{query}&quot;.</p>
                   <p className="text-[11px]">Try searching by mood, acoustic tempo, or artist style.</p>
                 </div>
               )}
@@ -260,7 +260,7 @@ export const AskSlothModal: FC<AskSlothModalProps> = ({
                     key={item.track_id}
                     onMouseEnter={() => onSelectIndex(idx)}
                     className={`relative transition-colors ${
-                      isSelected ? 'bg-[var(--surface-raised)]/90 ring-1 ring-inset ring-[var(--color-accent)]/40' : ''
+                      isSelected ? 'surface-primary/20 ring-1 ring-inset ring-border' : ''
                     }`}
                   >
                     <TrackRow
@@ -280,10 +280,10 @@ export const AskSlothModal: FC<AskSlothModalProps> = ({
             </div>
 
             {/* Bottom Status & Keycap Guide Bar */}
-            <div className="flex items-center justify-between px-4 py-2 border-t border-[var(--border)] bg-[var(--surface)] text-[11px] font-mono text-[var(--text-muted)]">
+            <div className="flex items-center justify-between px-4 py-2.5 border-t-(length:--border-width) border-border surface-input text-xs text-foreground/60 font-sans">
               <div className="flex items-center gap-2">
-                <span className="flex items-center gap-1 text-[var(--text-secondary)]">
-                  <Cpu size={12} className="text-[var(--color-accent)]" />
+                <span className="flex items-center gap-1.5 text-foreground/80 font-medium">
+                  <Cpu size={14} className="text-primary" />
                   <span>CLAP + Gated Fusion</span>
                 </span>
                 {results.length > 0 && (
@@ -296,14 +296,14 @@ export const AskSlothModal: FC<AskSlothModalProps> = ({
               </div>
 
               <div className="hidden sm:flex items-center gap-3">
-                <span className="flex items-center gap-1">
-                  <kbd className="px-1 py-0.2 bg-[var(--surface-raised)] border border-[var(--border)] rounded text-[10px]">
+                <span className="flex items-center gap-1.5">
+                  <kbd className="px-1.5 py-0.5 surface-input border-(length:--border-width) border-border rounded text-[10px] font-mono font-bold text-foreground shadow-xs">
                     ↑↓
                   </kbd>
                   navigate
                 </span>
-                <span className="flex items-center gap-1">
-                  <kbd className="px-1 py-0.2 bg-[var(--surface-raised)] border border-[var(--border)] rounded text-[10px] flex items-center">
+                <span className="flex items-center gap-1.5">
+                  <kbd className="px-1.5 py-0.5 surface-input border-(length:--border-width) border-border rounded text-[10px] font-mono font-bold text-foreground shadow-xs flex items-center">
                     <CornerDownLeft size={10} />
                   </kbd>
                   play
