@@ -1,5 +1,17 @@
+/**
+ * Ensure any repository we take reference from or code from isn't referenced or spoken about anywhere either in files or readme or code
+ * Original: packages/ui/src/components/Input/Input.tsx
+ * Adapted for Sloth by syedzahidsaleem2@gmail.com
+ * Changes: [styling system, data layer, routing]
+ */
+
 import { cva, type VariantProps } from 'class-variance-authority';
-import { ComponentPropsWithoutRef, forwardRef, useId, type ReactNode } from 'react';
+import {
+  ComponentPropsWithoutRef,
+  forwardRef,
+  useId,
+  type ReactNode,
+} from 'react';
 import { cn } from '@/lib/utils';
 
 export const inputVariants = cva(
@@ -20,7 +32,7 @@ export const inputVariants = cva(
       },
       size: {
         sm: 'h-9 text-sm',
-        default: 'h-10 text-base',
+        default: 'h-10',
         lg: 'h-11 text-lg',
       },
       state: {
@@ -28,7 +40,7 @@ export const inputVariants = cva(
         error: 'border-accent-red',
       },
       withAddon: {
-        false: 'rounded-md border-(length:--border-width)',
+        false: 'rounded border-(length:--border-width)',
         true: 'rounded-l border-0 focus-visible:ring-0 focus-visible:ring-offset-0',
       },
     },
@@ -42,13 +54,14 @@ export const inputVariants = cva(
   },
 );
 
-export type InputProps = Omit<ComponentPropsWithoutRef<'input'>, 'size'> &
+export type InputProps = Omit<ComponentPropsWithoutRef<'input'>, 'type' | 'size'> &
   VariantProps<typeof inputVariants> & {
     label?: string;
     description?: string;
     error?: string;
     startAddon?: ReactNode;
     endAddon?: ReactNode;
+    type?: string;
   };
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
@@ -74,12 +87,19 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   const descriptionId = `${inputId}-description`;
   const errorId = `${inputId}-error`;
 
+  const describedBy = [
+    description ? descriptionId : null,
+    error ? errorId : null,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   const state = error ? 'error' : 'normal';
   const resolvedType =
     type ?? (variant === 'password' ? 'password' : variant === 'number' ? 'number' : 'text');
 
   return (
-    <div className="flex w-full flex-col gap-1.5">
+    <div className="flex w-full flex-col gap-2">
       {label && (
         <label
           htmlFor={inputId}
@@ -89,46 +109,63 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           {label}
         </label>
       )}
-      <div className="relative flex w-full items-center">
-        {startAddon && (
-          <div className="border-border surface-muted flex h-10 items-center justify-center border-y-(length:--border-width) border-l-(length:--border-width) rounded-l-md px-3 text-sm">
-            {startAddon}
-          </div>
-        )}
+      {endAddon || startAddon ? (
+        <div className="border-border has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-muted inline-flex w-full items-stretch overflow-hidden rounded border-(length:--border-width) has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-offset-2">
+          {startAddon && (
+            <div className="surface-primary border-border flex items-center gap-2 border-r-(length:--border-width) px-3 text-sm">
+              {startAddon}
+            </div>
+          )}
+          <input
+            id={inputId}
+            ref={ref}
+            type={resolvedType}
+            aria-labelledby={label ? labelId : undefined}
+            aria-describedby={describedBy || undefined}
+            aria-invalid={!!error || undefined}
+            aria-errormessage={error ? errorId : undefined}
+            inputMode={variant === 'number' ? 'numeric' : undefined}
+            className={cn(
+              inputVariants({
+                variant,
+                size,
+                tone,
+                state,
+                withAddon: true,
+                className,
+              }),
+            )}
+            {...rest}
+          />
+          {endAddon && (
+            <div className="surface-primary border-border flex items-center gap-2 border-l-(length:--border-width) px-3 text-sm">
+              {endAddon}
+            </div>
+          )}
+        </div>
+      ) : (
         <input
           id={inputId}
           ref={ref}
           type={resolvedType}
-          aria-describedby={
-            [description ? descriptionId : null, error ? errorId : null]
-              .filter(Boolean)
-              .join(' ') || undefined
-          }
+          aria-labelledby={label ? labelId : undefined}
+          aria-describedby={describedBy || undefined}
+          aria-invalid={!!error || undefined}
+          aria-errormessage={error ? errorId : undefined}
+          inputMode={variant === 'number' ? 'numeric' : undefined}
           className={cn(
-            inputVariants({
-              variant,
-              tone,
-              size,
-              state,
-              withAddon: Boolean(startAddon || endAddon),
-              className,
-            }),
+            inputVariants({ variant, size, tone, state, className }),
           )}
           {...rest}
         />
-        {endAddon && (
-          <div className="border-border surface-muted flex h-10 items-center justify-center border-y-(length:--border-width) border-r-(length:--border-width) rounded-r-md px-3 text-sm">
-            {endAddon}
-          </div>
-        )}
-      </div>
+      )}
       {description && !error && (
-        <p id={descriptionId} className="text-foreground/60 text-xs">
+        <p id={descriptionId} className="text-foreground/60 text-sm select-none">
           {description}
         </p>
       )}
       {error && (
-        <p id={errorId} className="text-accent-red text-xs font-medium">
+        <p id={errorId} className="text-accent-red text-xs select-none">
           {error}
         </p>
       )}
