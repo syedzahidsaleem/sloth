@@ -87,6 +87,9 @@ export interface SlothSettings {
   // Lyrics
   enableSyncedLyrics?: boolean;
   karaokeModeDefault?: boolean;
+  cleanLyricHeaders?: boolean;
+  autoScrollLyrics?: boolean;
+  preferSyncedLyrics?: boolean;
 
   // Integrations
   lastFmEnabled: boolean;
@@ -143,6 +146,9 @@ export const DEFAULT_SETTINGS: SlothSettings = {
 
   enableSyncedLyrics: true,
   karaokeModeDefault: true,
+  cleanLyricHeaders: true,
+  autoScrollLyrics: true,
+  preferSyncedLyrics: true,
 
   lastFmEnabled: false,
   lastFmUsername: '',
