@@ -90,6 +90,7 @@ export interface SlothSettings {
   cleanLyricHeaders?: boolean;
   autoScrollLyrics?: boolean;
   preferSyncedLyrics?: boolean;
+  lyricsFontSize?: number;
 
   // Integrations
   lastFmEnabled: boolean;
@@ -149,6 +150,7 @@ export const DEFAULT_SETTINGS: SlothSettings = {
   cleanLyricHeaders: true,
   autoScrollLyrics: true,
   preferSyncedLyrics: true,
+  lyricsFontSize: 16,
 
   lastFmEnabled: false,
   lastFmUsername: '',
