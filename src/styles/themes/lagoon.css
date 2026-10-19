@@ -1,0 +1,33 @@
+/**
+ * Sloth Theme: Lagoon
+ * Deep oceanic cyan-charcoal dark theme with bright aqua accent.
+ */
+
+:root[data-theme-id='nuclear:lagoon'],
+:root[data-theme-id='sloth:lagoon'],
+:root[data-theme-id='lagoon'],
+:root[data-theme='lagoon'],
+:root[data-theme='aqua'] {
+  --background: oklch(0.20 0.025 205);
+  --muted: oklch(0.25 0.03 205);
+  --input: oklch(0.16 0.02 205);
+  --card: oklch(0.28 0.035 205);
+  --popover: oklch(0.28 0.035 205);
+  --surface: oklch(0.25 0.03 205);
+  --surface-raised: oklch(0.28 0.035 205);
+
+  --primary: oklch(0.68 0.16 205);
+  --primary-foreground: oklch(0.12 0.02 205);
+  --foreground: oklch(0.95 0.008 205);
+  --muted-foreground: oklch(0.78 0.015 205);
+  --border: oklch(0.42 0.04 205);
+
+  --color-accent: oklch(0.72 0.16 205);
+  --color-accent-foreground: oklch(0.12 0.02 205);
+
+  --background-gradient: none;
+  --muted-gradient: none;
+  --card-gradient: none;
+  --popover-gradient: none;
+  --primary-gradient: none;
+}
