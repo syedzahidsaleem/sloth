@@ -40,7 +40,7 @@ describe('Sloth Player & Queue UI Components', () => {
 
       const primaryButton = playerControlVariants({ variant: 'primary', size: 'lg' });
       expect(primaryButton).toContain('bg-[var(--color-accent)]');
-      expect(primaryButton).toContain('rounded-[6px]');
+      expect(primaryButton).toContain('rounded-[4px]');
 
       const activeToggle = playerControlVariants({ variant: 'accentToggle', active: true });
       expect(activeToggle).toContain('text-[var(--color-accent)]');

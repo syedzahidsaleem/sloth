@@ -10,7 +10,8 @@ import { useCallback, useState } from 'react';
 const API_BASE =
   typeof window !== 'undefined' && (window as any).__SLOTH_DOWNLOADER_URL__
     ? (window as any).__SLOTH_DOWNLOADER_URL__
-    : process.env.NEXT_PUBLIC_DOWNLOADER_URL || 'http://127.0.0.1:8802';
+    : (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_DOWNLOADER_URL) ||
+      'http://127.0.0.1:8802';
 
 export interface IndexerState {
   indexed: number;
