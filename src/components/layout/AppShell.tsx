@@ -2,51 +2,38 @@ import { FC, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 export interface AppShellProps {
-  sidebar: ReactNode;
-  mainContent: ReactNode;
-  playerBar: ReactNode;
   topbar?: ReactNode;
+  children: ReactNode;
+  playerBar?: ReactNode;
+  sidebar?: ReactNode;
+  mainContent?: ReactNode;
   className?: string;
 }
 
 export const AppShell: FC<AppShellProps> = ({
+  topbar,
+  children,
+  playerBar,
   sidebar,
   mainContent,
-  playerBar,
-  topbar,
   className,
 }) => {
   return (
     <div
+      data-testid="app-shell"
       className={cn(
-        'h-screen w-screen overflow-hidden flex flex-col',
-        'bg-[var(--background)] text-[var(--text-primary)] font-sans',
+        'surface-background text-foreground grid h-screen w-screen grid-rows-[auto_1fr_auto] overflow-hidden select-none font-sans',
         className,
       )}
     >
-      {topbar && (
-        <div className="shrink-0 z-40 border-b border-[var(--border)]">
-          {topbar}
-        </div>
-      )}
-
-      {/* Main Workspace: CSS Grid [sidebar] [main] */}
-      <div className="grid grid-cols-[220px_1fr] flex-1 min-h-0 w-full overflow-hidden">
-        {/* Fixed 220px Sidebar container */}
-        <div className="w-[220px] h-full overflow-hidden">
+      {topbar}
+      {children ? children : (
+        <div className="relative flex flex-1 min-h-0 overflow-hidden">
           {sidebar}
-        </div>
-
-        {/* Fluid Scrollable Main Content container */}
-        <div className="min-w-0 h-full flex flex-col overflow-hidden">
           {mainContent}
         </div>
-      </div>
-
-      {/* Fixed 72px Player Bar container */}
-      <div className="h-[72px] min-h-[72px] max-h-[72px] w-full shrink-0 z-50">
-        {playerBar}
-      </div>
+      )}
+      {playerBar}
     </div>
   );
 };
