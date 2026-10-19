@@ -402,9 +402,18 @@ export const SettingsModal: FC<SettingsModalProps> = ({
         </nav>
 
         {/* RIGHT COLUMN: Settings Content Panel */}
-        <div className="surface-background flex-1 min-w-0 overflow-y-auto p-8 text-foreground font-sans">
-          {/* TAB: APPEARANCE (Exact match to Screenshot 2) */}
-          {activeTab === 'appearance' && (
+        <div className="surface-background flex-1 min-w-0 overflow-y-auto p-8 text-foreground font-sans scroll-smooth">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 8 }}
+              animate={shouldReduce ? { opacity: 1 } : { opacity: 1, y: 0 }}
+              exit={shouldReduce ? { opacity: 0 } : { opacity: 0, y: -6 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
+              className="w-full"
+            >
+              {/* TAB: APPEARANCE (Exact match to Screenshot 2) */}
+              {activeTab === 'appearance' && (
             <div className="flex flex-col gap-6 max-w-2xl">
               <h2 className="text-2xl font-bold tracking-tight">Appearance</h2>
 
@@ -1037,6 +1046,8 @@ export const SettingsModal: FC<SettingsModalProps> = ({
               </div>
             </div>
           )}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </motion.div>
     </div>
