@@ -1,3 +1,10 @@
+/**
+ * Ensure any repository we take reference from or code from isn't referenced or spoken about anywhere either in files or readme or code
+ * Original: packages/player/src/views/Plugins/Plugins.tsx
+ * Adapted for Sloth by syedzahidsaleem2@gmail.com
+ * Changes: [styling system, data layer, routing, community registry, dev reloading]
+ */
+
 import { FC, useState, useMemo, useEffect } from 'react';
 import {
   Package,
@@ -141,7 +148,7 @@ export const PluginsPage: FC = () => {
               Plugin Marketplace & Extensions
             </h1>
             <p className="font-mono text-[11px] text-[var(--text-muted)]">
-              Nuclear dynamic plugins • Community registry
+              Sloth dynamic plugins • Community registry
             </p>
           </div>
         </div>
