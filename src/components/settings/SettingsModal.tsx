@@ -892,10 +892,14 @@ export const SettingsModal: FC<SettingsModalProps> = ({
 
               {/* Basic themes */}
               <div className="flex flex-col gap-3">
-                <h3 className="text-base font-bold">Basic themes</h3>
+                <h3 className="text-base font-bold font-heading">Basic themes</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                   {BUILTIN_THEMES.map((theme) => {
-                    const isActive = currentThemeId === theme.id;
+                    const isActive =
+                      currentThemeId === theme.id ||
+                      (theme.id === 'default' &&
+                        (currentThemeId === 'nuclear:default' || currentThemeId === 'default')) ||
+                      currentThemeId.replace('nuclear:', '') === theme.id.replace('nuclear:', '');
 
                     return (
                       <button
@@ -903,21 +907,21 @@ export const SettingsModal: FC<SettingsModalProps> = ({
                         type="button"
                         onClick={() => handleSelectTheme(theme.id)}
                         className={cn(
-                          'flex flex-col justify-between items-start gap-3 p-3 rounded-md border-(length:--border-width) border-border shadow-shadow cursor-pointer transition-all text-left',
+                          'flex flex-col justify-between items-start gap-2.5 px-4 py-3 rounded-md border-(length:--border-width) border-border cursor-pointer transition-all text-left',
                           isActive
-                            ? 'surface-primary'
-                            : 'surface-input hover:scale-[1.02]'
+                            ? 'surface-primary shadow-shadow font-bold'
+                            : 'surface-input shadow-shadow hover:translate-x-0.5 hover:translate-y-0.5'
                         )}
                       >
-                        <span className="text-xs font-bold">{theme.name}</span>
+                        <span className="text-sm font-bold font-heading">{theme.name}</span>
 
                         {/* 4 Palette Dots */}
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1.5">
                           {theme.palette.map((color, idx) => (
                             <span
                               key={idx}
                               aria-hidden
-                              className="size-4 rounded-full border border-black shadow-xs shrink-0"
+                              className="size-4.5 rounded-full border border-black/40 ring-1 ring-border/20 shadow-xs shrink-0"
                               style={{ backgroundColor: color }}
                             />
                           ))}
