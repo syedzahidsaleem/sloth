@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Search, X, Sparkles, Settings as SettingsIco
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { SlothLogo } from '@/components/ui/SlothLogo';
+import { ThemeController } from '@/components/ui/ThemeController';
 import { cn } from '@/lib/utils';
 
 export type TopBarProps = {
@@ -48,7 +49,7 @@ export const TopBar: FC<TopBarProps> = ({
           className="flex items-center gap-2 cursor-pointer ml-0.5 group"
           title={`Sloth ${version}`}
         >
-          <div className="size-8 rounded-lg bg-white text-black flex items-center justify-center border-2 border-black shadow-[2px_2px_0px_#000] group-hover:scale-105 transition-transform">
+          <div className="size-8 rounded-lg surface-muted text-foreground flex items-center justify-center border-2 border-border shadow-[2px_2px_0px_var(--border)] group-hover:scale-105 transition-transform">
             <SlothLogo size={20} />
           </div>
           <span className="font-heading font-extrabold text-sm tracking-tight text-foreground hidden sm:inline">
@@ -64,7 +65,7 @@ export const TopBar: FC<TopBarProps> = ({
             disabled={!canGoBack}
             onClick={onBack}
             aria-label="Back"
-            className="size-7.5 rounded p-0 flex items-center justify-center"
+            className="size-7.5 rounded p-0 flex items-center justify-center border-2 border-border shadow-[2px_2px_0px_var(--border)]"
           >
             <ChevronLeft size={16} />
           </Button>
@@ -74,7 +75,7 @@ export const TopBar: FC<TopBarProps> = ({
             disabled={!canGoForward}
             onClick={onForward}
             aria-label="Forward"
-            className="size-7.5 rounded p-0 flex items-center justify-center"
+            className="size-7.5 rounded p-0 flex items-center justify-center border-2 border-border shadow-[2px_2px_0px_var(--border)]"
           >
             <ChevronRight size={16} />
           </Button>
@@ -86,7 +87,7 @@ export const TopBar: FC<TopBarProps> = ({
           variant="pill"
           color="green"
           animated
-          className="cursor-pointer font-bold border-2 border-black text-black"
+          className="cursor-pointer font-bold border-2 border-border text-foreground"
         >
           Click to update
         </Badge>
@@ -101,7 +102,7 @@ export const TopBar: FC<TopBarProps> = ({
           }}
           className="relative w-full"
         >
-          <Search className="text-black/60 pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+          <Search className="text-foreground/60 pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
           <input
             data-testid="search-box"
             type="text"
@@ -114,7 +115,7 @@ export const TopBar: FC<TopBarProps> = ({
               }
             }}
             placeholder="Search"
-            className="surface-background border-2 border-black text-black placeholder:text-black/50 h-8 w-full rounded-lg pl-9 pr-8 text-sm outline-none shadow-[2px_2px_0px_#000] font-medium"
+            className="surface-background border-2 border-border text-foreground placeholder:text-foreground/50 h-8 w-full rounded-lg pl-9 pr-8 text-sm outline-none shadow-[2px_2px_0px_var(--border)] font-medium"
           />
           {searchQuery.length > 0 && (
             <button
@@ -129,7 +130,7 @@ export const TopBar: FC<TopBarProps> = ({
         </form>
       </div>
 
-      {/* Right items: Jam / Ask Sloth / Settings button */}
+      {/* Right items: Jam / Ask Sloth / Settings button / Theme Controller */}
       <div className="flex flex-row items-center justify-end gap-2">
         {onOpenAskSloth && (
           <Button
@@ -166,6 +167,9 @@ export const TopBar: FC<TopBarProps> = ({
             <SettingsIcon size={16} />
           </Button>
         )}
+
+        {/* Dark Mode Toggle Controller (Matches Nuclear TopBar) */}
+        <ThemeController />
       </div>
     </header>
   );
