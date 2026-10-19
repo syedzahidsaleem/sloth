@@ -1,0 +1,34 @@
+/**
+ * Sloth Theme: Arctic Moss
+ * Forest emerald-charcoal dark theme with vivid moss/mint accent.
+ */
+
+:root[data-theme-id='nuclear:arctic-moss'],
+:root[data-theme-id='sloth:arctic-moss'],
+:root[data-theme-id='arctic-moss'],
+:root[data-theme-id='moss'],
+:root[data-theme='moss'],
+:root[data-theme='green'] {
+  --background: oklch(0.20 0.02 175);
+  --muted: oklch(0.25 0.025 175);
+  --input: oklch(0.16 0.015 175);
+  --card: oklch(0.28 0.03 175);
+  --popover: oklch(0.28 0.03 175);
+  --surface: oklch(0.25 0.025 175);
+  --surface-raised: oklch(0.28 0.03 175);
+
+  --primary: oklch(0.70 0.14 175);
+  --primary-foreground: oklch(0.12 0.02 175);
+  --foreground: oklch(0.95 0.008 175);
+  --muted-foreground: oklch(0.78 0.015 175);
+  --border: oklch(0.42 0.035 175);
+
+  --color-accent: oklch(0.72 0.14 175);
+  --color-accent-foreground: oklch(0.12 0.02 175);
+
+  --background-gradient: none;
+  --muted-gradient: none;
+  --card-gradient: none;
+  --popover-gradient: none;
+  --primary-gradient: none;
+}
