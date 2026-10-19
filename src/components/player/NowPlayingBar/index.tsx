@@ -83,14 +83,15 @@ export const NowPlayingBar: FC<PlayerStateProps> = ({
         </div>
 
         {/* Column 3: Volume & Secondary Actions */}
-        <div className="flex items-center gap-3 md:gap-4 justify-self-end">
+        <div className="hidden sm:flex items-center gap-3 md:gap-4 justify-self-end">
           <VolumeControl
             volume={volume}
             isMuted={isMuted}
             onVolumeChange={onVolumeChange}
             onMuteToggle={onMuteToggle}
+            className="hidden md:flex"
           />
-          <div className="h-4 w-[1px] bg-[var(--border)]" />
+          <div className="hidden md:block h-4 w-[1px] bg-[var(--border)]" />
           <SecondaryControls
             isQueueOpen={isQueueOpen}
             onQueueToggle={onQueueToggle}
