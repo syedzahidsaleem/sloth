@@ -29,7 +29,8 @@ export function createDatabase(
   dbPath?: string,
   options: { autoMigrate?: boolean } = { autoMigrate: true }
 ): DatabaseConnection {
-  const resolvedPath = dbPath ?? process.env.DATABASE_PATH ?? 'sloth.db';
+  const globalProcess = typeof globalThis !== 'undefined' ? (globalThis as any).process : undefined;
+  const resolvedPath = dbPath ?? globalProcess?.env?.DATABASE_PATH ?? 'sloth.db';
   const sqlite = new Database(resolvedPath);
 
   // WAL mode and essential SQLite performance & integrity pragmas
