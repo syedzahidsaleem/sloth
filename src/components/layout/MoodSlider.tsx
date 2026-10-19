@@ -281,9 +281,9 @@ export const MoodSlider: FC<MoodSliderProps> = ({
             onClick={handleReset}
             title="Reset mood to neutral"
             aria-label="Reset mood sliders"
-            className="text-[var(--text-muted)] hover:text-[var(--text-primary)] p-0.5 rounded-[2px] transition-colors cursor-pointer"
+            className="text-[var(--text-muted)] hover:text-[var(--text-primary)] p-1 min-size-6 flex items-center justify-center rounded-[4px] transition-colors cursor-pointer"
           >
-            <RotateCcw size={10} aria-hidden="true" />
+            <RotateCcw size={12} aria-hidden="true" />
           </button>
         </div>
       </div>
