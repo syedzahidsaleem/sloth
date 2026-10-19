@@ -1,42 +1,36 @@
-import { useState, useEffect } from 'react';
-import {
-  Search,
-  Sparkles,
-  Disc,
-  ChevronLeft,
-} from 'lucide-react';
-import {
-  Button,
-  Input,
-  TrackRow,
-  Track,
-  Modal,
-} from './components/ui';
+import { useState, useEffect, useCallback } from 'react';
 import {
   AppShell,
   Sidebar,
-  MainContent,
+  PlayerBar,
+  TopBar,
+  PlayerWorkspace,
+  ConnectedQueuePanel,
   NavItemKey,
 } from './components/layout';
-import { NowPlayingBar, QueuePanel } from './components/player';
-import HomePage from './app/page';
+import { Track } from './components/ui/TrackRow';
+import { SettingsModal, SettingsTabId } from './components/settings/SettingsModal';
+
+// Pages
+import DashboardPage from './app/page';
+import FavoriteAlbumsPage from './app/favorites/albums/page';
+import FavoriteTracksPage from './app/favorites/tracks/page';
+import FavoriteArtistsPage from './app/favorites/artists/page';
+import SourcesPage from './app/sources/page';
+import HistoryPage from './app/history/page';
+import PlaylistsPage from './app/playlists/page';
+import LyricsPage from './app/lyrics/page';
 import SearchPage from './app/search/page';
 import ArtistPage from './app/artist/[id]/page';
 import AlbumPage from './app/album/[id]/page';
-import SettingsPage from './app/settings/page';
 import PluginsPage from './app/plugins/page';
-import { LyricsView } from './components/lyrics';
-import { parseLrc, SAMPLE_MIDNIGHT_CITY_LRC } from './lyrics/parser';
-import { GenreQuizModal } from './components/onboarding';
-import { getSlothSettings } from './services/settingsStore';
-import {
-  AccentPalette,
-  setAccentPalette,
-  getCurrentAccent,
-} from './styles/tokens';
-import { AskSlothModal, useAskSloth } from './features/ask-sloth';
 
-const SAMPLE_TRACKS: Track[] = [
+// Features & Modals
+import { AskSlothModal, useAskSloth } from './features/ask-sloth';
+import { GenreQuizModal } from './components/onboarding';
+import { getSlothSettings, applyTheme } from './services/settingsStore';
+
+export const SAMPLE_TRACKS: Track[] = [
   {
     id: '1',
     title: 'Midnight City',
@@ -105,59 +99,154 @@ const SAMPLE_TRACKS: Track[] = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<NavItemKey>('home');
+  // Navigation & View state
+  const [activeTab, setActiveTab] = useState<NavItemKey>('dashboard');
   const [route, setRoute] = useState<{
-    view: 'home' | 'search' | 'artist' | 'album' | 'library' | 'playlists' | 'plugins' | 'settings';
+    view:
+      | 'dashboard'
+      | 'favorite-albums'
+      | 'favorite-tracks'
+      | 'favorite-artists'
+      | 'playlists'
+      | 'history'
+      | 'lyrics'
+      | 'sources'
+      | 'preferences'
+      | 'search'
+      | 'artist'
+      | 'album'
+      | 'home'
+      | 'library'
+      | 'plugins';
     id?: string;
-  }>({ view: 'home' });
-  const [currentAccent, setCurrentAccent] = useState<AccentPalette>('green');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  }>({ view: 'dashboard' });
 
-  const handleTabChange = (tab: NavItemKey) => {
-    setActiveTab(tab);
-    setRoute({ view: tab });
-  };
-
-  // Playback state
-  const [tracks, setTracks] = useState<Track[]>(SAMPLE_TRACKS);
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
-  const currentTrack = tracks[currentTrackIndex] || SAMPLE_TRACKS[0];
-
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(42);
-  const [volume, setVolume] = useState(80);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isShuffle, setIsShuffle] = useState(false);
-  const [repeatMode, setRepeatMode] = useState<'off' | 'all' | 'one'>('off');
-  const [isQueueOpen, setIsQueueOpen] = useState(false);
-  const [isLyricsOpen, setIsLyricsOpen] = useState(false);
+  // Sidebar Layout State (collapsible left & right)
+  const [leftSidebarWidth, setLeftSidebarWidth] = useState(220);
+  const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
+  const [rightSidebarWidth, setRightSidebarWidth] = useState(280);
+  const [isRightCollapsed, setIsRightCollapsed] = useState(false);
 
   // Search input state
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Modals
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settingsInitialTab, setSettingsInitialTab] = useState<SettingsTabId>('appearance');
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+
+  // Playback state (defaults to empty queue like screenshot 1)
+  const [queue, setQueue] = useState<Track[]>([]);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+  const currentTrack = queue[currentTrackIndex] || {
+    id: 'none',
+    title: 'No track playing',
+    artist: 'Unknown artist',
+    durationSeconds: 0,
+    isFavorite: false,
+  };
+
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [volume, setVolume] = useState(80);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isShuffle, setIsShuffle] = useState(false);
+  const [repeatMode, setRepeatMode] = useState<'off' | 'all' | 'one'>('off');
+
+  // History tracking
+  const [historyTracks, setHistoryTracks] = useState<Track[]>([]);
+
   // Ask Sloth natural language command palette
   const askSloth = useAskSloth();
 
-  // Sync initial accent and check onboarding on mount
-  useEffect(() => {
-    const acc = getCurrentAccent();
-    setCurrentAccent(acc);
-    setAccentPalette(acc);
+  // Handle Tab Switch
+  const handleTabChange = (tab: NavItemKey) => {
+    setActiveTab(tab);
+    if (tab === 'preferences' || tab === 'settings') {
+      setIsSettingsOpen(true);
+      return;
+    }
+    if (tab === 'dashboard' || tab === 'home') {
+      setRoute({ view: 'dashboard' });
+    } else {
+      setRoute({ view: tab as any });
+    }
+  };
 
+  const openSettingsTab = (tab: SettingsTabId) => {
+    setSettingsInitialTab(tab);
+    setIsSettingsOpen(true);
+  };
+
+  // Keyboard Shortcuts (Space, Ctrl+K, Ctrl+Q, Ctrl+F)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in input
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        (e.target as HTMLElement).isContentEditable
+      ) {
+        return;
+      }
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (queue.length > 0) {
+          setIsPlaying((prev) => !prev);
+        }
+      } else if (e.ctrlKey && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        askSloth.openModal();
+      } else if (e.ctrlKey && e.key.toLowerCase() === 'q') {
+        e.preventDefault();
+        setIsRightCollapsed((prev) => !prev);
+      } else if (e.ctrlKey && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        const searchInput = document.querySelector<HTMLInputElement>('[data-testid="search-box"]');
+        searchInput?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [queue.length, askSloth]);
+
+  // Initial Check & Theme Initialization
+  useEffect(() => {
     const userSettings = getSlothSettings();
+    applyTheme(userSettings.themeId || 'nuclear:default');
     if (!userSettings.onboardingCompleted) {
-      setIsOnboardingOpen(true);
+      setIsOnboardingOpen(false); // default clean start
     }
   }, []);
 
+  // Expose test & regression hooks on window
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).__SLOTH_NAV__ = {
+        setRoute,
+        setActiveTab,
+        setIsPlaying,
+        openSettings: () => setIsSettingsOpen(true),
+        closeSettings: () => setIsSettingsOpen(false),
+        openAskSloth: () => askSloth.openModal(),
+        closeAskSloth: () => askSloth.closeModal(),
+        setSearchQuery,
+        setEmptyLibrary: () => setQueue([]),
+        setPopulatedLibrary: () => setQueue(SAMPLE_TRACKS),
+        toggleLeftSidebar: () => setIsLeftCollapsed((prev) => !prev),
+        toggleRightSidebar: () => setIsRightCollapsed((prev) => !prev),
+      };
+    }
+  }, [askSloth]);
+
   // Simulated progress timer when playing
   useEffect(() => {
-    if (!isPlaying) return;
+    if (!isPlaying || currentTrack.durationSeconds <= 0) return;
     const interval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= currentTrack.durationSeconds) {
-          // Track ended, handle repeat or next
           if (repeatMode === 'one') return 0;
           handleNextTrack();
           return 0;
@@ -168,41 +257,46 @@ export default function App() {
     return () => clearInterval(interval);
   }, [isPlaying, currentTrack.durationSeconds, repeatMode]);
 
-  const handleAccentChange = (accent: AccentPalette) => {
-    setCurrentAccent(accent);
-    setAccentPalette(accent);
-  };
+  const handlePlayTrack = useCallback((track: Track) => {
+    setQueue((prev) => {
+      const exists = prev.some((t) => t.id === track.id);
+      if (!exists) {
+        return [...prev, track];
+      }
+      return prev;
+    });
 
-  const handleFavoriteToggle = (track: Track) => {
-    setTracks((prev) =>
-      prev.map((t) => (t.id === track.id ? { ...t, isFavorite: !t.isFavorite } : t)),
-    );
-  };
-
-  const handlePlayTrack = (track: Track) => {
-    const idx = tracks.findIndex((t) => t.id === track.id);
-    if (idx !== -1) {
-      setCurrentTrackIndex(idx);
+    const existingIdx = queue.findIndex((t) => t.id === track.id);
+    if (existingIdx !== -1) {
+      setCurrentTrackIndex(existingIdx);
+    } else {
+      setCurrentTrackIndex(queue.length);
     }
+
     setProgress(0);
     setIsPlaying(true);
-  };
+
+    // Record into history
+    setHistoryTracks((prev) => [track, ...prev.filter((t) => t.id !== track.id)]);
+  }, [queue]);
 
   const handleNextTrack = () => {
+    if (queue.length === 0) return;
     if (isShuffle) {
-      const nextIdx = Math.floor(Math.random() * tracks.length);
+      const nextIdx = Math.floor(Math.random() * queue.length);
       setCurrentTrackIndex(nextIdx);
     } else {
-      setCurrentTrackIndex((prev) => (prev + 1) % tracks.length);
+      setCurrentTrackIndex((prev) => (prev + 1) % queue.length);
     }
     setProgress(0);
   };
 
   const handlePreviousTrack = () => {
+    if (queue.length === 0) return;
     if (progress > 3) {
       setProgress(0);
     } else {
-      setCurrentTrackIndex((prev) => (prev - 1 + tracks.length) % tracks.length);
+      setCurrentTrackIndex((prev) => (prev - 1 + queue.length) % queue.length);
       setProgress(0);
     }
   };
@@ -213,368 +307,263 @@ export default function App() {
       all: 'one',
       one: 'off',
     };
-    setRepeatMode(nextMode[repeatMode]);
+    setRepeatMode(nextMode[repeatMode] || 'off');
   };
 
+  const handleFavoriteToggle = (track: Track) => {
+    setQueue((prev) =>
+      prev.map((t) => (t.id === track.id ? { ...t, isFavorite: !t.isFavorite } : t)),
+    );
+  };
+
+  const handleSearchSubmit = () => {
+    if (searchQuery.trim().length > 0) {
+      setActiveTab('search');
+      setRoute({ view: 'search' });
+    }
+  };
 
   return (
     <>
-    <AppShell
-      topbar={
-        <div className="h-12 px-4 flex items-center justify-between bg-[var(--surface)] select-none">
-          {/* Back button + Search Bar */}
-          <div className="flex items-center gap-3">
-            {(route.view === 'artist' || route.view === 'album') && (
-              <button
-                type="button"
-                onClick={() => {
-                  setRoute({ view: 'home' });
-                  setActiveTab('home');
+      <AppShell
+        topbar={
+          <TopBar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onSearchSubmit={handleSearchSubmit}
+            onBack={() => handleTabChange('dashboard')}
+            onForward={() => {}}
+            onOpenSettings={() => openSettingsTab('appearance')}
+            onOpenAskSloth={() => askSloth.openModal()}
+            onOpenJam={() => openSettingsTab('integrations')}
+          />
+        }
+        playerBar={
+          <PlayerBar
+            title={currentTrack.title}
+            artist={currentTrack.artist}
+            coverUrl={currentTrack.coverUrl}
+            isFavorite={currentTrack.isFavorite}
+            onFavoriteToggle={() => handleFavoriteToggle(currentTrack)}
+            isPlaying={isPlaying}
+            onPlayPause={() => {
+              if (queue.length === 0) {
+                // Populate demo track if queue was empty
+                handlePlayTrack(SAMPLE_TRACKS[0]);
+              } else {
+                setIsPlaying(!isPlaying);
+              }
+            }}
+            onNext={handleNextTrack}
+            onPrevious={handlePreviousTrack}
+            isShuffle={isShuffle}
+            onShuffleToggle={() => setIsShuffle(!isShuffle)}
+            repeatMode={repeatMode}
+            onRepeatToggle={handleRepeatToggle}
+            progressSeconds={progress}
+            totalDurationSeconds={currentTrack.durationSeconds}
+            onSeek={(sec) => setProgress(sec)}
+            volume={volume}
+            isMuted={isMuted}
+            onVolumeChange={setVolume}
+            onMuteToggle={() => setIsMuted(!isMuted)}
+          />
+        }
+      >
+        <PlayerWorkspace>
+          {/* LEFT SIDEBAR: Collapsible, animated */}
+          <PlayerWorkspace.LeftSidebar
+            width={leftSidebarWidth}
+            isCollapsed={isLeftCollapsed}
+            onWidthChange={setLeftSidebarWidth}
+            onToggle={() => setIsLeftCollapsed(!isLeftCollapsed)}
+          >
+            <Sidebar
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+              onOpenPreferences={() => openSettingsTab('appearance')}
+              isCompact={isLeftCollapsed}
+            />
+          </PlayerWorkspace.LeftSidebar>
+
+          {/* MAIN VIEWPORT: Render active screen in ViewShell */}
+          <PlayerWorkspace.Main>
+            {/* VIEW 1: DASHBOARD (Matches Screenshot 1) */}
+            {(route.view === 'dashboard' || route.view === 'home') && (
+              <DashboardPage
+                onBrowsePlugins={() => {
+                  setActiveTab('plugins');
+                  setRoute({ view: 'plugins' });
                 }}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-[4px] bg-[var(--surface-raised)] hover:bg-[var(--surface-raised)]/80 border border-[var(--border)] text-xs text-[var(--text-secondary)] hover:text-white cursor-pointer transition-colors"
-                title="Back to Dashboard"
-              >
-                <ChevronLeft size={14} />
-                <span>Back</span>
-              </button>
+                onPlayTrack={handlePlayTrack}
+                tracks={SAMPLE_TRACKS}
+                currentTrackId={currentTrack.id}
+                isPlaying={isPlaying}
+                onSelectAlbum={(albId) => setRoute({ view: 'album', id: albId })}
+                onSelectArtist={(artId) => setRoute({ view: 'artist', id: artId })}
+              />
             )}
 
-            <div className="w-72 md:w-80">
-              <Input
-                placeholder="Search tracks, artists, albums..."
-                size="sm"
-                value={searchQuery}
-                onFocus={() => {
-                  setRoute({ view: 'search' });
-                  setActiveTab('search');
-                }}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  if (route.view !== 'search') {
-                    setRoute({ view: 'search' });
-                    setActiveTab('search');
-                  }
-                }}
-                startAddon={<Search size={14} className="text-[var(--text-muted)]" />}
-                className="bg-[var(--background)] border-[var(--border)]"
+            {/* VIEW 2: FAVORITE ALBUMS (Matches Screenshot 7) */}
+            {route.view === 'favorite-albums' && (
+              <FavoriteAlbumsPage
+                albums={[]}
+                onSelectAlbum={(albId) => setRoute({ view: 'album', id: albId })}
               />
-            </div>
+            )}
 
-            <button
-              type="button"
-              data-testid="ask-sloth-topbar-button"
-              onClick={askSloth.openModal}
-              className="flex items-center gap-2 px-2.5 py-1.5 rounded-[4px] bg-[var(--surface-raised)] hover:bg-[var(--surface-raised)]/80 border border-[var(--border)] text-xs text-[var(--text-primary)] hover:border-[var(--color-accent)]/50 transition-colors cursor-pointer"
-              title="Natural Language Search (Cmd+K / Ctrl+K)"
-            >
-              <Sparkles size={13} className="text-[var(--color-accent)]" />
-              <span className="font-medium hidden sm:inline">Ask Sloth</span>
-              <kbd className="px-1.5 py-0.5 rounded-[3px] bg-[var(--background)] border border-[var(--border)] text-[10px] font-mono text-[var(--text-secondary)]">
-                ⌘K
-              </kbd>
-            </button>
-          </div>
+            {/* VIEW 3: FAVORITE TRACKS */}
+            {route.view === 'favorite-tracks' && (
+              <FavoriteTracksPage
+                tracks={queue.length > 0 ? queue : SAMPLE_TRACKS}
+                currentTrackId={currentTrack.id}
+                isPlaying={isPlaying}
+                onPlayTrack={handlePlayTrack}
+              />
+            )}
 
-          {/* Quick Stats & System Badges */}
-          <div className="flex items-center gap-2">
-            <div className="hidden md:flex items-center gap-1.5 px-2 py-1 rounded-[3px] bg-[var(--background)] border border-[var(--border)] text-[10px] font-mono text-[var(--text-secondary)]">
-              <span className="size-1.5 rounded-full bg-[var(--color-accent)] animate-pulse" />
-              <span>OKLCH DESIGN TOKENS</span>
-            </div>
+            {/* VIEW 4: FAVORITE ARTISTS */}
+            {route.view === 'favorite-artists' && (
+              <FavoriteArtistsPage
+                artists={[]}
+                onSelectArtist={(artId) => setRoute({ view: 'artist', id: artId })}
+              />
+            )}
 
-            <Button
-              size="xs"
-              variant="secondary"
-              onClick={() => setIsModalOpen(true)}
-              className="font-mono text-[11px]"
-            >
-              <Sparkles size={12} className="mr-1 text-[var(--color-accent)]" />
-              Token Specs
-            </Button>
-          </div>
-        </div>
-      }
-      sidebar={
-        <Sidebar
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          currentAccent={currentAccent}
-          onAccentChange={handleAccentChange}
-        />
-      }
-      mainContent={
-        <MainContent>
-          {isLyricsOpen ? (
-            <LyricsView
-              trackTitle={currentTrack.title}
-              artistName={currentTrack.artist}
-              albumName={currentTrack.album}
-              lyrics={parseLrc(SAMPLE_MIDNIGHT_CITY_LRC)}
-              progressSeconds={progress}
-              totalDurationSeconds={currentTrack.durationSeconds}
-              onSeek={(sec) => setProgress(sec)}
-              onClose={() => setIsLyricsOpen(false)}
-              trackId={currentTrack.id}
-            />
-          ) : (
-            <>
-              {/* VIEW: HOME DASHBOARD */}
-              {route.view === 'home' && (
-            <HomePage
-              onPlayTrack={handlePlayTrack}
-              onPlayAlbum={() => handlePlayTrack(tracks[0])}
-              onSelectArtist={(artistId) => setRoute({ view: 'artist', id: artistId })}
-              onSelectAlbum={(albumId) => setRoute({ view: 'album', id: albumId })}
+            {/* VIEW 5: PLAYLISTS */}
+            {route.view === 'playlists' && (
+              <PlaylistsPage
+                onPlayPlaylist={() => handlePlayTrack(SAMPLE_TRACKS[0])}
+                onSelectPlaylist={() => {}}
+              />
+            )}
+
+            {/* VIEW 6: HISTORY */}
+            {route.view === 'history' && (
+              <HistoryPage
+                historyTracks={historyTracks}
+                currentTrackId={currentTrack.id}
+                isPlaying={isPlaying}
+                onPlayTrack={handlePlayTrack}
+                onClearHistory={() => setHistoryTracks([])}
+              />
+            )}
+
+            {/* VIEW 7: LYRICS */}
+            {route.view === 'lyrics' && (
+              <LyricsPage
+                trackTitle={currentTrack.title}
+                artistName={currentTrack.artist}
+                albumName={currentTrack.album}
+                progressSeconds={progress}
+                onSeek={(sec) => setProgress(sec)}
+              />
+            )}
+
+            {/* VIEW 8: SOURCES (Matches Screenshot 10) */}
+            {route.view === 'sources' && <SourcesPage />}
+
+            {/* VIEW 9: SEARCH */}
+            {route.view === 'search' && (
+              <SearchPage
+                initialQuery={searchQuery}
+                onPlayTrack={handlePlayTrack}
+                onSelectArtist={(artId) => setRoute({ view: 'artist', id: artId })}
+                onSelectAlbum={(albId) => setRoute({ view: 'album', id: albId })}
+                currentTrackId={currentTrack.id}
+                isPlaying={isPlaying}
+              />
+            )}
+
+            {/* VIEW 10: ARTIST DETAIL */}
+            {route.view === 'artist' && (
+              <ArtistPage
+                artistId={route.id || 'm83'}
+                onPlayTrack={handlePlayTrack}
+                onPlayArtist={() => handlePlayTrack(SAMPLE_TRACKS[0])}
+                onSelectAlbum={(albumId) => setRoute({ view: 'album', id: albumId })}
+                onSelectArtist={(artistId) => setRoute({ view: 'artist', id: artistId })}
+                currentTrackId={currentTrack.id}
+                isPlaying={isPlaying}
+              />
+            )}
+
+            {/* VIEW 11: ALBUM DETAIL */}
+            {route.view === 'album' && (
+              <AlbumPage
+                albumId={route.id || 'alb-1'}
+                onPlayTrack={handlePlayTrack}
+                onPlayAll={(albumTracks) => {
+                  setQueue(albumTracks);
+                  setCurrentTrackIndex(0);
+                  setProgress(0);
+                  setIsPlaying(true);
+                }}
+                onSelectArtist={(artistId) => setRoute({ view: 'artist', id: artistId })}
+                currentTrackId={currentTrack.id}
+                isPlaying={isPlaying}
+              />
+            )}
+
+            {/* VIEW 12: PLUGINS VIEW */}
+            {route.view === 'plugins' && <PluginsPage />}
+          </PlayerWorkspace.Main>
+
+          {/* RIGHT SIDEBAR: Collapsible queue panel */}
+          <PlayerWorkspace.RightSidebar
+            width={rightSidebarWidth}
+            isCollapsed={isRightCollapsed}
+            onWidthChange={setRightSidebarWidth}
+            onToggle={() => setIsRightCollapsed(!isRightCollapsed)}
+          >
+            <ConnectedQueuePanel
+              queue={queue}
               currentTrackId={currentTrack.id}
               isPlaying={isPlaying}
+              isCollapsed={isRightCollapsed}
+              onTrackSelect={handlePlayTrack}
+              onRemoveTrack={(trackId) => setQueue((prev) => prev.filter((t) => t.id !== trackId))}
+              onClearQueue={() => setQueue([])}
             />
-          )}
+          </PlayerWorkspace.RightSidebar>
+        </PlayerWorkspace>
+      </AppShell>
 
-          {/* VIEW: SEARCH CATALOG */}
-          {route.view === 'search' && (
-            <SearchPage
-              onPlayTrack={handlePlayTrack}
-              onSelectArtist={(artistId) => setRoute({ view: 'artist', id: artistId })}
-              onSelectAlbum={(albumId) => setRoute({ view: 'album', id: albumId })}
-              currentTrackId={currentTrack.id}
-              isPlaying={isPlaying}
-            />
-          )}
+      {/* 2-Column Settings Modal (Matches Screenshots 2, 3, 4, 5, 8, 9) */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        initialTab={settingsInitialTab}
+        onNavigateToPlugins={() => {
+          setActiveTab('plugins');
+          setRoute({ view: 'plugins' });
+        }}
+      />
 
-          {/* VIEW: ARTIST PAGE */}
-          {route.view === 'artist' && (
-            <ArtistPage
-              artistId={route.id || 'm83'}
-              onPlayTrack={handlePlayTrack}
-              onPlayArtist={() => handlePlayTrack(tracks[0])}
-              onSelectAlbum={(albumId) => setRoute({ view: 'album', id: albumId })}
-              onSelectArtist={(artistId) => setRoute({ view: 'artist', id: artistId })}
-              currentTrackId={currentTrack.id}
-              isPlaying={isPlaying}
-            />
-          )}
+      {/* Ask Sloth Command Palette Modal (Ctrl+K) */}
+      <AskSlothModal
+        isOpen={askSloth.isOpen}
+        onClose={askSloth.closeModal}
+        query={askSloth.query}
+        onQueryChange={askSloth.setQuery}
+        isLoading={askSloth.isLoading}
+        results={askSloth.results}
+        interpretation={askSloth.interpretation}
+        parsedQuery={askSloth.parsedQuery}
+        elapsedMs={askSloth.elapsedMs}
+        selectedIndex={askSloth.selectedIndex}
+        onSelectIndex={askSloth.setSelectedIndex}
+        onPlayTrack={handlePlayTrack}
+        currentTrackId={currentTrack.id}
+        isPlaying={isPlaying}
+      />
 
-          {/* VIEW: ALBUM PAGE */}
-          {route.view === 'album' && (
-            <AlbumPage
-              albumId={route.id || 'alb-1'}
-              onPlayTrack={handlePlayTrack}
-              onPlayAll={(albumTracks) => {
-                setTracks(albumTracks);
-                setCurrentTrackIndex(0);
-                setProgress(0);
-                setIsPlaying(true);
-              }}
-              onSelectArtist={(artistId) => setRoute({ view: 'artist', id: artistId })}
-              currentTrackId={currentTrack.id}
-              isPlaying={isPlaying}
-            />
-          )}
-
-          {/* TAB 3: LIBRARY */}
-          {activeTab === 'library' && (
-            <div className="space-y-6">
-              <div>
-                <h1 className="text-xl font-bold tracking-tight">Music Library</h1>
-                <p className="text-xs text-[var(--text-muted)] font-mono mt-0.5">
-                  Saved albums, offline cache, and favorite tracks
-                </p>
-              </div>
-
-              {/* Favorites collection */}
-              <div className="space-y-3">
-                <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--text-secondary)] font-mono">
-                  Favorites ({tracks.filter((t) => t.isFavorite).length})
-                </h2>
-                <div className="rounded-[4px] border border-[var(--border)] bg-[var(--surface)] overflow-hidden divide-y divide-[var(--border)]">
-                  {tracks
-                    .filter((t) => t.isFavorite)
-                    .map((t, idx) => (
-                      <TrackRow
-                        key={t.id}
-                        track={t}
-                        index={idx}
-                        isPlaying={isPlaying && currentTrack.id === t.id}
-                        onPlay={() => handlePlayTrack(t)}
-                        onFavoriteToggle={() => handleFavoriteToggle(t)}
-                      />
-                    ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 4: PLAYLISTS */}
-          {activeTab === 'playlists' && (
-            <div className="space-y-6">
-              <div>
-                <h1 className="text-xl font-bold tracking-tight">Playlists</h1>
-                <p className="text-xs text-[var(--text-muted)] font-mono mt-0.5">
-                  Curated flows, AI smart-mixes, and station radios
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {[
-                  { title: 'Synthwave Nightride', count: '48 tracks', badge: 'Synthesizer' },
-                  { title: 'Cyberpunk Lo-Fi', count: '32 tracks', badge: 'Focus' },
-                  { title: 'French Touch & Electro', count: '64 tracks', badge: 'High Energy' },
-                ].map((pl, i) => (
-                  <div
-                    key={i}
-                    className="p-4 rounded-[4px] bg-[var(--surface)] border border-[var(--border)] space-y-3 hover:border-[var(--color-accent)] transition-colors cursor-pointer group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono uppercase bg-[var(--surface-raised)] px-2 py-0.5 rounded text-[var(--color-accent)] border border-[var(--border)]">
-                        {pl.badge}
-                      </span>
-                      <Disc size={16} className="text-[var(--text-muted)] group-hover:text-[var(--color-accent)] transition-colors" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-[var(--text-primary)]">{pl.title}</h3>
-                      <p className="text-xs text-[var(--text-muted)] font-mono">{pl.count}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 5: PLUGINS */}
-          {activeTab === 'plugins' && (
-            <PluginsPage />
-          )}
-
-          {/* TAB 6: SETTINGS */}
-          {activeTab === 'settings' && (
-            <SettingsPage />
-          )}
-            </>
-          )}
-        </MainContent>
-      }
-      playerBar={
-        <NowPlayingBar
-          currentTrack={currentTrack}
-          isPlaying={isPlaying}
-          onPlayPause={() => setIsPlaying(!isPlaying)}
-          onNext={handleNextTrack}
-          onPrevious={handlePreviousTrack}
-          isShuffle={isShuffle}
-          onShuffleToggle={() => setIsShuffle(!isShuffle)}
-          repeatMode={repeatMode}
-          onRepeatToggle={handleRepeatToggle}
-          progressSeconds={progress}
-          totalDurationSeconds={currentTrack.durationSeconds}
-          onSeek={(sec) => setProgress(sec)}
-          volume={volume}
-          isMuted={isMuted}
-          onVolumeChange={setVolume}
-          onMuteToggle={() => setIsMuted(!isMuted)}
-          isQueueOpen={isQueueOpen}
-          onQueueToggle={() => setIsQueueOpen(!isQueueOpen)}
-          isLyricsOpen={isLyricsOpen}
-          onLyricsToggle={() => setIsLyricsOpen(!isLyricsOpen)}
-          onFavoriteToggle={() => handleFavoriteToggle(currentTrack)}
-        />
-      }
-    />
-
-    {/* Draggable Queue Drawer Panel */}
-    <QueuePanel
-      isOpen={isQueueOpen}
-      onClose={() => setIsQueueOpen(false)}
-      queue={tracks}
-      currentTrackId={currentTrack.id}
-      isPlaying={isPlaying}
-      onTrackSelect={(track) => {
-        const idx = tracks.findIndex((t) => t.id === track.id);
-        if (idx !== -1) {
-          setCurrentTrackIndex(idx);
-        }
-        setIsPlaying(true);
-      }}
-      onRemoveTrack={(trackId) => {
-        setTracks((prev) => prev.filter((t) => t.id !== trackId));
-      }}
-      onClearQueue={() => setTracks([])}
-      onReorderQueue={(newQueue) => setTracks(newQueue)}
-      onAddPickToQueue={(pick) => setTracks((prev) => [...prev, pick])}
-    />
-
-    {/* Token Specifications Modal */}
-    <Modal
-      isOpen={isModalOpen}
-      onClose={() => setIsModalOpen(false)}
-      title="Sloth Nuclear Design Tokens"
-      description="Directly ported from Nuclear's visual layout and design system. Surface colors are encoded in OKLCH with user-selectable accent variables."
-      actions={
-        <>
-          <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
-            Close
-          </Button>
-          <Button variant="default" onClick={() => setIsModalOpen(false)}>
-            Understood
-          </Button>
-        </>
-      }
-    >
-      <div className="space-y-3 font-mono text-xs">
-        <div className="flex items-center justify-between border-b border-[var(--border)] pb-1.5">
-          <span className="text-[var(--text-muted)]">--background:</span>
-          <span className="text-[var(--color-accent)] font-semibold">oklch(0.25 0.012 245) (#1e2327)</span>
-        </div>
-        <div className="flex items-center justify-between border-b border-[var(--border)] pb-1.5">
-          <span className="text-[var(--text-muted)]">--surface:</span>
-          <span className="text-[var(--color-accent)] font-semibold">oklch(0.29 0.012 245) (#282d33)</span>
-        </div>
-        <div className="flex items-center justify-between border-b border-[var(--border)] pb-1.5">
-          <span className="text-[var(--text-muted)]">--surface-raised:</span>
-          <span className="text-[var(--color-accent)] font-semibold">oklch(0.33 0.012 245) (#31383f)</span>
-        </div>
-        <div className="flex items-center justify-between border-b border-[var(--border)] pb-1.5">
-          <span className="text-[var(--text-muted)]">--border:</span>
-          <span className="text-[var(--color-accent)] font-semibold">oklch(0.38 0.012 245) (#3d444c)</span>
-        </div>
-        <div className="flex items-center justify-between border-b border-[var(--border)] pb-1.5">
-          <span className="text-[var(--text-muted)]">--sidebar-width:</span>
-          <span className="text-[var(--text-primary)] font-semibold">220px (Fixed)</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-[var(--text-muted)]">--player-height:</span>
-          <span className="text-[var(--text-primary)] font-semibold">72px (Fixed)</span>
-        </div>
-      </div>
-    </Modal>
-
-    {/* First-Launch Coldstart Genre Quiz Modal */}
-    <GenreQuizModal
-      isOpen={isOnboardingOpen}
-      onClose={() => setIsOnboardingOpen(false)}
-      onComplete={() => {
-        setIsOnboardingOpen(false);
-      }}
-    />
-
-    {/* Ask Sloth Command Palette Modal (Cmd+K / Ctrl+K) */}
-    <AskSlothModal
-      isOpen={askSloth.isOpen}
-      onClose={askSloth.closeModal}
-      query={askSloth.query}
-      onQueryChange={askSloth.setQuery}
-      isLoading={askSloth.isLoading}
-      results={askSloth.results}
-      interpretation={askSloth.interpretation}
-      parsedQuery={askSloth.parsedQuery}
-      elapsedMs={askSloth.elapsedMs}
-      selectedIndex={askSloth.selectedIndex}
-      onSelectIndex={askSloth.setSelectedIndex}
-      onPlayTrack={(track) => {
-        handlePlayTrack(track);
-      }}
-      currentTrackId={currentTrack.id}
-      isPlaying={isPlaying}
-    />
+      {/* Coldstart Onboarding Modal */}
+      <GenreQuizModal
+        isOpen={isOnboardingOpen}
+        onClose={() => setIsOnboardingOpen(false)}
+        onComplete={() => setIsOnboardingOpen(false)}
+      />
     </>
   );
 }

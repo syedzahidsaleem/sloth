@@ -1,103 +1,74 @@
-/**
- * Sloth Dashboard / Home Page (src/app/page.tsx)
- * Nuclear-derived content-first layout:
- * - Top-right: Source status indicator (green dot when all sources OK)
- * - "Recently Played" horizontal scroll row of AlbumCards
- * - "Sloth Picks for You" row (algorithmic hypergraph recommendations)
- * - "Trending & New Releases" row
- * - "Top Tracks" high-density list
- * Flat UI, NO hero banner, NO glassmorphism.
- */
-
-import { motion, useReducedMotion, Variants } from 'motion/react';
-import { Sparkles, Clock, TrendingUp, CheckCircle2, Play } from 'lucide-react';
-import { AlbumCard, TrackRow, Track } from '@/components/ui';
+import { FC } from 'react';
+import { Button } from '@/components/ui/Button';
+import { ViewShell } from '@/components/ui/ViewShell';
+import { CardsRow, CardsRowItem } from '@/components/ui/CardsRow';
+import { TrackRow, Track } from '@/components/ui/TrackRow';
 
 export interface DashboardPageProps {
+  onBrowsePlugins?: () => void;
   onPlayTrack?: (track: Track) => void;
-  onPlayAlbum?: (albumTitle: string) => void;
   onSelectArtist?: (artistId: string) => void;
   onSelectAlbum?: (albumId: string) => void;
+  tracks?: Track[];
   currentTrackId?: string;
   isPlaying?: boolean;
 }
 
-export const RECENTLY_PLAYED_ALBUMS = [
+export const RECENTLY_PLAYED_ALBUMS: CardsRowItem[] = [
   {
     id: 'alb-1',
     title: "Hurry Up, We're Dreaming",
     subtitle: 'M83 • 2011',
-    coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80',
-    artistId: 'm83',
+    imageUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80',
   },
   {
     id: 'alb-2',
     title: 'Starboy',
     subtitle: 'The Weeknd • 2016',
-    coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80',
-    artistId: 'the-weeknd',
+    imageUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80',
   },
   {
     id: 'alb-3',
     title: 'Odyssey',
     subtitle: 'HOME • 2014',
-    coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80',
-    artistId: 'home',
-  },
-  {
-    id: 'alb-4',
-    title: 'Random Access Memories',
-    subtitle: 'Daft Punk • 2013',
-    coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80',
-    artistId: 'daft-punk',
-  },
-  {
-    id: 'alb-5',
-    title: 'Discovery',
-    subtitle: 'Daft Punk • 2001',
-    coverUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&q=80',
-    artistId: 'daft-punk',
+    imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80',
   },
 ];
 
 export const SLOTH_PICKS = [
   {
-    id: 'pick-alb-1',
-    title: 'Days of Thunder',
-    subtitle: 'The Midnight • Synthwave',
-    badge: '98% Neural Match',
-    coverUrl: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=300&q=80',
-    artistId: 'the-midnight',
+    id: 'pick-1',
+    title: 'Midnight City',
+    subtitle: 'M83 • Synthpop',
+    imageUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80',
+    badge: 'Neural Match (98%)',
   },
   {
-    id: 'pick-alb-2',
-    title: 'Cross',
-    subtitle: 'Justice • Electro House',
-    badge: 'Hypergraph #1',
-    coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80',
-    artistId: 'justice',
+    id: 'pick-2',
+    title: 'Resonance',
+    subtitle: 'HOME • Chillwave',
+    imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80',
+    badge: 'Hypergraph GNN',
   },
   {
-    id: 'pick-alb-3',
-    title: 'OutRun',
-    subtitle: 'Kavinsky • French Electro',
-    badge: 'MERT Acoustic',
-    coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80',
-    artistId: 'kavinsky',
+    id: 'pick-3',
+    title: 'Veridis Quo',
+    subtitle: 'Daft Punk • House',
+    imageUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&q=80',
+    badge: 'MERT Timbre',
   },
   {
-    id: 'pick-alb-4',
-    title: 'Endless Fantasy',
-    subtitle: 'Anamanaguchi • Chiptune',
+    id: 'pick-4',
+    title: 'Starboy',
+    subtitle: 'The Weeknd • Pop',
+    imageUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80',
     badge: 'BERT4Rec Next',
-    coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80',
-    artistId: 'anamanaguchi',
   },
 ];
 
 export const TRENDING_TRACKS: Track[] = [
   {
-    id: 'trend-1',
+    id: 'tr-1',
     title: 'Midnight City',
     artist: 'M83',
     album: "Hurry Up, We're Dreaming",
@@ -106,193 +77,149 @@ export const TRENDING_TRACKS: Track[] = [
     isFavorite: true,
   },
   {
-    id: 'trend-2',
-    title: 'Starboy',
-    artist: 'The Weeknd, Daft Punk',
-    album: 'Starboy',
-    durationSeconds: 230,
-    coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80',
-    isFavorite: false,
-  },
-  {
-    id: 'trend-3',
-    title: 'Resonance',
-    artist: 'HOME',
-    album: 'Odyssey',
-    durationSeconds: 212,
-    coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80',
-    isFavorite: true,
-  },
-  {
-    id: 'trend-4',
+    id: 'tr-2',
     title: 'Instant Crush',
-    artist: 'Daft Punk, Julian Casablancas',
+    artist: 'Daft Punk ft. Julian Casablancas',
     album: 'Random Access Memories',
     durationSeconds: 337,
-    coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80',
-    isFavorite: false,
-  },
-  {
-    id: 'trend-5',
-    title: 'Veridis Quo',
-    artist: 'Daft Punk',
-    album: 'Discovery',
-    durationSeconds: 344,
     coverUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&q=80',
-    isFavorite: true,
+    isFavorite: false,
   },
 ];
 
-export default function HomePage({
+export const DashboardPage: FC<DashboardPageProps> = ({
+  onBrowsePlugins,
   onPlayTrack,
-  onPlayAlbum,
-  onSelectArtist,
   onSelectAlbum,
+  tracks = [],
   currentTrackId,
   isPlaying,
-}: DashboardPageProps) {
-  const shouldReduceMotion = useReducedMotion();
-
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: shouldReduceMotion ? 0 : 0.06,
-      },
-    },
-  };
-
-  const itemVariants: Variants = {
-    hidden: shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.25, ease: 'easeOut' },
-    },
-  };
+}) => {
+  const displayTracks = tracks.length > 0 ? tracks : TRENDING_TRACKS;
 
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="p-6 space-y-8 select-none"
-      data-testid="home-dashboard"
+    <ViewShell
+      data-testid="dashboard-view"
+      title="Dashboard"
+      headerActions={
+        <div className="flex items-center gap-2">
+          {onBrowsePlugins && (
+            <Button
+              size="xs"
+              variant="default"
+              onClick={onBrowsePlugins}
+              className="font-bold text-xs gap-1.5"
+            >
+              Browse Plugins
+            </Button>
+          )}
+        </div>
+      }
     >
-      {/* Header bar: Title + Source Status Indicator */}
-      <motion.div variants={itemVariants} className="flex items-center justify-between pb-2 border-b border-[var(--border)]">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
-            Dashboard
-          </h1>
-          <p className="text-xs text-[var(--text-muted)] mt-0.5">
-            Unified music streaming with local SQLite persistence & neural scoring
-          </p>
-        </div>
-
-        {/* Source Status Indicator at top-right (Green dot when operational) */}
-        <div
-          className="flex items-center gap-2 px-2.5 py-1 rounded-[4px] bg-[var(--surface)] border border-[var(--border)] text-xs font-mono"
-          data-testid="sources-status-indicator"
-        >
-          <span className="relative flex size-2">
-            <span className="animate-ping absolute inline-flex size-full rounded-full bg-emerald-400 opacity-75" />
-            <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
-          </span>
-          <span className="text-[var(--text-secondary)]">All Sources Operational</span>
-          <CheckCircle2 size={13} className="text-emerald-400 ml-0.5" />
-        </div>
-      </motion.div>
-
-      {/* Section 1: "Recently Played" horizontal scroll row of AlbumCards */}
-      <motion.section variants={itemVariants} className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Clock size={16} className="text-[var(--color-accent)]" />
-            <h2 className="text-base font-semibold text-[var(--text-primary)]">Recently Played</h2>
+      <div className="flex flex-col gap-8 pb-12 w-full">
+        {/* Welcome to Sloth Banner */}
+        <div className="surface-card border-border shadow-shadow rounded-lg border-(length:--border-width) p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-xl font-extrabold tracking-tight text-foreground">
+              Welcome to Sloth
+            </h2>
+            <p className="text-xs text-foreground/70 max-w-xl">
+              Unified music streaming with 6-layer Gated Fusion, acoustic embeddings, and community plugins. Play music instantly below.
+            </p>
           </div>
-          <span className="text-xs text-[var(--text-muted)] font-mono">5 Albums</span>
-        </div>
-
-        <div className="flex items-center gap-4 overflow-x-auto pb-2 scrollbar-thin">
-          {RECENTLY_PLAYED_ALBUMS.map((album) => (
-            <div key={album.id} className="shrink-0">
-              <AlbumCard
-                title={album.title}
-                subtitle={album.subtitle}
-                coverUrl={album.coverUrl}
-                onClick={() => onSelectAlbum?.(album.id)}
-                onPlay={() => onPlayAlbum?.(album.title)}
-              />
-            </div>
-          ))}
-        </div>
-      </motion.section>
-
-      {/* Section 2: "Sloth Picks for You" row (Algorithmic recommendations) */}
-      <motion.section variants={itemVariants} className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles size={16} className="text-[var(--color-accent)]" />
-            <h2 className="text-base font-semibold text-[var(--text-primary)]">Sloth Picks for You</h2>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => onPlayTrack?.(displayTracks[0])}
+              className="font-bold"
+            >
+              ▶ Play Trending Mix
+            </Button>
+            {onBrowsePlugins && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={onBrowsePlugins}
+                className="font-bold"
+              >
+                Plugins Store
+              </Button>
+            )}
           </div>
-          <span className="text-xs text-[var(--color-accent)] font-mono">Heterogeneous Hypergraph</span>
         </div>
 
-        <div className="flex items-center gap-4 overflow-x-auto pb-2 scrollbar-thin">
-          {SLOTH_PICKS.map((pick) => (
-            <div key={pick.id} className="shrink-0">
-              <AlbumCard
-                title={pick.title}
-                subtitle={pick.subtitle}
-                coverUrl={pick.coverUrl}
-                badge={
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[var(--surface-raised)] border border-[var(--color-accent)]/40 text-[var(--color-accent)] shadow-sm">
-                    {pick.badge}
-                  </span>
-                }
+        {/* Sloth Picks / Neural Recommendations */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-bold text-foreground">Neural Recommendations</h3>
+            <span className="text-xs font-mono text-foreground/50">BERT4Rec + LightHGCN + MERT</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            {SLOTH_PICKS.map((pick) => (
+              <div
+                key={pick.id}
+                className="surface-card border-border shadow-shadow group relative flex flex-col rounded-lg border-(length:--border-width) p-3 transition-transform hover:-translate-y-0.5 cursor-pointer"
                 onClick={() => {
-                  if (onSelectArtist) onSelectArtist(pick.artistId);
-                  else if (onSelectAlbum) onSelectAlbum(pick.id);
+                  const match = displayTracks.find((t) => t.title.toLowerCase() === pick.title.toLowerCase()) || {
+                    id: pick.id,
+                    title: pick.title,
+                    artist: pick.subtitle.split('•')[0]?.trim() || 'Artist',
+                    durationSeconds: 240,
+                    coverUrl: pick.imageUrl,
+                    isFavorite: false,
+                  };
+                  onPlayTrack?.(match);
                 }}
-                onPlay={() => onPlayAlbum?.(pick.title)}
-              />
-            </div>
-          ))}
-        </div>
-      </motion.section>
-
-      {/* Section 3: "Trending & Top Tracks" High-Density List */}
-      <motion.section variants={itemVariants} className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <TrendingUp size={16} className="text-[var(--color-accent)]" />
-            <h2 className="text-base font-semibold text-[var(--text-primary)]">Trending Tracks</h2>
+              >
+                <div className="relative aspect-square w-full overflow-hidden rounded border-(length:--border-width) border-border mb-3">
+                  <img
+                    src={pick.imageUrl}
+                    alt={pick.title}
+                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                  />
+                  <div className="absolute top-2 right-2 rounded bg-black/80 px-2 py-0.5 text-[10px] font-bold text-white border border-white/20">
+                    {pick.badge}
+                  </div>
+                </div>
+                <div className="text-sm font-bold text-foreground truncate">{pick.title}</div>
+                <div className="text-xs text-foreground/60 truncate">{pick.subtitle}</div>
+              </div>
+            ))}
           </div>
-          <button
-            type="button"
-            onClick={() => onPlayTrack?.(TRENDING_TRACKS[0])}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] bg-[var(--surface-raised)] hover:bg-[var(--surface-raised)]/80 border border-[var(--border)] text-xs text-[var(--text-primary)] cursor-pointer transition-colors"
-          >
-            <Play size={12} fill="currentColor" />
-            <span>Play Top Tracks</span>
-          </button>
         </div>
 
-        <div className="space-y-1">
-          {TRENDING_TRACKS.map((track, idx) => (
-            <TrackRow
-              key={track.id}
-              track={track}
-              index={idx + 1}
-              isCurrent={track.id === currentTrackId}
-              isPlaying={isPlaying && track.id === currentTrackId}
-              onPlay={() => onPlayTrack?.(track)}
-            />
-          ))}
+        {/* Recently Played / Featured Albums */}
+        <CardsRow
+          title="Featured Albums"
+          items={RECENTLY_PLAYED_ALBUMS.map((item) => ({
+            ...item,
+            onClick: () => onSelectAlbum?.(item.id),
+          }))}
+        />
+
+        {/* Recommended Tracks Table */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-bold text-foreground">Trending & Popular Tracks</h3>
+            <span className="text-xs text-foreground/50">{displayTracks.length} tracks available</span>
+          </div>
+          <div className="flex flex-col gap-1">
+            {displayTracks.map((track, i) => (
+              <TrackRow
+                key={track.id}
+                track={track}
+                index={i + 1}
+                isCurrent={track.id === currentTrackId}
+                isPlaying={isPlaying && track.id === currentTrackId}
+                onPlay={onPlayTrack}
+              />
+            ))}
+          </div>
         </div>
-      </motion.section>
-    </motion.div>
+      </div>
+    </ViewShell>
   );
-}
+};
+
+export default DashboardPage;

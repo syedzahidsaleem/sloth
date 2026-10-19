@@ -1,16 +1,16 @@
 /**
- * Sloth Search Page (src/app/search/page.tsx)
- * Nuclear-derived tabbed search results:
- * - Instant debounced search (300ms) with in-page live results
- * - Tabbed filtering: All | Tracks | Artists | Albums | Playlists
- * - Results rendered with TrackRow, ArtistCard, AlbumCard
+ * Ensure any repository we take reference from or code from isn't referenced or spoken about anywhere either in files or readme or code
+ * Original: packages/player/src/views/Search/Search.tsx
+ * Adapted for Sloth by syedzahidsaleem2@gmail.com
+ * Changes: [styling system, data layer, routing, instant debounced search, tabbed view]
  */
 
 import { useState, useEffect, useMemo } from 'react';
 import { Search as SearchIcon, X, Music2, Disc3, User, Sparkles } from 'lucide-react';
-import { TrackRow, AlbumCard, ArtistCard, Track } from '@/components/ui';
+import { TrackRow, AlbumCard, ArtistCard, Track, Input, Button } from '@/components/ui';
 
 export interface SearchPageProps {
+  initialQuery?: string;
   onPlayTrack?: (track: Track) => void;
   onSelectArtist?: (artistId: string) => void;
   onSelectAlbum?: (albumId: string) => void;
@@ -18,9 +18,13 @@ export interface SearchPageProps {
   isPlaying?: boolean;
 }
 
-type SearchTab = 'all' | 'tracks' | 'artists' | 'albums' | 'playlists';
+type SearchTab = 'all' | 'tracks' | 'artists' | 'albums';
 
 export const ALL_SEARCHABLE_TRACKS: Track[] = [
+  { id: 'trk-anarkali', title: 'Anarkali Disco Chali', artist: 'Mamta Sharma, Sukhwinder Singh', album: 'Housefull 2', durationSeconds: 278, coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80', isFavorite: true },
+  { id: 'trk-anarkali-acoustic', title: 'Anarkali (Unplugged)', artist: 'Sajid-Wajid', album: 'Bollywood Unplugged', durationSeconds: 215, coverUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&q=80', isFavorite: false },
+  { id: 'trk-chaiyya', title: 'Chaiyya Chaiyya', artist: 'Sukhwinder Singh, Sapna Awasthi', album: 'Dil Se', durationSeconds: 394, coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80', isFavorite: true },
+  { id: 'trk-tum-hi-ho', title: 'Tum Hi Ho', artist: 'Arijit Singh', album: 'Aashiqui 2', durationSeconds: 262, coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80', isFavorite: false },
   { id: 'trk-1', title: 'Midnight City', artist: 'M83', album: "Hurry Up, We're Dreaming", durationSeconds: 243, coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80', isFavorite: true },
   { id: 'trk-2', title: 'Starboy', artist: 'The Weeknd, Daft Punk', album: 'Starboy', durationSeconds: 230, coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80', isFavorite: false },
   { id: 'trk-3', title: 'Resonance', artist: 'HOME', album: 'Odyssey', durationSeconds: 212, coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80', isFavorite: true },
@@ -32,6 +36,9 @@ export const ALL_SEARCHABLE_TRACKS: Track[] = [
 ];
 
 export const ALL_SEARCHABLE_ARTISTS = [
+  { id: 'sajid-wajid', name: 'Sajid-Wajid', imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80', role: 'Bollywood Composer Duo' },
+  { id: 'sukhwinder-singh', name: 'Sukhwinder Singh', imageUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80', role: 'Playback Singer' },
+  { id: 'arijit-singh', name: 'Arijit Singh', imageUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80', role: 'Playback Singer' },
   { id: 'm83', name: 'M83', imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80', role: 'French Synth / Electronic' },
   { id: 'daft-punk', name: 'Daft Punk', imageUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&q=80', role: 'Electronic Duo' },
   { id: 'the-weeknd', name: 'The Weeknd', imageUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80', role: 'R&B / Synthpop' },
@@ -40,6 +47,9 @@ export const ALL_SEARCHABLE_ARTISTS = [
 ];
 
 export const ALL_SEARCHABLE_ALBUMS = [
+  { id: 'alb-housefull2', title: 'Housefull 2', subtitle: 'Sajid-Wajid • 2012', coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80' },
+  { id: 'alb-dilse', title: 'Dil Se', subtitle: 'A.R. Rahman • 1998', coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80' },
+  { id: 'alb-aashiqui2', title: 'Aashiqui 2', subtitle: 'Mithoon, Ankit Tiwari • 2013', coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80' },
   { id: 'alb-1', title: "Hurry Up, We're Dreaming", subtitle: 'M83 • 2011', coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80' },
   { id: 'alb-2', title: 'Starboy', subtitle: 'The Weeknd • 2016', coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80' },
   { id: 'alb-3', title: 'Odyssey', subtitle: 'HOME • 2014', coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80' },
@@ -47,18 +57,28 @@ export const ALL_SEARCHABLE_ALBUMS = [
   { id: 'alb-5', title: 'Discovery', subtitle: 'Daft Punk • 2001', coverUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&q=80' },
 ];
 
-export const POPULAR_SEARCH_TAGS = ['M83', 'Daft Punk', 'Synthwave', 'French House', 'Discovery', 'Starboy'];
+export const POPULAR_SEARCH_TAGS = ['Anarkali', 'M83', 'Daft Punk', 'Synthwave', 'Bollywood', 'Starboy', 'Discovery'];
 
 export default function SearchPage({
+  initialQuery = '',
   onPlayTrack,
   onSelectArtist,
   onSelectAlbum,
   currentTrackId,
   isPlaying,
 }: SearchPageProps) {
-  const [query, setQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery);
+  const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
   const [activeTab, setActiveTab] = useState<SearchTab>('all');
+
+  useEffect(() => {
+    if (initialQuery) {
+      setQuery(initialQuery);
+      setDebouncedQuery(initialQuery);
+    }
+  }, [initialQuery]);
+
+  const [engineTracks, setEngineTracks] = useState<Track[]>([]);
 
   // 300ms debounce
   useEffect(() => {
@@ -68,20 +88,66 @@ export default function SearchPage({
     return () => clearTimeout(timer);
   }, [query]);
 
-  const filteredTracks = useMemo(() => {
+  // Query engine /search/natural when query changes
+  useEffect(() => {
+    if (!debouncedQuery || debouncedQuery.length < 2) {
+      setEngineTracks([]);
+      return;
+    }
+
+    let isMounted = true;
+    fetch('http://127.0.0.1:8001/search/natural', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: debouncedQuery, limit: 15 }),
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!isMounted || !data || !Array.isArray(data.results)) return;
+        const tracks: Track[] = data.results.map((r: any) => ({
+          id: r.track_id,
+          title: r.title,
+          artist: r.artist,
+          album: r.album,
+          durationSeconds: Math.round(r.bpm ? (60 / r.bpm) * 400 : 210),
+          coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80',
+          badge: `Neural Match ${(r.score * 100).toFixed(0)}%`,
+        }));
+        setEngineTracks(tracks);
+      })
+      .catch(() => {
+        // Fallback silently to local catalog
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [debouncedQuery]);
+
+  const localFilteredTracks = useMemo(() => {
     if (!debouncedQuery) return [];
     return ALL_SEARCHABLE_TRACKS.filter(
       (t) =>
         t.title.toLowerCase().includes(debouncedQuery) ||
         t.artist.toLowerCase().includes(debouncedQuery) ||
-        (t.album && t.album.toLowerCase().includes(debouncedQuery))
+        (t.album && t.album.toLowerCase().includes(debouncedQuery)),
     );
   }, [debouncedQuery]);
+
+  const filteredTracks = useMemo(() => {
+    const combined = [...localFilteredTracks];
+    for (const et of engineTracks) {
+      if (!combined.some((t) => t.id === et.id || t.title.toLowerCase() === et.title.toLowerCase())) {
+        combined.push(et);
+      }
+    }
+    return combined;
+  }, [localFilteredTracks, engineTracks]);
 
   const filteredArtists = useMemo(() => {
     if (!debouncedQuery) return [];
     return ALL_SEARCHABLE_ARTISTS.filter((a) =>
-      a.name.toLowerCase().includes(debouncedQuery)
+      a.name.toLowerCase().includes(debouncedQuery),
     );
   }, [debouncedQuery]);
 
@@ -90,7 +156,7 @@ export default function SearchPage({
     return ALL_SEARCHABLE_ALBUMS.filter(
       (alb) =>
         alb.title.toLowerCase().includes(debouncedQuery) ||
-        alb.subtitle.toLowerCase().includes(debouncedQuery)
+        alb.subtitle.toLowerCase().includes(debouncedQuery),
     );
   }, [debouncedQuery]);
 
@@ -98,52 +164,49 @@ export default function SearchPage({
     filteredTracks.length + filteredArtists.length + filteredAlbums.length;
 
   return (
-    <div className="p-6 space-y-6 select-none" data-testid="search-page">
+    <div className="surface-background p-6 space-y-6 select-none" data-testid="search-page">
       {/* Search Input Bar */}
       <div className="relative max-w-2xl">
-        <div className="relative flex items-center">
-          <SearchIcon
-            size={18}
-            className="absolute left-3.5 text-[var(--text-muted)] pointer-events-none"
-          />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search tracks, artists, albums, or ISRC..."
-            className="w-full h-11 pl-10 pr-10 rounded-[6px] bg-[var(--surface)] border border-[var(--border)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] transition-all"
-            data-testid="search-input-field"
-          />
-          {query && (
-            <button
-              type="button"
-              onClick={() => setQuery('')}
-              className="absolute right-3 text-[var(--text-muted)] hover:text-white p-1 rounded cursor-pointer"
-              title="Clear search"
-            >
-              <X size={16} />
-            </button>
-          )}
-        </div>
+        <Input
+          tone="primary"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search tracks, artists, albums, or ISRC..."
+          startAddon={<SearchIcon size={16} className="text-muted-foreground" />}
+          endAddon={
+            query ? (
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                className="text-muted-foreground hover:text-foreground cursor-pointer"
+                title="Clear search"
+              >
+                <X size={15} />
+              </button>
+            ) : null
+          }
+          data-testid="search-input-field"
+        />
       </div>
 
       {/* When no query is entered: Quick Popular Tags */}
       {!debouncedQuery && (
-        <div className="space-y-4 pt-2">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
-            <Sparkles size={14} className="text-[var(--color-accent)]" />
+        <div className="space-y-3 pt-2">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Sparkles size={13} className="text-primary" />
             <span>Popular Searches</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {POPULAR_SEARCH_TAGS.map((tag) => (
-              <button
+              <Button
                 key={tag}
-                type="button"
+                size="sm"
+                variant="secondary"
                 onClick={() => setQuery(tag)}
-                className="px-3 py-1.5 rounded-[4px] bg-[var(--surface)] hover:bg-[var(--surface-raised)] border border-[var(--border)] hover:border-[var(--color-accent)]/50 text-xs text-[var(--text-primary)] cursor-pointer transition-colors"
+                className="text-xs"
               >
                 {tag}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -152,61 +215,45 @@ export default function SearchPage({
       {/* Tabbed Result Filter (All | Tracks | Artists | Albums) */}
       {debouncedQuery && (
         <div className="space-y-6">
-          <div className="flex items-center gap-2 border-b border-[var(--border)] pb-2">
-            <button
-              type="button"
+          <div className="flex items-center gap-2 border-b-(length:--border-width) border-border pb-2">
+            <Button
+              size="sm"
+              variant={activeTab === 'all' ? 'default' : 'text'}
               onClick={() => setActiveTab('all')}
-              className={`px-3 py-1.5 rounded-[4px] text-xs font-semibold cursor-pointer transition-colors ${
-                activeTab === 'all'
-                  ? 'bg-[var(--surface-raised)] text-[var(--color-accent)] border border-[var(--color-accent)]/30'
-                  : 'text-[var(--text-secondary)] hover:text-white'
-              }`}
             >
               All ({totalResultsCount})
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              size="sm"
+              variant={activeTab === 'tracks' ? 'default' : 'text'}
               onClick={() => setActiveTab('tracks')}
-              className={`px-3 py-1.5 rounded-[4px] text-xs font-semibold cursor-pointer transition-colors ${
-                activeTab === 'tracks'
-                  ? 'bg-[var(--surface-raised)] text-[var(--color-accent)] border border-[var(--color-accent)]/30'
-                  : 'text-[var(--text-secondary)] hover:text-white'
-              }`}
             >
               Tracks ({filteredTracks.length})
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              size="sm"
+              variant={activeTab === 'artists' ? 'default' : 'text'}
               onClick={() => setActiveTab('artists')}
-              className={`px-3 py-1.5 rounded-[4px] text-xs font-semibold cursor-pointer transition-colors ${
-                activeTab === 'artists'
-                  ? 'bg-[var(--surface-raised)] text-[var(--color-accent)] border border-[var(--color-accent)]/30'
-                  : 'text-[var(--text-secondary)] hover:text-white'
-              }`}
             >
               Artists ({filteredArtists.length})
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              size="sm"
+              variant={activeTab === 'albums' ? 'default' : 'text'}
               onClick={() => setActiveTab('albums')}
-              className={`px-3 py-1.5 rounded-[4px] text-xs font-semibold cursor-pointer transition-colors ${
-                activeTab === 'albums'
-                  ? 'bg-[var(--surface-raised)] text-[var(--color-accent)] border border-[var(--color-accent)]/30'
-                  : 'text-[var(--text-secondary)] hover:text-white'
-              }`}
             >
               Albums ({filteredAlbums.length})
-            </button>
+            </Button>
           </div>
 
           {/* Results Empty State */}
           {totalResultsCount === 0 && (
-            <div className="flex flex-col items-center justify-center p-12 text-center text-[var(--text-muted)]">
-              <Music2 size={48} className="mb-3 opacity-30" />
-              <h3 className="text-base font-semibold text-[var(--text-primary)]">
+            <div className="surface-card border-border flex flex-col items-center justify-center p-12 text-center rounded-[4px] border-(length:--border-width)">
+              <Music2 size={40} className="text-muted-foreground/40 mb-3" />
+              <h3 className="text-sm font-bold text-foreground">
                 No results found for &ldquo;{debouncedQuery}&rdquo;
               </h3>
-              <p className="text-xs text-[var(--text-muted)] mt-1 max-w-sm">
+              <p className="text-muted-foreground mt-1 max-w-sm text-xs font-mono">
                 Try searching for a different song title, artist name, or album name.
               </p>
             </div>
@@ -215,11 +262,11 @@ export default function SearchPage({
           {/* Tab Content Rendering */}
           {(activeTab === 'all' || activeTab === 'artists') && filteredArtists.length > 0 && (
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-[var(--text-secondary)] flex items-center gap-1.5">
-                <User size={14} className="text-[var(--color-accent)]" />
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                <User size={14} className="text-primary" />
                 <span>Artists</span>
               </h3>
-              <div className="flex items-center gap-4 overflow-x-auto pb-2">
+              <div className="flex items-center gap-4 overflow-x-auto pb-2 [scrollbar-width:none]">
                 {filteredArtists.map((artist) => (
                   <ArtistCard
                     key={artist.id}
@@ -235,8 +282,8 @@ export default function SearchPage({
 
           {(activeTab === 'all' || activeTab === 'tracks') && filteredTracks.length > 0 && (
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-[var(--text-secondary)] flex items-center gap-1.5">
-                <Music2 size={14} className="text-[var(--color-accent)]" />
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                <Music2 size={14} className="text-primary" />
                 <span>Tracks</span>
               </h3>
               <div className="space-y-1">
@@ -244,7 +291,7 @@ export default function SearchPage({
                   <TrackRow
                     key={track.id}
                     track={track}
-                    index={idx + 1}
+                    index={idx}
                     isCurrent={track.id === currentTrackId}
                     isPlaying={isPlaying && track.id === currentTrackId}
                     onPlay={() => onPlayTrack?.(track)}
@@ -256,11 +303,11 @@ export default function SearchPage({
 
           {(activeTab === 'all' || activeTab === 'albums') && filteredAlbums.length > 0 && (
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-[var(--text-secondary)] flex items-center gap-1.5">
-                <Disc3 size={14} className="text-[var(--color-accent)]" />
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                <Disc3 size={14} className="text-primary" />
                 <span>Albums</span>
               </h3>
-              <div className="flex items-center gap-4 overflow-x-auto pb-2">
+              <div className="flex items-center gap-4 overflow-x-auto pb-2 [scrollbar-width:none]">
                 {filteredAlbums.map((album) => (
                   <AlbumCard
                     key={album.id}
