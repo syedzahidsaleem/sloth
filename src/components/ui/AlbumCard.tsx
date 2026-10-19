@@ -1,6 +1,14 @@
+/**
+ * Ensure any repository we take reference from or code from isn't referenced or spoken about anywhere either in files or readme or code
+ * Original: packages/ui/src/components/Card/Card.tsx
+ * Adapted for Sloth by syedzahidsaleem2@gmail.com
+ * Changes: [styling system, data layer, routing, play overlay, badge support]
+ */
+
 import { FC, ReactNode } from 'react';
-import { Disc3, Play } from 'lucide-react';
+import { CassetteTape, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Box } from './Box';
 
 export type AlbumCardProps = {
   title: string;
@@ -26,35 +34,46 @@ export const AlbumCard: FC<AlbumCardProps> = ({
   <div
     role="button"
     tabIndex={0}
-    onClick={onClick}
+    data-testid="card"
+    onKeyDown={(e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onClick?.();
+      }
+    }}
     className={cn(
-      'group border-border surface-card shadow-shadow hover:translate-x-shadow-x hover:translate-y-shadow-y flex w-44 cursor-pointer flex-col rounded-lg border-(length:--border-width) p-2.5 text-left transition-all hover:shadow-none select-none',
+      'surface-card border-border shadow-shadow hover:translate-x-shadow-x hover:translate-y-shadow-y group flex w-44 flex-col items-stretch gap-2 rounded-[4px] border-(length:--border-width) p-2 text-left transition-all hover:shadow-none select-none cursor-pointer',
       className,
     )}
+    onClick={onClick}
   >
-    {/* Cover Art Container */}
-    <div className="relative aspect-square w-full overflow-hidden rounded-md border-(length:--border-width) border-border bg-muted">
+    <Box
+      variant="primary"
+      shadow="none"
+      className="surface-card border-border relative aspect-square w-full items-center justify-center overflow-hidden rounded-[4px] border-(length:--border-width) p-0"
+    >
       {image ? (
         image
       ) : coverUrl ? (
         <img
           src={coverUrl}
           alt={title}
-          className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+          loading="lazy"
+          decoding="async"
+          className="size-full object-cover transition-transform duration-200 group-hover:scale-105"
         />
       ) : (
-        <div className="text-muted-foreground/40 flex size-full items-center justify-center">
-          <Disc3 size={64} className="stroke-1" />
+        <div className="text-muted-foreground/30 flex size-full items-center justify-center">
+          <CassetteTape size={64} className="stroke-1" />
         </div>
       )}
 
       {badge && (
-        <div className="absolute top-2 left-2 z-10">
+        <div className="absolute top-1.5 left-1.5 z-10">
           {badge}
         </div>
       )}
 
-      {/* Hover Play Button */}
       {onPlay && (
         <button
           type="button"
@@ -63,38 +82,44 @@ export const AlbumCard: FC<AlbumCardProps> = ({
             onPlay();
           }}
           aria-label={`Play ${title}`}
-          className="surface-primary border-border shadow-shadow absolute right-2.5 bottom-2.5 flex size-9 items-center justify-center rounded-full border-(length:--border-width) opacity-0 transition-all duration-200 group-hover:opacity-100 hover:scale-110 active:scale-95"
+          className="surface-primary border-border shadow-shadow absolute right-2 bottom-2 flex size-8 items-center justify-center rounded-[4px] border-(length:--border-width) opacity-0 transition-opacity duration-150 group-hover:opacity-100 hover:scale-105 active:scale-95"
         >
-          <Play size={16} className="fill-current translate-x-0.5" />
+          <Play size={14} className="fill-current translate-x-0.5" />
         </button>
       )}
-    </div>
+    </Box>
 
-    {/* Metadata */}
-    <div className="mt-2.5 min-w-0">
-      <h3 className="text-foreground truncate text-sm font-bold tracking-tight">
-        {title}
-      </h3>
-      {subtitle && (
-        <p className="text-foreground/70 truncate text-xs font-medium">
-          {subtitle}
-        </p>
-      )}
-    </div>
+    {(title || subtitle) && (
+      <div className="min-w-0 px-0.5 pb-0.5">
+        {title && (
+          <div
+            data-testid="card-title"
+            className="text-card-foreground truncate text-sm font-bold tracking-tight"
+          >
+            {title}
+          </div>
+        )}
+        {subtitle && (
+          <div className="text-card-foreground/60 truncate text-xs font-medium">
+            {subtitle}
+          </div>
+        )}
+      </div>
+    )}
   </div>
 );
 
 export const AlbumCardSkeleton: FC<{ className?: string }> = ({ className }) => (
   <div
     className={cn(
-      'border-border surface-card shadow-shadow flex w-44 animate-pulse flex-col rounded-lg border-(length:--border-width) p-2.5',
+      'surface-card border-border shadow-shadow flex w-44 animate-pulse flex-col rounded-[4px] border-(length:--border-width) p-2',
       className,
     )}
   >
-    <div className="border-border bg-muted/60 aspect-square w-full rounded-md border-(length:--border-width)" />
-    <div className="mt-2.5 space-y-1.5">
-      <div className="bg-muted/80 h-3.5 w-3/4 rounded-sm" />
-      <div className="bg-muted/50 h-3 w-1/2 rounded-sm" />
+    <div className="border-border bg-muted/60 aspect-square w-full rounded-[4px] border-(length:--border-width)" />
+    <div className="mt-2 space-y-1.5 px-0.5">
+      <div className="bg-muted/80 h-3.5 w-3/4 rounded-[4px]" />
+      <div className="bg-muted/50 h-3 w-1/2 rounded-[4px]" />
     </div>
   </div>
 );
