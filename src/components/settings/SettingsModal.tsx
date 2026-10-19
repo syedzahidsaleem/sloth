@@ -999,19 +999,66 @@ export const SettingsModal: FC<SettingsModalProps> = ({
                     >
                       <h3 className="text-base font-bold font-heading">Lyrics</h3>
 
+                      {/* Clean lyric headers */}
                       <div className="flex items-start gap-3 py-1">
                         <Toggle
-                          checked={settings.enableSyncedLyrics ?? true}
-                          onChange={(checked) => updateSetting('enableSyncedLyrics', checked)}
+                          checked={settings.cleanLyricHeaders ?? true}
+                          onChange={(checked) => updateSetting('cleanLyricHeaders', checked)}
                         />
                         <div className="flex flex-col gap-0.5">
-                          <span className="text-sm font-bold">Enable synced lyrics</span>
+                          <span className="text-sm font-bold">Clean lyric headers</span>
                           <span className="text-xs text-foreground/60">
-                            Automatically fetch and display synchronized lyrics for playing tracks.
+                            Remove common lyric section and credit headers.
                           </span>
                         </div>
                       </div>
 
+                      {/* Auto-scroll lyrics */}
+                      <div className="flex items-start gap-3 py-1">
+                        <Toggle
+                          checked={settings.autoScrollLyrics ?? true}
+                          onChange={(checked) => updateSetting('autoScrollLyrics', checked)}
+                        />
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-sm font-bold">Auto-scroll lyrics</span>
+                          <span className="text-xs text-foreground/60">
+                            Keep the active synced lyric line in view.
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Prefer synced lyrics */}
+                      <div className="flex items-start gap-3 py-1">
+                        <Toggle
+                          checked={settings.preferSyncedLyrics ?? true}
+                          onChange={(checked) => updateSetting('preferSyncedLyrics', checked)}
+                        />
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-sm font-bold">Prefer synced lyrics</span>
+                          <span className="text-xs text-foreground/60">
+                            Prefer timestamped lyrics when available.
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Lyrics font size slider */}
+                      <div className="flex flex-col gap-1.5 py-1">
+                        <Slider
+                          label="Lyrics font size"
+                          description="Set the default size used for lyrics."
+                          value={settings.lyricsFontSize ?? 16}
+                          min={12}
+                          max={28}
+                          step={1}
+                          unit="px"
+                          showValue={true}
+                          startLabel="Small"
+                          endLabel="Large"
+                          onValueChange={(val) => updateSetting('lyricsFontSize', val)}
+                        />
+                      </div>
+
+                      {/* Karaoke mode by default */}
                       <div className="flex items-start gap-3 py-1">
                         <Toggle
                           checked={settings.karaokeModeDefault ?? true}
