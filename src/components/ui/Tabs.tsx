@@ -1,3 +1,10 @@
+/**
+ * Ensure any repository we take reference from or code from isn't referenced or spoken about anywhere either in files or readme or code
+ * Original: packages/ui/src/components/Tabs/Tabs.tsx
+ * Adapted for Sloth by syedzahidsaleem2@gmail.com
+ * Changes: [styling system, data layer, routing]
+ */
+
 import {
   createContext,
   useContext,
@@ -65,7 +72,7 @@ export const TabsList: FC<PropsWithChildren<{ className?: string }>> = ({
   <div
     role="tablist"
     className={cn(
-      'surface-muted border-border flex items-center gap-1.5 rounded-lg border-(length:--border-width) p-1',
+      'surface-muted border-border flex items-center gap-1.5 rounded border-(length:--border-width) p-1',
       className,
     )}
   >
@@ -98,7 +105,7 @@ export const TabsTab: FC<TabsTabProps> = ({
       size="sm"
       onClick={() => setSelectedIndex(index)}
       className={cn(
-        'rounded-md font-semibold transition-all',
+        'rounded font-semibold transition-all',
         isSelected && 'shadow-shadow',
         className,
       )}
