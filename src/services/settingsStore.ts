@@ -64,8 +64,21 @@ export interface SlothSettings {
 
   // Appearance
   accent: AccentPalette;
+  themeId: string; // 'default' | 'dark' | 'nuclear:aurora' | 'nuclear:ember' | 'nuclear:lagoon' | 'nuclear:arctic-moss'
   fontSize: FontSizePreference;
   showTrackNumbers: boolean;
+
+  // Nuclear UI Settings
+  framelessWindow: boolean;
+  customTitleBar: boolean;
+  titleBarStyle: string;
+  recordHistory: boolean;
+  enableNuclearJam: boolean;
+  remoteUrl: string;
+  apiUrl: string;
+  mpdEnabled: boolean;
+  discoveryVariety: number;
+  skipDurationSeconds: number;
 
   // Integrations
   lastFmEnabled: boolean;
@@ -86,6 +99,8 @@ export const DEFAULT_SETTINGS: SlothSettings = {
   downloadFolder: '~/Downloads/Sloth',
 
   crossfadeSeconds: 3,
+  skipDurationSeconds: 5,
+  discoveryVariety: 50,
   volumeNormalization: true,
   skipSilence: false,
   audioQuality: 'lossless',
@@ -101,8 +116,19 @@ export const DEFAULT_SETTINGS: SlothSettings = {
   sourcePriorities: ['youtube', 'piped', 'qobuz', 'fastapi'],
 
   accent: 'green',
+  themeId: 'default',
   fontSize: 'normal',
   showTrackNumbers: true,
+
+  // Nuclear UI Defaults
+  framelessWindow: false,
+  customTitleBar: true,
+  titleBarStyle: 'Auto',
+  recordHistory: true,
+  enableNuclearJam: false,
+  remoteUrl: '',
+  apiUrl: '',
+  mpdEnabled: false,
 
   lastFmEnabled: false,
   lastFmUsername: '',
@@ -149,6 +175,25 @@ export function getSlothSettings(): SlothSettings {
   }
 }
 
+export function applyTheme(themeId: string) {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  root.removeAttribute('data-theme-id');
+  
+  // Sloth is a dark-first player: ensure data-theme='dark' is set
+  root.setAttribute('data-theme', 'dark');
+
+  if (themeId && themeId !== 'default' && themeId !== 'dark') {
+    const cleanId = themeId.replace('nuclear:', '').replace('sloth:', '');
+    root.setAttribute('data-theme-id', themeId);
+    root.setAttribute('data-theme-variant', cleanId);
+  } else if (themeId === 'dark') {
+    root.setAttribute('data-theme-id', 'dark');
+  } else {
+    root.setAttribute('data-theme-id', 'nuclear:default');
+  }
+}
+
 /**
  * Save settings and notify listeners.
  */
@@ -178,6 +223,10 @@ export function saveSlothSettings(newSettings: Partial<SlothSettings>): SlothSet
     // Apply accent update if accent changed
     if (newSettings.accent && newSettings.accent !== current.accent) {
       setAccentPalette(newSettings.accent);
+    }
+    // Apply theme update if theme changed
+    if (newSettings.themeId && newSettings.themeId !== current.themeId) {
+      applyTheme(newSettings.themeId);
     }
     window.dispatchEvent(new CustomEvent(SETTINGS_CHANGE_EVENT, { detail: updated }));
   } catch (err) {
