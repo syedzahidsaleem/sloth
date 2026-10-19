@@ -1187,6 +1187,54 @@ export const SettingsModal: FC<SettingsModalProps> = ({
                     >
                       <h3 className="text-base font-bold font-heading">Playback</h3>
 
+                      {/* Discovery variety slider */}
+                      <div className="flex flex-col gap-1.5 py-1">
+                        <Slider
+                          label="Discovery variety"
+                          description="How far recommendations deviate from your current listening. Lower is closer."
+                          value={settings.discoveryVariety ?? 0}
+                          min={0}
+                          max={100}
+                          step={1}
+                          showValue={true}
+                          startLabel="Less crazy"
+                          endLabel="More crazy"
+                          onValueChange={(val) => updateSetting('discoveryVariety', val)}
+                        />
+                      </div>
+
+                      {/* Skip duration input */}
+                      <div className="flex flex-col gap-1.5 py-1">
+                        <label className="text-sm font-bold">Skip duration</label>
+                        <input
+                          type="number"
+                          value={settings.skipDurationSeconds ?? 5}
+                          onChange={(e) =>
+                            updateSetting('skipDurationSeconds', Math.max(1, Number(e.target.value) || 1))
+                          }
+                          className="surface-input border-border text-foreground shadow-shadow h-10 w-full px-3 rounded-md border-(length:--border-width) font-sans text-sm outline-none focus:ring-1 focus:ring-primary"
+                        />
+                        <span className="text-xs text-foreground/60">
+                          Number of seconds to skip forward/backward
+                        </span>
+                      </div>
+
+                      {/* Crossfade input */}
+                      <div className="flex flex-col gap-1.5 py-1">
+                        <label className="text-sm font-bold">Crossfade</label>
+                        <input
+                          type="number"
+                          value={settings.crossfadeMs ?? 0}
+                          onChange={(e) =>
+                            updateSetting('crossfadeMs', Math.max(0, Number(e.target.value) || 0))
+                          }
+                          className="surface-input border-border text-foreground shadow-shadow h-10 w-full px-3 rounded-md border-(length:--border-width) font-sans text-sm outline-none focus:ring-1 focus:ring-primary"
+                        />
+                        <span className="text-xs text-foreground/60">
+                          Crossfade duration between tracks in milliseconds
+                        </span>
+                      </div>
+
                       {/* Audio Quality */}
                       <div className="flex flex-col gap-1.5 py-1">
                         <span className="text-sm font-bold">Audio quality</span>
@@ -1229,28 +1277,6 @@ export const SettingsModal: FC<SettingsModalProps> = ({
                           <span className="text-xs text-foreground/60">
                             Skip silent intervals at the beginning and end of tracks.
                           </span>
-                        </div>
-                      </div>
-
-                      {/* Crossfade */}
-                      <div className="flex flex-col gap-1.5 py-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-bold">Crossfade</span>
-                          <span className="text-xs font-mono">{settings.crossfadeSeconds ?? 0}s</span>
-                        </div>
-                        <span className="text-xs text-foreground/60">
-                          Crossfade duration between consecutively queued tracks in seconds
-                        </span>
-                        <div className="py-2">
-                          <Slider
-                            value={settings.crossfadeSeconds ?? 0}
-                            min={0}
-                            max={12}
-                            step={1}
-                            onValueChange={(val) => updateSetting('crossfadeSeconds', val)}
-                            showValue={false}
-                            showFooter={false}
-                          />
                         </div>
                       </div>
                     </div>
