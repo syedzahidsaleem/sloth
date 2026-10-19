@@ -1085,6 +1085,82 @@ export const SettingsModal: FC<SettingsModalProps> = ({
                     >
                       <h3 className="text-base font-bold font-heading">Mini Player</h3>
 
+                      {/* Ambient artwork glow */}
+                      <div className="flex items-start gap-3 py-1">
+                        <Toggle
+                          checked={settings.miniPlayerAmbientGlow ?? true}
+                          onChange={(checked) => updateSetting('miniPlayerAmbientGlow', checked)}
+                        />
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-sm font-bold">Ambient artwork glow</span>
+                          <span className="text-xs text-foreground/60">
+                            Use the current artwork behind the mini player.
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Show artwork background */}
+                      <div className="flex items-start gap-3 py-1">
+                        <Toggle
+                          checked={settings.miniPlayerShowBackground ?? true}
+                          onChange={(checked) => updateSetting('miniPlayerShowBackground', checked)}
+                        />
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-sm font-bold">Show artwork background</span>
+                          <span className="text-xs text-foreground/60">
+                            Use the current artwork inside the player background.
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Show queue button */}
+                      <div className="flex items-start gap-3 py-1">
+                        <Toggle
+                          checked={settings.miniPlayerShowQueue ?? true}
+                          onChange={(checked) => updateSetting('miniPlayerShowQueue', checked)}
+                        />
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-sm font-bold">Show queue button</span>
+                          <span className="text-xs text-foreground/60">
+                            Show access to the queue and playlist panel.
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Sync theme accent */}
+                      <div className="flex items-start gap-3 py-1">
+                        <Toggle
+                          checked={settings.miniPlayerSyncAccent ?? true}
+                          onChange={(checked) => updateSetting('miniPlayerSyncAccent', checked)}
+                        />
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-sm font-bold">Sync theme accent</span>
+                          <span className="text-xs text-foreground/60">
+                            Match the mini player accent to Sloth.
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Language */}
+                      <div className="flex flex-col gap-1.5 py-1">
+                        <span className="text-sm font-bold">Language</span>
+                        <Select
+                          value={settings.miniPlayerLanguage || 'English'}
+                          onChange={(val) => updateSetting('miniPlayerLanguage', val)}
+                          options={[
+                            { id: 'English', label: 'English' },
+                            { id: 'Spanish', label: 'Spanish' },
+                            { id: 'German', label: 'German' },
+                            { id: 'French', label: 'French' },
+                            { id: 'Japanese', label: 'Japanese' },
+                          ]}
+                        />
+                        <span className="text-xs text-foreground/60">
+                          Change the Mini Player interface language.
+                        </span>
+                      </div>
+
+                      {/* Always on top */}
                       <div className="flex items-start gap-3 py-1">
                         <Toggle
                           checked={settings.miniPlayerAlwaysOnTop ?? false}
@@ -1094,19 +1170,6 @@ export const SettingsModal: FC<SettingsModalProps> = ({
                           <span className="text-sm font-bold">Always on top</span>
                           <span className="text-xs text-foreground/60">
                             Keep mini player above all other desktop windows.
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-3 py-1">
-                        <Toggle
-                          checked={settings.miniPlayerShowCover ?? true}
-                          onChange={(checked) => updateSetting('miniPlayerShowCover', checked)}
-                        />
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-sm font-bold">Display album artwork</span>
-                          <span className="text-xs text-foreground/60">
-                            Render high resolution album cover art in mini mode.
                           </span>
                         </div>
                       </div>
