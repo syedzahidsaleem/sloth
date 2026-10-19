@@ -80,6 +80,14 @@ export interface SlothSettings {
   discoveryVariety: number;
   skipDurationSeconds: number;
 
+  // Mini Player
+  miniPlayerAlwaysOnTop?: boolean;
+  miniPlayerShowCover?: boolean;
+
+  // Lyrics
+  enableSyncedLyrics?: boolean;
+  karaokeModeDefault?: boolean;
+
   // Integrations
   lastFmEnabled: boolean;
   lastFmUsername: string;
@@ -129,6 +137,12 @@ export const DEFAULT_SETTINGS: SlothSettings = {
   remoteUrl: '',
   apiUrl: '',
   mpdEnabled: false,
+
+  miniPlayerAlwaysOnTop: false,
+  miniPlayerShowCover: true,
+
+  enableSyncedLyrics: true,
+  karaokeModeDefault: true,
 
   lastFmEnabled: false,
   lastFmUsername: '',
