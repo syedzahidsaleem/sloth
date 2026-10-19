@@ -1,0 +1,33 @@
+/**
+ * Sloth Theme: Ember
+ * Warm amber-charcoal dark theme with fiery orange accent.
+ */
+
+:root[data-theme-id='nuclear:ember'],
+:root[data-theme-id='sloth:ember'],
+:root[data-theme-id='ember'],
+:root[data-theme='ember'],
+:root[data-theme='orange'] {
+  --background: oklch(0.22 0.03 20);
+  --muted: oklch(0.27 0.035 20);
+  --input: oklch(0.17 0.025 20);
+  --card: oklch(0.30 0.04 25);
+  --popover: oklch(0.30 0.04 25);
+  --surface: oklch(0.27 0.035 20);
+  --surface-raised: oklch(0.30 0.04 25);
+
+  --primary: oklch(0.74 0.18 35);
+  --primary-foreground: oklch(0.12 0.02 35);
+  --foreground: oklch(0.95 0.008 30);
+  --muted-foreground: oklch(0.78 0.015 30);
+  --border: oklch(0.44 0.05 25);
+
+  --color-accent: oklch(0.76 0.18 35);
+  --color-accent-foreground: oklch(0.12 0.02 35);
+
+  --background-gradient: none;
+  --muted-gradient: none;
+  --card-gradient: none;
+  --popover-gradient: none;
+  --primary-gradient: none;
+}
