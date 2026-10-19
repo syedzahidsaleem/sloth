@@ -111,8 +111,8 @@ export const Sidebar: FC<SidebarProps> = ({
         })}
       </div>
 
-      {/* Bottom Preferences Button */}
-      <div className="mt-auto pt-2 border-t-(length:--border-width) border-border/20 flex flex-col gap-1">
+      {/* Bottom Preferences Button (No separator line, matching Nuclear) */}
+      <div className="mt-auto pt-2 flex flex-col gap-1">
         <button
           type="button"
           data-testid="sidebar-item-preferences"
