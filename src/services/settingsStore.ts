@@ -83,6 +83,8 @@ export interface SlothSettings {
   // Mini Player
   miniPlayerAlwaysOnTop?: boolean;
   miniPlayerShowCover?: boolean;
+  miniPlayerAmbientGlow?: boolean;
+  miniPlayerShowBackground?: boolean;
 
   // Lyrics
   enableSyncedLyrics?: boolean;
@@ -144,6 +146,8 @@ export const DEFAULT_SETTINGS: SlothSettings = {
 
   miniPlayerAlwaysOnTop: false,
   miniPlayerShowCover: true,
+  miniPlayerAmbientGlow: true,
+  miniPlayerShowBackground: true,
 
   enableSyncedLyrics: true,
   karaokeModeDefault: true,
