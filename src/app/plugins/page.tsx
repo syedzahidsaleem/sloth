@@ -20,7 +20,7 @@ import {
   PLUGINS_EVENT,
   InstalledPlugin,
 } from '@/services/pluginStore';
-import { Button, Toggle } from '@/components/ui';
+import { Button, Toggle, Badge } from '@/components/ui';
 import { cn } from '@/lib/utils';
 
 type ActiveTab = 'store' | 'installed';
@@ -136,10 +136,10 @@ export const PluginsPage: FC = () => {
             <Package size={16} />
           </div>
           <div>
-            <h1 className="text-sm font-bold tracking-tight text-foreground">
+            <h1 className="text-sm font-bold font-heading tracking-tight text-foreground">
               Plugin Marketplace & Extensions
             </h1>
-            <p className="font-mono text-[11px] text-foreground/60">
+            <p className="font-sans text-xs text-foreground/60">
               Sloth dynamic plugins • Community registry
             </p>
           </div>
@@ -174,7 +174,7 @@ export const PluginsPage: FC = () => {
             )}
           >
             <span>Installed</span>
-            <span className="inline-flex items-center justify-center size-4 rounded-full bg-black text-white text-[10px] font-mono font-bold leading-none">
+            <span className="inline-flex items-center justify-center size-4 rounded-full bg-black text-white text-[10px] font-sans font-bold leading-none">
               {installedCount}
             </span>
           </button>
@@ -186,7 +186,7 @@ export const PluginsPage: FC = () => {
             size="sm"
             variant="default"
             onClick={() => setCustomModalOpen(true)}
-            className="font-bold shadow-shadow gap-1.5 text-xs"
+            className="font-bold shadow-shadow gap-1.5 text-xs font-sans"
           >
             <Plus size={14} />
             Add Plugin
@@ -212,7 +212,7 @@ export const PluginsPage: FC = () => {
                     placeholder="Search plugins by name, author, or keyword..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="surface-input border-border text-foreground shadow-shadow h-10 w-full rounded-md border-(length:--border-width) pl-10 pr-4 text-xs font-medium outline-none placeholder:text-foreground/40"
+                    className="surface-input border-border text-foreground shadow-shadow h-10 w-full rounded-md border-(length:--border-width) pl-10 pr-4 text-xs font-medium outline-none placeholder:text-foreground/40 font-sans"
                   />
                 </div>
 
@@ -226,10 +226,10 @@ export const PluginsPage: FC = () => {
                         type="button"
                         onClick={() => setSelectedCategory(chip.id)}
                         className={cn(
-                          'px-3 py-1 rounded-md text-xs font-mono cursor-pointer transition-all border-(length:--border-width) border-border shadow-xs',
+                          'px-3.5 py-1.5 rounded-md text-xs font-sans font-bold cursor-pointer transition-all border-(length:--border-width) border-border shadow-shadow',
                           isSelected
-                            ? 'surface-primary text-foreground font-bold'
-                            : 'surface-input text-foreground font-medium hover:bg-foreground/5'
+                            ? 'surface-primary text-foreground'
+                            : 'surface-input text-foreground/80 hover:bg-foreground/5'
                         )}
                       >
                         {chip.label}
@@ -244,7 +244,7 @@ export const PluginsPage: FC = () => {
                 {filteredStorePlugins.length === 0 ? (
                   <div className="flex flex-col items-center justify-center p-12 text-center rounded-lg border-(length:--border-width) border-border surface-input shadow-shadow">
                     <Package size={36} className="text-foreground/40 mb-2" />
-                    <h3 className="text-sm font-bold text-foreground">No plugins match your filter</h3>
+                    <h3 className="text-sm font-bold font-heading text-foreground">No plugins match your filter</h3>
                     <p className="text-xs text-foreground/60 mt-1">
                       Try searching with different terms or select "All Categories".
                     </p>
@@ -262,26 +262,26 @@ export const PluginsPage: FC = () => {
                       >
                         <div className="flex flex-col min-w-0 flex-1 gap-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="text-sm font-bold text-foreground tracking-wide">
-                              {plugin.name}
+                            <h3 className="text-base font-bold font-heading text-foreground inline-flex items-baseline gap-2">
+                              <span>{plugin.name}</span>
+                              <span className="text-xs font-normal text-foreground/60 font-sans">
+                                by <span className="font-medium text-foreground/80">{plugin.author}</span>
+                              </span>
                             </h3>
-                            <span className="font-mono text-[11px] text-foreground/60">
-                              by <span className="font-semibold text-foreground/80">{plugin.author}</span>
-                            </span>
-                            <span className="surface-background border border-black px-1.5 py-0.5 rounded text-[10px] font-mono font-bold">
+                            <Badge variant="pill" color="inverted" className="text-[11px] font-semibold">
                               v{plugin.version}
-                            </span>
+                            </Badge>
                             {plugin.verified && (
-                              <span className="bg-emerald-200 text-emerald-950 border border-black px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-1">
+                              <Badge variant="pill" color="green" className="text-[11px] font-semibold gap-1">
                                 <ShieldCheck size={11} />
                                 Verified
-                              </span>
+                              </Badge>
                             )}
-                            <span className="bg-cyan-200 text-cyan-950 border border-black px-1.5 py-0.5 rounded text-[10px] font-mono font-bold capitalize">
+                            <Badge variant="pill" color="cyan" className="text-[11px] font-semibold capitalize">
                               {plugin.category}
-                            </span>
+                            </Badge>
                           </div>
-                          <p className="text-xs text-foreground/70 line-clamp-1">
+                          <p className="text-xs text-foreground/70 line-clamp-2 leading-relaxed">
                             {plugin.description}
                           </p>
                         </div>
@@ -289,7 +289,7 @@ export const PluginsPage: FC = () => {
                         {/* Action: Install / Installed */}
                         <div className="shrink-0">
                           {isInstalling ? (
-                            <Button size="sm" disabled className="w-24 font-mono text-xs shadow-shadow">
+                            <Button size="sm" disabled className="w-28 font-sans text-xs font-bold shadow-shadow">
                               Installing...
                             </Button>
                           ) : isInstalled ? (
@@ -297,9 +297,9 @@ export const PluginsPage: FC = () => {
                               size="sm"
                               variant="secondary"
                               disabled
-                              className="w-24 font-mono text-xs flex items-center justify-center gap-1.5 bg-emerald-100 text-emerald-900 border-border border-(length:--border-width) shadow-xs font-bold"
+                              className="w-28 font-sans text-xs flex items-center justify-center gap-1.5 border-border border-(length:--border-width) shadow-xs font-bold"
                             >
-                              <Check size={13} />
+                              <Check size={14} />
                               Installed
                             </Button>
                           ) : (
@@ -307,9 +307,9 @@ export const PluginsPage: FC = () => {
                               size="sm"
                               variant="default"
                               onClick={() => handleInstall(plugin)}
-                              className="w-24 font-mono text-xs flex items-center justify-center gap-1.5 font-bold shadow-shadow"
+                              className="w-28 font-sans text-xs flex items-center justify-center gap-1.5 font-bold shadow-shadow"
                             >
-                              <Download size={13} />
+                              <Download size={14} />
                               Install
                             </Button>
                           )}
@@ -327,7 +327,7 @@ export const PluginsPage: FC = () => {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-base font-bold text-foreground">
+                  <h2 className="text-base font-bold font-heading text-foreground">
                     Installed Extensions ({installedCount})
                   </h2>
                   <p className="text-xs text-foreground/60">
@@ -339,11 +339,11 @@ export const PluginsPage: FC = () => {
               {installedCount === 0 ? (
                 <div className="flex flex-col items-center justify-center p-12 text-center rounded-lg border-(length:--border-width) border-border surface-input shadow-shadow">
                   <Package size={36} className="text-foreground/40 mb-2" />
-                  <h3 className="text-sm font-bold text-foreground">No plugins installed</h3>
+                  <h3 className="text-sm font-bold font-heading text-foreground">No plugins installed</h3>
                   <p className="text-xs text-foreground/60 mt-1 mb-4">
                     Explore the community store to enable streaming providers, lyrics, and widgets.
                   </p>
-                  <Button size="sm" variant="default" onClick={() => setActiveTab('store')} className="font-bold shadow-shadow">
+                  <Button size="sm" variant="default" onClick={() => setActiveTab('store')} className="font-bold shadow-shadow font-sans">
                     Browse Plugin Store
                   </Button>
                 </div>
@@ -363,24 +363,24 @@ export const PluginsPage: FC = () => {
                       >
                         {/* Plugin Info */}
                         <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md surface-primary border-(length:--border-width) border-border shadow-xs text-foreground font-mono font-bold text-xs">
-                            {plugin.category.substring(0, 2).toUpperCase()}
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md surface-primary border-(length:--border-width) border-border shadow-xs text-foreground font-sans font-bold text-xs uppercase">
+                            {plugin.category.substring(0, 2)}
                           </div>
                           <div className="flex flex-col min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-xs font-bold text-foreground">
+                              <span className="text-sm font-bold font-heading text-foreground">
                                 {plugin.name}
                               </span>
-                              <span className="font-mono text-[11px] text-foreground/60">
+                              <span className="text-xs text-foreground/60 font-sans">
                                 by {plugin.author}
                               </span>
-                              <span className="surface-background border border-black px-1.5 py-0.5 rounded text-[10px] font-mono font-bold">
+                              <Badge variant="pill" color="inverted" className="text-[11px] font-semibold">
                                 v{plugin.version}
-                              </span>
+                              </Badge>
                               {plugin.loadTimeMs && (
-                                <span className="bg-purple-200 text-purple-950 border border-black px-1.5 py-0.5 rounded text-[10px] font-mono font-bold">
+                                <Badge variant="pill" color="purple" className="text-[11px] font-semibold">
                                   {plugin.loadTimeMs}ms
-                                </span>
+                                </Badge>
                               )}
                             </div>
                             <p className="text-xs text-foreground/70 truncate mt-0.5">
