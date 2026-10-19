@@ -1,13 +1,95 @@
+/**
+ * Ensure any repository we take reference from or code from isn't referenced or spoken about anywhere either in files or readme or code
+ * Original: packages/ui/src/components/Slider/Slider.tsx
+ * Adapted for Sloth by syedzahidsaleem2@gmail.com
+ * Changes: [styling system, data layer, routing]
+ */
+
+import type { KeyboardEvent, PropsWithChildren } from 'react';
 import {
   FC,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
   useId,
   useMemo,
+  useRef,
   useState,
-  KeyboardEvent,
-  WheelEvent,
-  useEffect,
 } from 'react';
 import { cn } from '@/lib/utils';
+
+export type SliderContextValue = {
+  inputId: string;
+  labelId: string;
+  min: number;
+  max: number;
+  step: number;
+  value: number;
+  unit?: string;
+  disabled?: boolean;
+  percentage: number;
+  emit: (v: number) => void;
+  onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => void;
+  labelText?: string;
+  ariaLabel?: string;
+};
+
+const SliderContext = createContext<SliderContextValue | null>(null);
+
+export const useSliderContext = () => {
+  const ctx = useContext(SliderContext);
+  if (!ctx) {
+    throw new Error('Slider.* must be used within <Slider>');
+  }
+  return ctx;
+};
+
+export const SliderProvider = SliderContext.Provider;
+
+export const useSliderWheel = (
+  ref: React.RefObject<HTMLElement | null>,
+  opts: {
+    disabled?: boolean;
+    get: () => { value: number; step: number; min: number; max: number };
+    set: (next: number) => void;
+  },
+) => {
+  const getRef = useRef(opts.get);
+  const setRef = useRef(opts.set);
+
+  useEffect(() => {
+    getRef.current = opts.get;
+    setRef.current = opts.set;
+  }, [opts.get, opts.set]);
+
+  const onWheel = useCallback(
+    (event: WheelEvent) => {
+      if (opts.disabled) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      const { value, step, min, max } = getRef.current();
+      const dir = event.deltaY < 0 ? 1 : -1;
+      const next = value + dir * step;
+      const clamped = Math.min(Math.max(next, min), max);
+      setRef.current(clamped);
+    },
+    [opts.disabled],
+  );
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) {
+      return;
+    }
+    el.addEventListener('wheel', onWheel, { passive: false, capture: true });
+    return () => {
+      el.removeEventListener('wheel', onWheel as EventListener, true);
+    };
+  }, [onWheel, ref]);
+};
 
 export type SliderProps = {
   value?: number;
@@ -20,57 +102,63 @@ export type SliderProps = {
   disabled?: boolean;
   className?: string;
   label?: string;
+  'aria-label'?: string;
+  description?: string;
   showValue?: boolean;
+  showFooter?: boolean;
   startLabel?: string;
   endLabel?: string;
 };
 
-export const Slider: FC<SliderProps> = ({
-  value: controlledValue,
+const DEFAULT_MIN = 0;
+const DEFAULT_MAX = 100;
+const DEFAULT_STEP = 1;
+
+export const SliderRoot: FC<
+  PropsWithChildren<Omit<SliderProps, 'label' | 'showValue' | 'showFooter'>>
+> = ({
+  value: valueProp,
   defaultValue,
-  min = 0,
-  max = 100,
-  step = 1,
+  min = DEFAULT_MIN,
+  max = DEFAULT_MAX,
+  step = DEFAULT_STEP,
   unit,
   onValueChange,
-  disabled = false,
+  disabled,
   className,
-  label,
-  showValue = true,
-  startLabel,
-  endLabel,
+  'aria-label': ariaLabel,
+  children,
 }) => {
-  const [internalValue, setInternalValue] = useState<number>(defaultValue ?? min);
-  const isControlled = controlledValue !== undefined;
-  const value = isControlled ? controlledValue : internalValue;
-
-  useEffect(() => {
-    if (isControlled) {
-      setInternalValue(controlledValue);
-    }
-  }, [isControlled, controlledValue]);
-
-  const clamp = (val: number) => Math.min(Math.max(val, min), max);
-
+  const [internal, setInternal] = useState<number | undefined>(defaultValue);
+  const isControlled = valueProp !== undefined;
+  const value = isControlled ? (valueProp as number) : (internal ?? min);
+  const clamp = (n: number) => Math.min(Math.max(n, min), max);
   const emit = (next: number) => {
-    if (disabled) return;
-    const clamped = clamp(next);
+    const v = clamp(next);
     if (!isControlled) {
-      setInternalValue(clamped);
+      setInternal(v);
     }
-    onValueChange?.(clamped);
+    onValueChange?.(v);
   };
 
   const percentage = useMemo(() => {
-    if (max === min) return 0;
+    if (max === min) {
+      return 0;
+    }
     return ((value - min) / (max - min)) * 100;
   }, [value, min, max]);
 
-  const inputId = useId();
-  const labelId = `${inputId}-label`;
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  useSliderWheel(wrapperRef, {
+    disabled,
+    get: () => ({ value, step, min, max }),
+    set: (next) => emit(next),
+  });
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (disabled) return;
+  const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (disabled) {
+      return;
+    }
     const deltas: Record<string, number> = {
       ArrowRight: step,
       ArrowUp: step,
@@ -83,88 +171,195 @@ export const Slider: FC<SliderProps> = ({
     if (typeof delta === 'number') {
       e.preventDefault();
       emit(value + delta);
-    } else if (e.key === 'Home') {
+      return;
+    }
+    if (e.key === 'Home') {
       e.preventDefault();
       emit(min);
-    } else if (e.key === 'End') {
+      return;
+    }
+    if (e.key === 'End') {
       e.preventDefault();
       emit(max);
     }
   };
 
-  const handleWheel = (e: WheelEvent<HTMLDivElement>) => {
-    if (disabled) return;
-    e.preventDefault();
-    const direction = e.deltaY < 0 ? 1 : -1;
-    emit(value + direction * step);
-  };
+  const inputId = useId();
+  const labelId = `${inputId}-label`;
 
   return (
-    <div
-      className={cn('flex w-full flex-col gap-1.5 select-none', className)}
-      onWheel={handleWheel}
+    <SliderProvider
+      value={{
+        inputId,
+        labelId,
+        min,
+        max,
+        step,
+        value,
+        unit,
+        disabled,
+        percentage,
+        emit,
+        onKeyDown,
+        ariaLabel,
+      }}
     >
-      {(label || showValue) && (
-        <div className="flex w-full items-center justify-between text-xs font-semibold">
-          {label && (
-            <label id={labelId} htmlFor={inputId} className="text-foreground">
-              {label}
-            </label>
-          )}
-          {showValue && (
-            <span className="text-foreground/70 tabular-nums">
-              {value}
-              {unit ? ` ${unit}` : ''}
-            </span>
-          )}
-        </div>
-      )}
-
-      <div className="relative flex h-6 w-full items-center">
-        {/* Track background */}
-        <div className="border-border surface-input relative h-2.5 w-full overflow-hidden rounded-md border-(length:--border-width)">
-          {/* Active fill */}
-          <div
-            className="surface-primary absolute top-0 left-0 h-full rounded-l transition-all duration-75"
-            style={{ width: `${percentage}%` }}
-          />
-        </div>
-
-        {/* Thumb */}
-        <div
-          className={cn(
-            'border-border bg-input pointer-events-none absolute top-1/2 -ml-2.5 h-5 w-5 -translate-y-1/2 rounded-full border-(length:--border-width) shadow-sm transition-transform',
-            disabled && 'opacity-50',
-          )}
-          style={{ left: `${percentage}%` }}
-        />
-
-        {/* Hidden accessible input */}
-        <input
-          id={inputId}
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          disabled={disabled}
-          onChange={(e) => emit(Number(e.target.value))}
-          onKeyDown={handleKeyDown}
-          aria-labelledby={label ? labelId : undefined}
-          aria-valuemin={min}
-          aria-valuemax={max}
-          aria-valuenow={value}
-          aria-valuetext={unit ? `${value} ${unit}` : String(value)}
-          className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
-        />
+      <div
+        ref={wrapperRef}
+        className={cn('flex w-full flex-col gap-2', className)}
+      >
+        {children}
       </div>
+    </SliderProvider>
+  );
+};
 
-      {(startLabel || endLabel) && (
-        <div className="text-foreground/60 flex w-full justify-between text-[10px]">
-          <span>{startLabel}</span>
-          <span>{endLabel}</span>
-        </div>
+export const SliderHeader: FC<{ label?: string; showValue?: boolean }> = ({
+  label,
+  showValue = true,
+}) => {
+  const { inputId, labelId, unit, value } = useSliderContext();
+  return (
+    <div className="flex w-full items-center justify-between text-sm">
+      <label
+        id={labelId}
+        className="text-foreground font-semibold"
+        htmlFor={inputId}
+      >
+        {label}
+      </label>
+      {showValue && (
+        <span className="text-foreground/60">
+          {value}
+          {unit ? ` ${unit}` : ''}
+        </span>
       )}
     </div>
   );
 };
+
+export const SliderTrack: FC = () => {
+  const { percentage } = useSliderContext();
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2">
+      <div className="border-border surface-input relative h-3 w-full rounded border-(length:--border-width)">
+        <div
+          className="bg-primary absolute top-0 left-0 h-full rounded-l"
+          style={{ width: `${percentage}%` }}
+        />
+        <div
+          className="border-border bg-input absolute top-1/2 -ml-2 h-5 w-5 -translate-y-1/2 rounded-full border-(length:--border-width)"
+          style={{ left: `${percentage}%` }}
+        />
+      </div>
+    </div>
+  );
+};
+
+export const SliderRangeInput: FC = () => {
+  const {
+    inputId,
+    labelId,
+    min,
+    max,
+    step,
+    value,
+    unit,
+    emit,
+    onKeyDown,
+    disabled,
+    ariaLabel,
+  } = useSliderContext();
+  return (
+    <input
+      id={inputId}
+      type="range"
+      min={min}
+      max={max}
+      step={step}
+      value={value}
+      onChange={(e) => emit(Number(e.target.value))}
+      onKeyDown={onKeyDown}
+      disabled={disabled}
+      aria-label={ariaLabel || 'Slider'}
+      aria-labelledby={labelId}
+      aria-valuemin={min}
+      aria-valuemax={max}
+      aria-valuenow={value}
+      aria-valuetext={unit ? `${value} ${unit}` : String(value)}
+      className={cn(
+        'absolute inset-0 z-[1] h-6 w-full appearance-none opacity-0',
+        'cursor-pointer',
+      )}
+    />
+  );
+};
+
+export const SliderSurface: FC<PropsWithChildren> = ({ children }) => (
+  <div className="relative h-6 w-full overscroll-contain">{children}</div>
+);
+
+export const SliderFooter: FC<{
+  startLabel?: string;
+  endLabel?: string;
+}> = ({ startLabel, endLabel }) => {
+  const { min, max, unit } = useSliderContext();
+  return (
+    <div className="text-foreground/60 flex w-full justify-between text-xs">
+      <span>{startLabel ?? `${min}${unit ? ` ${unit}` : ''}`}</span>
+      <span>{endLabel ?? `${max}${unit ? ` ${unit}` : ''}`}</span>
+    </div>
+  );
+};
+
+export type SliderComponent = FC<PropsWithChildren<SliderProps>> & {
+  Header: typeof SliderHeader;
+  Surface: typeof SliderSurface;
+  Track: typeof SliderTrack;
+  RangeInput: typeof SliderRangeInput;
+  Footer: typeof SliderFooter;
+};
+
+const SliderImpl: FC<PropsWithChildren<SliderProps>> = ({
+  label,
+  description,
+  showValue = true,
+  showFooter = false,
+  startLabel,
+  endLabel,
+  className,
+  children,
+  ...rest
+}) => {
+  const hasCustomChildren = !!children;
+  return (
+    <SliderRoot className={className} {...rest}>
+      {hasCustomChildren ? (
+        children
+      ) : (
+        <>
+          {(label || showValue) && (
+            <SliderHeader label={label} showValue={showValue} />
+          )}
+          {description && (
+            <p className="text-foreground/60 text-xs">{description}</p>
+          )}
+          <SliderSurface>
+            <SliderTrack />
+            <SliderRangeInput />
+          </SliderSurface>
+          {(showFooter || startLabel || endLabel) && (
+            <SliderFooter startLabel={startLabel} endLabel={endLabel} />
+          )}
+        </>
+      )}
+    </SliderRoot>
+  );
+};
+
+export const Slider = SliderImpl as SliderComponent;
+Slider.Header = SliderHeader;
+Slider.Surface = SliderSurface;
+Slider.Track = SliderTrack;
+Slider.RangeInput = SliderRangeInput;
+Slider.Footer = SliderFooter;
