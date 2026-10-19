@@ -210,6 +210,17 @@ describe('Sloth Plugin System & Store', () => {
       miniPlayerShowCover: false,
       enableSyncedLyrics: true,
       karaokeModeDefault: false,
+      cleanLyricHeaders: true,
+      autoScrollLyrics: true,
+      preferSyncedLyrics: true,
+      lyricsFontSize: 20,
+      miniPlayerAmbientGlow: false,
+      miniPlayerShowBackground: true,
+      miniPlayerShowQueue: true,
+      miniPlayerSyncAccent: false,
+      miniPlayerLanguage: 'Spanish',
+      discoveryVariety: 25,
+      crossfadeMs: 2500,
     });
 
     const updated = getSlothSettings();
@@ -217,5 +228,16 @@ describe('Sloth Plugin System & Store', () => {
     expect(updated.miniPlayerShowCover).toBe(false);
     expect(updated.enableSyncedLyrics).toBe(true);
     expect(updated.karaokeModeDefault).toBe(false);
+    expect(updated.cleanLyricHeaders).toBe(true);
+    expect(updated.autoScrollLyrics).toBe(true);
+    expect(updated.preferSyncedLyrics).toBe(true);
+    expect(updated.lyricsFontSize).toBe(20);
+    expect(updated.miniPlayerAmbientGlow).toBe(false);
+    expect(updated.miniPlayerShowBackground).toBe(true);
+    expect(updated.miniPlayerShowQueue).toBe(true);
+    expect(updated.miniPlayerSyncAccent).toBe(false);
+    expect(updated.miniPlayerLanguage).toBe('Spanish');
+    expect(updated.discoveryVariety).toBe(25);
+    expect(updated.crossfadeMs).toBe(2500);
   });
 });
