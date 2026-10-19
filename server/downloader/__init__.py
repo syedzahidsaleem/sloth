@@ -15,7 +15,7 @@ from .downloader import (
     find_ytdlp_executable,
     sanitize_filename,
 )
-from .queue import DownloadQueue, DownloadTask
+from .job_queue import DownloadQueue, DownloadTask
 from .tagger import AudioTagger, TrackMetadata, parse_lrc_to_synced_tuples
 
 __all__ = [
