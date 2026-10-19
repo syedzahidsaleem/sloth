@@ -69,6 +69,25 @@ These paths are mapped to extract reference architecture and source-of-truth pat
 
 ---
 
+## Python Engine & Downloader Dependencies
+
+| Package | Version | Purpose | Security Audit Status |
+| :--- | :--- | :--- | :--- |
+| `fastapi` | `0.143.3` | High-performance asynchronous REST & WebSocket framework | Clean (0 CVEs) |
+| `starlette` | `1.8.0` | Asynchronous ASGI toolkit powering FastAPI | Clean (0 CVEs) |
+| `python-multipart` | `0.0.32` | Form & multipart parsing | Clean (0 CVEs, patched CVE-2024-53981) |
+| `urllib3` | `2.8.0` | HTTP client library | Clean (0 CVEs, patched CVE-2026-97687) |
+| `python-dotenv` | `1.2.4` | Environment variable management | Clean (0 CVEs, patched CVE-2026-28684) |
+| `uvicorn` | `0.51.0` | Lightning-fast ASGI server implementation | Clean (0 CVEs) |
+| `pydantic` | `2.13.4` | Schema modeling & runtime validation | Clean (0 CVEs) |
+| `mutagen` | `1.47.0` | Audio metadata extraction & ID3/Vorbis/MP4 tagging | Clean (0 CVEs) |
+| `httpx` | `0.28.1` | Asynchronous HTTP client for source providers & APIs | Clean (0 CVEs) |
+| `numpy` | `2.2.3` | Numerical array manipulation for audio & embedding fallback | Clean (0 CVEs) |
+| `cryptography` | `50.0.2` | Core cryptographic primitives & cipher verification | Clean (0 CVEs, patched PYSEC-2026-3552) |
+| `pyjwt` | `2.15.1` | JSON Web Token encoding & verification | Clean (0 CVEs) |
+
+---
+
 ## Engine Hosting & Infrastructure Architecture (Vercel vs. Persistent Compute)
 
 > **CRITICAL ARCHITECTURAL DIRECTIVE**: **The SLOTH Neural Engine (`server/engine/`) is NOT hosted on Vercel.**
