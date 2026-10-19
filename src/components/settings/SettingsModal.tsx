@@ -146,6 +146,8 @@ export const SettingsModal: FC<SettingsModalProps> = ({
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const isProgrammaticScroll = useRef(false);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Track settings changes
   useEffect(() => {
@@ -161,11 +163,16 @@ export const SettingsModal: FC<SettingsModalProps> = ({
       }
       setCurrentThemeId(currentSettings.themeId || 'default');
     }
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
   }, [isOpen, initialTab]);
 
-  // Nuclear scrollspy algorithm
+  // Robust scrollspy algorithm with programmatic scroll lock
   const handleScroll = useCallback(() => {
-    if (!viewportRef.current || activeAppTab !== null) return;
+    if (!viewportRef.current || activeAppTab !== null || isProgrammaticScroll.current) return;
     const viewport = viewportRef.current;
     const isBottom =
       viewport.scrollTop + viewport.clientHeight >= viewport.scrollHeight - 30;
@@ -174,26 +181,38 @@ export const SettingsModal: FC<SettingsModalProps> = ({
       return;
     }
 
-    const viewportMiddle = viewport.scrollTop + viewport.clientHeight / 2.5;
+    const scrollAnchor = viewport.scrollTop + 80;
     let foundSection: (typeof SETTINGS_SECTIONS)[number]['id'] = SETTINGS_SECTIONS[0].id;
     for (const section of SETTINGS_SECTIONS) {
       const el = sectionRefs.current[section.id];
-      if (el && el.offsetTop <= viewportMiddle) {
-        foundSection = section.id;
+      if (el) {
+        const elTop = el.offsetTop - viewport.offsetTop;
+        if (elTop <= scrollAnchor) {
+          foundSection = section.id;
+        }
       }
     }
     setActiveSettingsSection(foundSection);
   }, [activeAppTab]);
 
   const handleSelectSettingsSection = (secId: string) => {
+    isProgrammaticScroll.current = true;
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
     setActiveAppTab(null);
     setActiveSettingsSection(secId);
-    setTimeout(() => {
-      const el = sectionRefs.current[secId];
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 20);
+
+    const el = sectionRefs.current[secId];
+    const viewport = viewportRef.current;
+    if (el && viewport) {
+      const targetTop = el.offsetTop - viewport.offsetTop;
+      viewport.scrollTo({ top: Math.max(0, targetTop - 12), behavior: 'smooth' });
+    }
+
+    scrollTimeoutRef.current = setTimeout(() => {
+      isProgrammaticScroll.current = false;
+    }, 550);
   };
 
   const handleSelectAppTab = (appId: SettingsTabId) => {
@@ -222,7 +241,7 @@ export const SettingsModal: FC<SettingsModalProps> = ({
 
   const currentHeading = activeAppTab
     ? APP_SECTIONS.find((a) => a.id === activeAppTab)?.label || 'App'
-    : SETTINGS_SECTIONS.find((s) => s.id === activeSettingsSection)?.label || 'General';
+    : 'General';
 
   return (
     <AnimatePresence>
