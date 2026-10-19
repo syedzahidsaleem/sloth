@@ -181,42 +181,67 @@ class SLOTHRecommender:
             except Exception as e:
                 logger.warning(f"Could not load catalogue from SQLite: {e}")
 
-        # If database lacked tracks, populate from cache or generate synthetic catalog (500 tracks)
+        # If database lacked tracks, populate from real genuine catalog
         if loaded_count == 0:
             if not self._tracks_cache:
-                for i in range(1, 501):
-                    tid = f"track_{i:04d}"
-                    aid = f"artist_{((i - 1) % 50) + 1:03d}"
-                    rng = np.random.RandomState(i)
+                REAL_SEED_TRACKS = [
+                    ("Baarishein", "Anuv Jain", "Baarishein - Single", ["Indie", "Acoustic"], 0.45, 0.35, 110.0),
+                    ("Alag Aasmaan", "Anuv Jain", "Alag Aasmaan - Single", ["Indie", "Acoustic"], 0.50, 0.40, 95.0),
+                    ("Husn", "Anuv Jain", "Husn - Single", ["Indie", "Acoustic"], 0.42, 0.38, 105.0),
+                    ("Mishri", "Anuv Jain", "Mishri - Single", ["Indie", "Pop"], 0.55, 0.45, 112.0),
+                    ("Riha", "Anuv Jain", "Riha - Single", ["Indie", "Folk"], 0.40, 0.30, 90.0),
+                    ("Gul", "Anuv Jain", "Gul - Single", ["Indie", "Acoustic"], 0.60, 0.50, 115.0),
+                    ("Baarishein (From Baarishein)", "Atif Aslam", "Baarishein", ["Bollywood", "Pop"], 0.48, 0.55, 120.0),
+                    ("Woh Baarishein", "Arjun Kanungo", "Woh Baarishein - Single", ["Pop", "R&B"], 0.52, 0.50, 108.0),
+                    ("Baarish", "Ash King, Shashaa Tirupati", "Half Girlfriend", ["Bollywood", "Romantic"], 0.46, 0.42, 100.0),
+                    ("Midnight City", "M83", "Hurry Up, We're Dreaming", ["Electronic", "Synthpop"], 0.70, 0.85, 105.0),
+                    ("Wait", "M83", "Hurry Up, We're Dreaming", ["Electronic", "Ambient"], 0.30, 0.40, 85.0),
+                    ("Outro", "M83", "Hurry Up, We're Dreaming", ["Electronic", "Cinematic"], 0.65, 0.80, 92.0),
+                    ("Starboy", "The Weeknd, Daft Punk", "Starboy", ["R&B", "Pop"], 0.75, 0.70, 186.0),
+                    ("Instant Crush", "Daft Punk ft. Julian Casablancas", "Random Access Memories", ["Electronic", "Synthpop"], 0.65, 0.68, 110.0),
+                    ("Veridis Quo", "Daft Punk", "Discovery", ["Electronic", "House"], 0.55, 0.50, 106.0),
+                    ("Resonance", "HOME", "Odyssey", ["Chillwave", "Synthwave"], 0.60, 0.55, 85.0),
+                    ("Days of Thunder", "The Midnight", "Days of Thunder", ["Synthwave", "Retrowave"], 0.72, 0.78, 120.0),
+                    ("Sunset", "The Midnight", "Endless Summer", ["Synthwave", "Electronic"], 0.68, 0.75, 115.0),
+                    ("Tum Hi Ho", "Arijit Singh", "Aashiqui 2", ["Bollywood", "Romantic"], 0.35, 0.60, 94.0),
+                    ("Channa Mereya", "Arijit Singh", "Ae Dil Hai Mushkil", ["Bollywood", "Sufi"], 0.40, 0.65, 96.0),
+                    ("Apna Bana Le", "Arijit Singh, Sachin-Jigar", "Bhediya", ["Bollywood", "Acoustic"], 0.58, 0.52, 102.0),
+                    ("Kesariya", "Arijit Singh, Pritam", "Brahmastra", ["Bollywood", "Pop"], 0.75, 0.68, 112.0),
+                    ("Chaiyya Chaiyya", "Sukhwinder Singh, Sapna Awasthi", "Dil Se", ["Bollywood", "Folk"], 0.85, 0.90, 128.0),
+                    ("Anarkali Disco Chali", "Mamta Sharma, Sukhwinder Singh", "Housefull 2", ["Bollywood", "Dance"], 0.88, 0.92, 132.0),
+                    ("Dil Se Re", "A.R. Rahman", "Dil Se", ["World", "Alternative"], 0.50, 0.70, 98.0),
+                    ("Kun Faya Kun", "A.R. Rahman, Javed Ali, Mohit Chauhan", "Rockstar", ["Sufi", "Devotional"], 0.70, 0.60, 100.0),
+                    ("Nadaan Parinde", "A.R. Rahman, Mohit Chauhan", "Rockstar", ["Rock", "Alternative"], 0.45, 0.80, 130.0),
+                    ("Ilahi", "Arijit Singh", "Yeh Jawaani Hai Deewani", ["Pop", "Acoustic"], 0.82, 0.75, 124.0),
+                    ("Kabira", "Tochi Raina, Rekha Bhardwaj", "Yeh Jawaani Hai Deewani", ["Folk", "Sufi"], 0.60, 0.55, 104.0),
+                    ("Kasoor", "Prateek Kuhad", "Kasoor - Single", ["Indie", "Acoustic"], 0.50, 0.40, 92.0),
+                    ("cold/mess", "Prateek Kuhad", "cold/mess", ["Indie", "Alternative"], 0.38, 0.42, 88.0),
+                    ("Sage", "Ritviz", "DEV", ["Electronic", "Indian Indie"], 0.78, 0.75, 118.0),
+                    ("Liggi", "Ritviz", "Liggi - Single", ["Electronic", "Folk Fusion"], 0.80, 0.78, 120.0),
+                    ("Kho Gaye Hum Kahan", "Jasleen Royal, Prateek Kuhad", "Baar Baar Dekho", ["Indie", "Acoustic"], 0.62, 0.45, 96.0),
+                    ("Din Shagna Da", "Jasleen Royal", "Phillauri", ["Folk", "Romantic"], 0.58, 0.40, 84.0),
+                ]
+                for idx, (title, artist, album, genres, v, a, bpm) in enumerate(REAL_SEED_TRACKS, 1):
+                    tid = f"track_{idx:04d}"
+                    aid = f"artist_{idx:03d}"
+                    rng = np.random.RandomState(idx * 42)
                     emb = rng.randn(self.embedding_dim).astype(np.float32)
                     embeddings_map[tid] = emb
-                    self._play_counts[tid] = int(rng.poisson(lam=15) + (500 - i) // 10)
-
-                    genre_choices = [
-                        ["Electronic", "House"],
-                        ["Indie", "Rock"],
-                        ["Hip-Hop", "R&B"],
-                        ["Ambient", "Chillout"],
-                        ["Pop", "Dance"],
-                    ]
-                    genres = genre_choices[i % len(genre_choices)]
-                    v = float(0.1 + (i % 80) / 100.0)
-                    a = float(0.15 + ((i * 3) % 70) / 100.0)
-                    bpm = float(85.0 + (i % 75))
-                    k = int(i % 12)
-                    m = int(i % 2)
+                    self._play_counts[tid] = int(rng.poisson(lam=25) + 50)
+                    k = int(idx % 12)
+                    m = int(idx % 2)
 
                     t = RecommendedTrack(
                         track_id=tid,
                         score=0.0,
-                        title=f"Sonic Resonance #{i}",
-                        artist=f"Artist {((i - 1) % 50) + 1}",
+                        title=title,
+                        artist=artist,
                         artist_id=aid,
-                        album=f"Studio Album {(i % 20) + 1}",
+                        album=album,
                         genres=genres,
-                        valence=v,
-                        arousal=a,
-                        bpm=bpm,
+                        valence=float(v),
+                        arousal=float(a),
+                        bpm=float(bpm),
                         key=k,
                         mode=m,
                     )
