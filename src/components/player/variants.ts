@@ -13,7 +13,7 @@ export const playerControlVariants = cva(
         default:
           'bg-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-raised)] border border-transparent rounded-[4px]',
         primary:
-          'bg-[var(--color-accent)] text-[var(--color-accent-foreground)] hover:brightness-110 active:scale-95 rounded-[6px] shadow-sm',
+          'bg-[var(--color-accent)] text-[var(--color-accent-foreground)] hover:brightness-110 active:scale-95 rounded-[4px] shadow-sm',
         accentToggle:
           'bg-[var(--surface-raised)] text-[var(--color-accent)] border border-[var(--color-accent)]/40 rounded-[4px]',
         ghost:
@@ -21,9 +21,9 @@ export const playerControlVariants = cva(
       },
       size: {
         sm: 'size-7 text-xs',
-        md: 'size-8 text-sm',
+        md: 'size-9 text-sm',
         lg: 'size-10 text-base',
-        play: 'size-9 text-base',
+        play: 'size-10 text-base',
       },
       active: {
         true: 'text-[var(--color-accent)]',
