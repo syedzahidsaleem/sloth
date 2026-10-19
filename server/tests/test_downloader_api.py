@@ -21,7 +21,7 @@ from server.downloader.downloader import (
     DownloadStatus,
 )
 from server.downloader.main import app, download_queue
-from server.downloader.queue import DownloadQueue, DownloadTask
+from server.downloader.job_queue import DownloadQueue, DownloadTask
 
 
 class TestDownloaderQueue(unittest.IsolatedAsyncioTestCase):
