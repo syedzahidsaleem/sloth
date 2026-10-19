@@ -11,6 +11,7 @@ import {
   Copy,
   Check,
 } from 'lucide-react';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { Button } from '@/components/ui/Button';
 import { Toggle } from '@/components/ui/Toggle';
 import { Slider } from '@/components/ui/Slider';
@@ -112,6 +113,7 @@ export const SettingsModal: FC<SettingsModalProps> = ({
   const [themeSubTab, setThemeSubTab] = useState<'my' | 'store'>('my');
   const [selectedAdvancedTheme, setSelectedAdvancedTheme] = useState<string>('none');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const shouldReduce = useReducedMotion();
 
   // Track settings changes
   useEffect(() => {
