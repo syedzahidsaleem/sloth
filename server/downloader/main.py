@@ -25,7 +25,7 @@ from pydantic import BaseModel, Field
 # Ensure local package imports work in all execution contexts
 _dir = Path(__file__).resolve().parent
 if str(_dir) not in sys.path:
-    sys.path.insert(0, str(_dir))
+    sys.path.append(str(_dir))
 
 try:
     from .downloader import (
@@ -36,7 +36,7 @@ try:
         find_ytdlp_executable,
         sanitize_filename,
     )
-    from .queue import DownloadQueue, DownloadTask
+    from .job_queue import DownloadQueue, DownloadTask
     from .tagger import TrackMetadata
 except (ImportError, ValueError):
     from downloader import (  # type: ignore
@@ -47,7 +47,7 @@ except (ImportError, ValueError):
         find_ytdlp_executable,
         sanitize_filename,
     )
-    from queue import DownloadQueue, DownloadTask  # type: ignore
+    from job_queue import DownloadQueue, DownloadTask  # type: ignore
     from tagger import TrackMetadata  # type: ignore
 
 logging.basicConfig(level=logging.INFO)
