@@ -203,4 +203,19 @@ describe('Sloth Plugin System & Store', () => {
     expect(success).toBe(true);
     expect(getInstalledPlugins()['piped-engine']).toBeUndefined();
   });
+
+  it('persists mini player and lyrics display settings', () => {
+    saveSlothSettings({
+      miniPlayerAlwaysOnTop: true,
+      miniPlayerShowCover: false,
+      enableSyncedLyrics: true,
+      karaokeModeDefault: false,
+    });
+
+    const updated = getSlothSettings();
+    expect(updated.miniPlayerAlwaysOnTop).toBe(true);
+    expect(updated.miniPlayerShowCover).toBe(false);
+    expect(updated.enableSyncedLyrics).toBe(true);
+    expect(updated.karaokeModeDefault).toBe(false);
+  });
 });
