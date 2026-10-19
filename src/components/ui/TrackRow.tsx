@@ -1,5 +1,12 @@
+/**
+ * Ensure any repository we take reference from or code from isn't referenced or spoken about anywhere either in files or readme or code
+ * Original: packages/ui/src/components/TrackTable/SortableRow.tsx
+ * Adapted for Sloth by syedzahidsaleem2@gmail.com
+ * Changes: [styling system, data layer, routing, direct row rendering]
+ */
+
 import { FC, ReactNode, MouseEvent } from 'react';
-import { Heart, Play, Pause, MoreVertical, Plus, Music, Download } from 'lucide-react';
+import { Heart, Play, Pause, EllipsisVertical, Plus, Music, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './Button';
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from './ContextMenu';
@@ -67,12 +74,11 @@ export const TrackRow: FC<TrackRowProps> = ({
 
   return (
     <div
-      role="row"
       data-testid="track-row"
       onClick={() => onPlay?.(track)}
       className={cn(
-        'group border-border bg-muted/60 hover:surface-card flex h-14 w-full cursor-pointer items-center gap-3 border-b-(length:--border-width) px-3 transition-colors select-none',
-        isCurrent && 'surface-card border-primary/50',
+        'group border-border bg-muted/40 hover:surface-card flex h-12 w-full cursor-pointer items-center gap-3 border-b-(length:--border-width) px-3 transition-colors select-none rounded-[4px]',
+        isCurrent && 'surface-card border-primary/50 text-primary',
         className,
       )}
     >
@@ -86,8 +92,8 @@ export const TrackRow: FC<TrackRowProps> = ({
           onClick={handlePlayClick}
           aria-label={isPlaying ? 'Pause' : 'Play'}
           className={cn(
-            'hover:text-foreground hidden group-hover:flex items-center justify-center transition-transform active:scale-90',
-            isCurrent && 'flex text-foreground',
+            'hover:text-foreground hidden group-hover:flex items-center justify-center transition-transform active:scale-95',
+            isCurrent && 'flex text-primary',
           )}
         >
           {isPlaying ? <Pause size={14} className="fill-current" /> : <Play size={14} className="fill-current" />}
@@ -95,7 +101,7 @@ export const TrackRow: FC<TrackRowProps> = ({
       </div>
 
       {/* Thumbnail */}
-      <div className="border-border relative size-10 shrink-0 overflow-hidden rounded-md border-(length:--border-width) bg-background/50">
+      <div className="border-border relative size-9 shrink-0 overflow-hidden rounded-[4px] border-(length:--border-width) bg-background/50">
         {track.coverUrl ? (
           <img
             src={track.coverUrl}
@@ -104,17 +110,17 @@ export const TrackRow: FC<TrackRowProps> = ({
           />
         ) : (
           <div className="text-foreground/40 flex size-full items-center justify-center">
-            <Music size={16} />
+            <Music size={15} />
           </div>
         )}
       </div>
 
       {/* Title & Artist */}
       <div className="min-w-0 flex-1">
-        <div className={cn('truncate text-sm font-bold', isCurrent ? 'text-primary' : 'text-foreground')}>
+        <div className={cn('truncate text-sm font-semibold', isCurrent ? 'text-primary' : 'text-foreground')}>
           {track.title}
         </div>
-        <div className="text-foreground/60 truncate text-xs font-medium">
+        <div className="text-foreground/60 truncate text-xs">
           {track.artist}
         </div>
       </div>
@@ -171,7 +177,7 @@ export const TrackRow: FC<TrackRowProps> = ({
         )}
 
         {/* Duration */}
-        <div className="w-12 text-right text-xs font-medium tabular-nums text-foreground/70">
+        <div className="w-12 text-right text-xs font-mono tabular-nums text-foreground/70">
           {formatTime(track.durationSeconds)}
         </div>
 
@@ -185,7 +191,7 @@ export const TrackRow: FC<TrackRowProps> = ({
               className="opacity-0 transition-opacity group-hover:opacity-100 text-foreground/70 hover:text-foreground"
               aria-label="More options"
             >
-              <MoreVertical size={15} />
+              <EllipsisVertical size={15} />
             </Button>
           }
         >
