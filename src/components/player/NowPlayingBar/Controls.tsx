@@ -61,7 +61,7 @@ export const Controls: FC<ControlsProps> = ({
   };
 
   return (
-    <div className={cn('flex items-center justify-center gap-1.5 md:gap-2.5', className)}>
+    <div className={cn('flex items-center justify-center gap-2 sm:gap-2.5', className)}>
       {/* 1. Shuffle Button */}
       <motion.button
         type="button"
@@ -106,7 +106,7 @@ export const Controls: FC<ControlsProps> = ({
         onClick={onPlayPause}
         whileTap={shouldReduceMotion || disabled ? undefined : { scale: 0.92 }}
         className={cn(
-          'size-9 md:size-10 rounded-[6px] border border-[var(--border)] bg-[var(--surface-raised)] text-[var(--text-primary)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] flex items-center justify-center transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] cursor-pointer select-none shadow-sm'
+          'size-9 md:size-10 rounded-[4px] border border-[var(--border)] bg-[var(--surface-raised)] text-[var(--text-primary)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] flex items-center justify-center transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] cursor-pointer select-none shadow-sm'
         )}
         title={isPlaying ? 'Pause' : 'Play'}
         aria-label={isPlaying ? 'Pause' : 'Play'}
