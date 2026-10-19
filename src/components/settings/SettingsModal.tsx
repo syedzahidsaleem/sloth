@@ -146,11 +146,22 @@ export const SettingsModal: FC<SettingsModalProps> = ({
   };
 
   return (
-    <div
-      data-testid="settings-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 sm:p-8 md:p-12 font-sans select-none"
-    >
-      <div className="surface-background text-foreground border-border shadow-nav relative flex h-full max-h-[820px] w-full max-w-5xl rounded-lg border-(length:--border-width) overflow-hidden">
+    <AnimatePresence>
+      {isOpen && (
+        <div
+          data-testid="settings-modal"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 md:p-12 font-sans select-none"
+        >
+          {/* Animated Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-black/60 backdrop-blur-xs"
+          />
+
+          <div className="surface-background text-foreground border-border shadow-nav relative flex h-full max-h-[820px] w-full max-w-5xl rounded-lg border-(length:--border-width) overflow-hidden z-10">
         {/* Close Button top-right */}
         <Button
           size="icon-sm"
@@ -998,6 +1009,8 @@ export const SettingsModal: FC<SettingsModalProps> = ({
         </div>
       </div>
     </div>
+  )}
+</AnimatePresence>
   );
 };
 
