@@ -1,19 +1,14 @@
 /**
- * Sloth Artist Page (src/app/artist/[id]/page.tsx)
- * Nuclear-derived layout:
- * - Top: Full-width artist banner photo fading to background at bottom
- * - Avatar + Artist Name (text-5xl font-extrabold) + Genre tag badges + Play Artist / Favorite actions
- * - Tabs: "Top Tracks" | "Albums" | "Similar Artists" | "Biography"
- * - Top Tracks: TrackRow ranked 1-10
- * - Albums: AlbumCard responsive grid
- * - Similar Artists: ArtistCard row
- * - Biography: Plain text with expand/collapse toggle
+ * Ensure any repository we take reference from or code from isn't referenced or spoken about anywhere either in files or readme or code
+ * Original: packages/player/src/views/Artist/Artist.tsx
+ * Adapted for Sloth by syedzahidsaleem2@gmail.com
+ * Changes: [styling system, data layer, routing, top tracks, albums grid, similar artists, biography]
  */
 
 import { useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { Play, Heart, Disc3, Users, FileText, Music2 } from 'lucide-react';
-import { TrackRow, AlbumCard, ArtistCard, Track } from '@/components/ui';
+import { TrackRow, AlbumCard, ArtistCard, Track, Button, Badge } from '@/components/ui';
 
 export interface ArtistPageProps {
   artistId?: string;
@@ -55,7 +50,7 @@ Their breakthrough 2011 double album "Hurry Up, We're Dreaming" achieved worldwi
       { id: 'm83-3', title: 'Outro', artist: 'M83', album: "Hurry Up, We're Dreaming", durationSeconds: 247, coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=120&q=80' },
       { id: 'm83-4', title: 'Reunion', artist: 'M83', album: "Hurry Up, We're Dreaming", durationSeconds: 235, coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=120&q=80' },
       { id: 'm83-5', title: 'Solitude', artist: 'M83', album: 'Junk', durationSeconds: 363, coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=120&q=80' },
-      { id: 'm83-6', title: 'My Tears Are Becoming a Sea', artist: 'M83', album: 'Hurry Up, We\'re Dreaming', durationSeconds: 151, coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=120&q=80' },
+      { id: 'm83-6', title: 'My Tears Are Becoming a Sea', artist: 'M83', album: "Hurry Up, We're Dreaming", durationSeconds: 151, coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=120&q=80' },
     ],
     albums: [
       { id: 'alb-1', title: "Hurry Up, We're Dreaming", year: 2011, coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80' },
@@ -118,137 +113,123 @@ export default function ArtistPage({
   const artist = SAMPLE_ARTISTS[artistId] || SAMPLE_ARTISTS.m83;
 
   return (
-    <div className="relative min-h-full pb-12 select-none" data-testid="artist-page">
+    <div className="surface-background relative min-h-full pb-12 select-none" data-testid="artist-page">
       {/* Top Banner with gradient fade to page surface */}
-      <div className="relative h-64 md:h-80 w-full overflow-hidden border-b border-[var(--border)]">
+      <div className="border-border relative h-64 md:h-80 w-full overflow-hidden border-b-(length:--border-width)">
         <img
           src={artist.bannerUrl}
           alt={artist.name}
           className="size-full object-cover select-none pointer-events-none"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[var(--background)] via-[var(--background)]/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
 
         {/* Artist Profile Header Overlay */}
         <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between gap-6">
           <div className="flex items-center gap-5">
-            {/* Circular Avatar with crisp border */}
-            <img
-              src={artist.avatarUrl}
-              alt={artist.name}
-              className="size-24 md:size-28 rounded-full border-2 border-[var(--border)] object-cover shadow-lg"
-            />
+            {/* Circular Avatar */}
+            <div className="border-border size-24 md:size-28 shrink-0 overflow-hidden rounded-full border-2 bg-muted/60 shadow-shadow">
+              <img
+                src={artist.avatarUrl}
+                alt={artist.name}
+                className="size-full object-cover"
+              />
+            </div>
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs uppercase tracking-widest text-[var(--color-accent)] font-mono font-semibold">
+              <Badge variant="pill" color="purple" className="w-fit text-[10px] font-mono">
                 Verified Artist
-              </span>
-              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[var(--text-primary)]">
+              </Badge>
+              <h1 className="text-foreground text-4xl md:text-5xl font-extrabold tracking-tight">
                 {artist.name}
               </h1>
               <div className="flex flex-wrap items-center gap-2 mt-0.5">
                 {artist.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-2 py-0.5 rounded-[4px] bg-[var(--surface-raised)] border border-[var(--border)] text-[11px] text-[var(--text-secondary)] font-medium"
-                  >
+                  <Badge key={tag} variant="pill" color="cyan" className="text-[10px]">
                     {tag}
-                  </span>
+                  </Badge>
                 ))}
               </div>
             </div>
           </div>
 
           {/* Quick Action Buttons */}
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
+          <div className="flex items-center gap-2">
+            <Button
+              size="default"
+              variant="default"
               onClick={() => onPlayArtist?.(artist.name)}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-[6px] bg-[var(--color-accent)] text-[var(--color-accent-foreground)] font-semibold text-sm hover:brightness-110 active:scale-95 transition-all cursor-pointer shadow-md"
+              className="flex items-center gap-2"
             >
-              <Play size={16} fill="currentColor" />
+              <Play size={15} className="fill-current" />
               <span>Play Artist</span>
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              size="icon"
+              variant={isFavorited ? 'default' : 'secondary'}
               onClick={() => setIsFavorited(!isFavorited)}
-              className={`p-2.5 rounded-[6px] border border-[var(--border)] bg-[var(--surface)] transition-colors cursor-pointer ${
-                isFavorited ? 'text-[var(--color-accent)] border-[var(--color-accent)]/50' : 'text-[var(--text-secondary)] hover:text-white'
-              }`}
-              title={isFavorited ? 'Favorited' : 'Favorite'}
+              aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
             >
-              <Heart size={18} fill={isFavorited ? 'currentColor' : 'none'} />
-            </button>
+              <Heart size={16} className={isFavorited ? 'fill-current' : ''} />
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Navigation Tabs: Top Tracks | Albums | Similar Artists | Biography */}
+      {/* Navigation Tabs */}
       <div className="px-6 mt-6">
-        <div className="flex items-center gap-2 border-b border-[var(--border)] pb-2">
-          <button
-            type="button"
+        <div className="border-border flex items-center gap-2 border-b-(length:--border-width) pb-2">
+          <Button
+            size="sm"
+            variant={activeTab === 'tracks' ? 'default' : 'text'}
             onClick={() => setActiveTab('tracks')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-[4px] text-xs font-semibold transition-colors cursor-pointer ${
-              activeTab === 'tracks'
-                ? 'bg-[var(--surface-raised)] text-[var(--color-accent)] border border-[var(--color-accent)]/30'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-            }`}
+            className="flex items-center gap-1.5"
           >
-            <Music2 size={14} />
+            <Music2 size={13} />
             <span>Top Tracks</span>
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            size="sm"
+            variant={activeTab === 'albums' ? 'default' : 'text'}
             onClick={() => setActiveTab('albums')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-[4px] text-xs font-semibold transition-colors cursor-pointer ${
-              activeTab === 'albums'
-                ? 'bg-[var(--surface-raised)] text-[var(--color-accent)] border border-[var(--color-accent)]/30'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-            }`}
+            className="flex items-center gap-1.5"
           >
-            <Disc3 size={14} />
+            <Disc3 size={13} />
             <span>Albums</span>
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            size="sm"
+            variant={activeTab === 'similar' ? 'default' : 'text'}
             onClick={() => setActiveTab('similar')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-[4px] text-xs font-semibold transition-colors cursor-pointer ${
-              activeTab === 'similar'
-                ? 'bg-[var(--surface-raised)] text-[var(--color-accent)] border border-[var(--color-accent)]/30'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-            }`}
+            className="flex items-center gap-1.5"
           >
-            <Users size={14} />
+            <Users size={13} />
             <span>Similar Artists</span>
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            size="sm"
+            variant={activeTab === 'bio' ? 'default' : 'text'}
             onClick={() => setActiveTab('bio')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-[4px] text-xs font-semibold transition-colors cursor-pointer ${
-              activeTab === 'bio'
-                ? 'bg-[var(--surface-raised)] text-[var(--color-accent)] border border-[var(--color-accent)]/30'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-            }`}
+            className="flex items-center gap-1.5"
           >
-            <FileText size={14} />
+            <FileText size={13} />
             <span>Biography</span>
-          </button>
+          </Button>
         </div>
 
         {/* Tab Contents */}
         <div className="mt-6">
-          {/* TAB 1: Top Tracks (Ranked 1-10) */}
+          {/* TAB 1: Top Tracks */}
           {activeTab === 'tracks' && (
             <motion.div
-              initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.15 }}
               className="space-y-1"
             >
               {artist.topTracks.map((track, idx) => (
                 <TrackRow
                   key={track.id}
                   track={track}
-                  index={idx + 1}
+                  index={idx}
                   isCurrent={track.id === currentTrackId}
                   isPlaying={isPlaying && track.id === currentTrackId}
                   onPlay={() => onPlayTrack?.(track)}
@@ -260,9 +241,9 @@ export default function ArtistPage({
           {/* TAB 2: Albums Grid */}
           {activeTab === 'albums' && (
             <motion.div
-              initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.15 }}
               className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
             >
               {artist.albums.map((alb) => (
@@ -281,10 +262,10 @@ export default function ArtistPage({
           {/* TAB 3: Similar Artists */}
           {activeTab === 'similar' && (
             <motion.div
-              initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
-              className="flex items-center gap-4 overflow-x-auto pb-4"
+              transition={{ duration: 0.15 }}
+              className="flex items-center gap-4 overflow-x-auto pb-4 [scrollbar-width:none]"
             >
               {artist.similarArtists.map((sim) => (
                 <ArtistCard
@@ -301,33 +282,34 @@ export default function ArtistPage({
           {/* TAB 4: Biography */}
           {activeTab === 'bio' && (
             <motion.div
-              initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
-              className="max-w-3xl p-5 rounded-[6px] bg-[var(--surface)] border border-[var(--border)] space-y-4"
+              transition={{ duration: 0.15 }}
+              className="surface-card border-border shadow-shadow max-w-3xl p-5 rounded-[4px] border-(length:--border-width) space-y-4"
             >
-              <div className="flex items-center justify-between pb-2 border-b border-[var(--border)]">
-                <span className="text-xs font-mono text-[var(--color-accent)] uppercase">
+              <div className="border-border flex items-center justify-between pb-2 border-b-(length:--border-width)">
+                <span className="text-primary font-mono text-xs uppercase">
                   Source: Last.fm & MusicBrainz
                 </span>
-                <span className="text-xs font-mono text-[var(--text-muted)]">
+                <span className="text-muted-foreground font-mono text-xs">
                   {artist.monthlyListeners.toLocaleString()} monthly listeners
                 </span>
               </div>
               <p
-                className={`text-sm leading-relaxed text-[var(--text-secondary)] whitespace-pre-line ${
+                className={`text-foreground/80 text-sm leading-relaxed whitespace-pre-line ${
                   isBioExpanded ? '' : 'line-clamp-4'
                 }`}
               >
                 {artist.bio}
               </p>
-              <button
-                type="button"
+              <Button
+                size="sm"
+                variant="text"
                 onClick={() => setIsBioExpanded(!isBioExpanded)}
-                className="text-xs font-semibold text-[var(--color-accent)] hover:underline cursor-pointer"
+                className="text-primary font-semibold"
               >
                 {isBioExpanded ? 'Show less' : 'Read more biography'}
-              </button>
+              </Button>
             </motion.div>
           )}
         </div>
