@@ -80,7 +80,7 @@ export interface SlothSettings {
   discoveryVariety: number;
   skipDurationSeconds: number;
 
-  // Mini Player
+  // Mini Player (Nuclear Reference)
   miniPlayerAlwaysOnTop?: boolean;
   miniPlayerShowCover?: boolean;
   miniPlayerAmbientGlow?: boolean;
@@ -89,13 +89,16 @@ export interface SlothSettings {
   miniPlayerSyncAccent?: boolean;
   miniPlayerLanguage?: string;
 
-  // Lyrics
+  // Lyrics (Nuclear Reference)
   enableSyncedLyrics?: boolean;
   karaokeModeDefault?: boolean;
   cleanLyricHeaders?: boolean;
   autoScrollLyrics?: boolean;
   preferSyncedLyrics?: boolean;
   lyricsFontSize?: number;
+
+  // Playback (Nuclear Reference)
+  crossfadeMs?: number;
 
   // Integrations
   lastFmEnabled: boolean;
@@ -116,8 +119,9 @@ export const DEFAULT_SETTINGS: SlothSettings = {
   downloadFolder: '~/Downloads/Sloth',
 
   crossfadeSeconds: 3,
+  crossfadeMs: 0,
   skipDurationSeconds: 5,
-  discoveryVariety: 50,
+  discoveryVariety: 0,
   volumeNormalization: true,
   skipSilence: false,
   audioQuality: 'lossless',
