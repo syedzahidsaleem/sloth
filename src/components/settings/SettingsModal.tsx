@@ -340,14 +340,15 @@ export const SettingsModal: FC<SettingsModalProps> = ({
             </Button>
           </div>
 
-          {/* Navigation Footer with Social Icons + Custom Sloth Logo */}
+          {/* Navigation Footer with Social Icons + Sloth Branding */}
           <div className="mt-auto pt-3 border-t-(length:--border-width) border-border/20 flex flex-col items-center gap-1.5">
             <div className="flex items-center gap-2">
               <Button
                 variant="text"
                 size="icon-sm"
-                onClick={() => window.open('https://discord.gg/sloth', '_blank')}
+                onClick={() => window.open('https://discord.gg/JqPjKxE', '_blank')}
                 title="Discord"
+                className="hover:scale-110 transition-transform"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.893.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
@@ -356,8 +357,9 @@ export const SettingsModal: FC<SettingsModalProps> = ({
               <Button
                 variant="text"
                 size="icon-sm"
-                onClick={() => window.open('https://github.com/syedzahid/sloth', '_blank')}
+                onClick={() => window.open('https://github.com/syedzahidsaleem/sloth', '_blank')}
                 title="GitHub"
+                className="hover:scale-110 transition-transform"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
@@ -366,22 +368,35 @@ export const SettingsModal: FC<SettingsModalProps> = ({
               <Button
                 variant="text"
                 size="icon-sm"
-                onClick={() => window.open('https://slothmusic.app', '_blank')}
+                onClick={() => window.open('https://fosstodon.org/@slothplayer', '_blank')}
+                title="Mastodon"
+                className="hover:scale-110 transition-transform"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M21.327 8.566c0-4.339-2.843-5.61-2.843-5.61-1.433-.658-3.894-.935-6.451-.956h-.063c-2.557.021-5.016.298-6.45.956 0 0-2.843 1.272-2.843 5.61 0 .993-.019 2.18.049 3.48.234 4.545 2.581 8.97 8.258 9.458 3.846.33 7.032-.93 7.032-.93l-.151-1.696s-2.735.855-5.786.758c-3.033-.097-3.238-1.74-3.324-2.518.082.012.164.022.25.029 2.148.243 4.238.118 6.27-.08 2.378-.23 4.417-1.077 4.707-1.52.593-.907.739-3.284.739-3.284s.013-.437.013-.997zm-3.279 5.867h-2.144v-5.44c0-1.16-.489-1.75-1.467-1.75-.978 0-1.467.59-1.467 1.75v3.136h-1.94v-3.136c0-1.16-.489-1.75-1.467-1.75-.978 0-1.467.59-1.467 1.75v5.44H5.952V8.783c0-1.16.296-2.08.887-2.76.591-.68 1.365-1.02 2.321-1.02 1.106 0 1.95.424 2.532 1.27l.74 1.24.74-1.24c.582-.846 1.426-1.27 2.532-1.27.956 0 1.73.34 2.321 1.02.591.68.887 1.6.887 2.76v5.65z"/>
+                </svg>
+              </Button>
+              <Button
+                variant="text"
+                size="icon-sm"
+                onClick={() => window.open('https://github.com/syedzahidsaleem/sloth', '_blank')}
                 title="Website"
+                className="hover:scale-110 transition-transform"
               >
                 <Globe size={15} />
               </Button>
               <Button
                 variant="text"
                 size="icon-sm"
-                title="Sloth"
-                className="p-0.5"
+                onClick={() => window.open('https://github.com/syedzahidsaleem/sloth', '_blank')}
+                title="Sloth Project"
+                className="p-0.5 hover:scale-110 transition-transform"
               >
                 <SlothLogo size={16} />
               </Button>
             </div>
             <span className="text-[11px] text-foreground/50 font-mono">
-              v1.51.0 (sloth-edition)
+              v1.51.2 (sloth-edition)
             </span>
           </div>
         </nav>
