@@ -115,7 +115,7 @@ export const PlayerBar: FC<PlayerBarProps> = ({
   return (
     <footer
       className={cn(
-        'surface-bottombar border-border relative flex h-20 w-full flex-col border-t-(length:--border-width) px-4 select-none',
+        'surface-bottombar border-border relative flex h-[72px] w-full flex-col border-t-(length:--border-width) px-4 select-none',
         className,
       )}
     >
@@ -143,7 +143,7 @@ export const PlayerBar: FC<PlayerBarProps> = ({
       <div className="grid h-full w-full grid-cols-[1fr_auto_1fr] items-center gap-4 pt-1">
         {/* Left: Now Playing */}
         <div className="flex min-w-0 items-center gap-3">
-          <div className="border-border bg-muted relative size-12 shrink-0 overflow-hidden rounded-md border-(length:--border-width)">
+          <div className="border-border bg-muted relative size-12 shrink-0 overflow-hidden rounded border-(length:--border-width)">
             {coverUrl ? (
               <img
                 src={coverUrl}

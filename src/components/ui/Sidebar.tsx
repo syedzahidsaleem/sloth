@@ -26,7 +26,7 @@ export const SidebarItem: FC<SidebarItemProps> = ({
     onClick={onClick}
     title={isCompact ? label : undefined}
     className={cn(
-      'group relative flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold transition-all outline-none select-none border-(length:--border-width)',
+      'group relative flex w-full items-center gap-3 rounded px-3 py-2 text-sm font-semibold transition-all outline-none select-none border-(length:--border-width)',
       isActive
         ? 'surface-primary border-border shadow-shadow font-bold'
         : 'text-foreground/80 hover:text-foreground hover:bg-foreground/10 border-transparent',
@@ -85,7 +85,7 @@ export const Sidebar: FC<SidebarProps> = ({
 }) => {
   return (
     <motion.aside
-      animate={{ width: isCompact ? 64 : 240 }}
+      animate={{ width: isCompact ? 64 : 220 }}
       transition={{
         type: 'spring',
         stiffness: 350,
