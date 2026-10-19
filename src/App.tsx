@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import {
   AppShell,
   Sidebar,
@@ -10,6 +11,30 @@ import {
 } from './components/layout';
 import { Track } from './components/ui/TrackRow';
 import { SettingsModal, SettingsTabId } from './components/settings/SettingsModal';
+
+const SLIDE_DISTANCE = 16;
+const SCALE_FACTOR = 0.98;
+
+const routeVariants = {
+  enter: {
+    x: SLIDE_DISTANCE,
+    scale: SCALE_FACTOR,
+    opacity: 0,
+    filter: 'blur(3px)',
+  },
+  center: {
+    x: 0,
+    scale: 1,
+    opacity: 1,
+    filter: 'blur(0px)',
+  },
+  exit: {
+    x: -SLIDE_DISTANCE,
+    scale: SCALE_FACTOR,
+    opacity: 0,
+    filter: 'blur(3px)',
+  },
+};
 
 // Pages
 import DashboardPage from './app/page';
@@ -120,6 +145,8 @@ export default function App() {
       | 'plugins';
     id?: string;
   }>({ view: 'dashboard' });
+
+  const shouldReduce = useReducedMotion();
 
   // Sidebar Layout State (collapsible left & right)
   const [leftSidebarWidth, setLeftSidebarWidth] = useState(220);
@@ -379,9 +406,24 @@ export default function App() {
             />
           </PlayerWorkspace.LeftSidebar>
 
-          {/* MAIN VIEWPORT: Render active screen in ViewShell */}
+          {/* MAIN VIEWPORT: Render active screen in ViewShell with Nuclear spring transition */}
           <PlayerWorkspace.Main>
-            {/* VIEW 1: DASHBOARD (Matches Screenshot 1) */}
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.div
+                key={route.view + (route.id || '')}
+                variants={shouldReduce ? undefined : routeVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{
+                  type: 'spring',
+                  stiffness: 400,
+                  damping: 30,
+                  mass: 0.8,
+                }}
+                className="h-full w-full overflow-hidden flex flex-col"
+              >
+                {/* VIEW 1: DASHBOARD (Matches Screenshot 1) */}
             {(route.view === 'dashboard' || route.view === 'home') && (
               <DashboardPage
                 onBrowsePlugins={() => {
@@ -509,6 +551,8 @@ export default function App() {
 
             {/* VIEW 12: PLUGINS VIEW */}
             {route.view === 'plugins' && <PluginsPage />}
+              </motion.div>
+            </AnimatePresence>
           </PlayerWorkspace.Main>
 
           {/* RIGHT SIDEBAR: Collapsible queue panel */}
