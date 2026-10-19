@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import {
   AppShell,
@@ -63,6 +63,7 @@ export const SAMPLE_TRACKS: Track[] = [
     album: "Hurry Up, We're Dreaming",
     durationSeconds: 243,
     coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80',
+    audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/24/09/79/2409794c-3d5d-af26-580e-7dc00ee4f207/mzaf_369629549966021675.plus.aac.p.m4a',
     isFavorite: true,
   },
   {
@@ -72,6 +73,7 @@ export const SAMPLE_TRACKS: Track[] = [
     album: 'Starboy',
     durationSeconds: 230,
     coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80',
+    audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/11/71/d6/1171d6ad-3c96-e027-2af6-58028426588c/mzaf_15137631797407745471.plus.aac.p.m4a',
     isFavorite: false,
   },
   {
@@ -81,6 +83,7 @@ export const SAMPLE_TRACKS: Track[] = [
     album: 'Odyssey',
     durationSeconds: 212,
     coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80',
+    audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/33/bb/1a/33bb1a1a-1448-3118-6891-639e61784145/mzaf_3810752549913623044.plus.aac.p.m4a',
     isFavorite: true,
   },
   {
@@ -90,6 +93,7 @@ export const SAMPLE_TRACKS: Track[] = [
     album: 'Random Access Memories',
     durationSeconds: 337,
     coverUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&q=80',
+    audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/dc/1e/c2/dc1ec21b-96a0-470c-ee89-2b09346fa847/mzaf_7827098614541126525.plus.aac.p.m4a',
     isFavorite: false,
   },
   {
@@ -99,6 +103,7 @@ export const SAMPLE_TRACKS: Track[] = [
     album: 'Discovery',
     durationSeconds: 344,
     coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80',
+    audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/e0/cc/c4/e0ccc4af-ad90-59fe-9a7c-9c32d1a3c380/mzaf_2643765405421046671.plus.aac.p.m4a',
     isFavorite: true,
   },
   {
@@ -108,6 +113,7 @@ export const SAMPLE_TRACKS: Track[] = [
     album: 'Days of Thunder',
     durationSeconds: 329,
     coverUrl: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=300&q=80',
+    audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/d6/cd/fe/d6cdfe48-ca9d-8c81-3e17-68b2a45a3d3f/mzaf_12365088739771920597.plus.aac.p.m4a',
     isFavorite: false,
   },
   {
@@ -117,6 +123,7 @@ export const SAMPLE_TRACKS: Track[] = [
     album: 'Underground Electronic Archives',
     durationSeconds: 274,
     coverUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=300&q=80',
+    audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/24/09/79/2409794c-3d5d-af26-580e-7dc00ee4f207/mzaf_369629549966021675.plus.aac.p.m4a',
     isFavorite: false,
     isDiscoverySlot: true,
     badge: 'New',
@@ -179,6 +186,9 @@ export default function App() {
   const [isMuted, setIsMuted] = useState(false);
   const [isShuffle, setIsShuffle] = useState(false);
   const [repeatMode, setRepeatMode] = useState<'off' | 'all' | 'one'>('off');
+
+  // Real HTML5 Audio Element
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // History tracking
   const [historyTracks, setHistoryTracks] = useState<Track[]>([]);
@@ -264,13 +274,54 @@ export default function App() {
         setPopulatedLibrary: () => setQueue(SAMPLE_TRACKS),
         toggleLeftSidebar: () => setIsLeftCollapsed((prev) => !prev),
         toggleRightSidebar: () => setIsRightCollapsed((prev) => !prev),
+        getAudio: () => audioRef.current,
       };
     }
   }, [askSloth]);
 
-  // Simulated progress timer when playing
+  // Handle audio play/pause with real HTMLAudioElement
   useEffect(() => {
-    if (!isPlaying || currentTrack.durationSeconds <= 0) return;
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      if (audioRef.current.paused && audioRef.current.src) {
+        audioRef.current.play().catch((err) => {
+          console.warn('Audio play prevented or interrupted:', err);
+        });
+      }
+    } else {
+      if (!audioRef.current.paused) {
+        audioRef.current.pause();
+      }
+    }
+  }, [isPlaying]);
+
+  // Sync volume and mute to real audio element
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = isMuted ? 0 : Math.max(0, Math.min(1, volume / 100));
+      audioRef.current.muted = isMuted;
+    }
+  }, [volume, isMuted]);
+
+  // Update audio source when currentTrack changes
+  useEffect(() => {
+    if (!audioRef.current) return;
+    if (currentTrack.audioUrl) {
+      if (audioRef.current.src !== currentTrack.audioUrl) {
+        audioRef.current.src = currentTrack.audioUrl;
+        audioRef.current.load();
+      }
+      if (isPlaying) {
+        audioRef.current.play().catch((err) => {
+          console.warn('Playback start error:', err);
+        });
+      }
+    }
+  }, [currentTrack.id, currentTrack.audioUrl, isPlaying]);
+
+  // Fallback simulated progress timer ONLY when track lacks a stream URL
+  useEffect(() => {
+    if (!isPlaying || currentTrack.durationSeconds <= 0 || currentTrack.audioUrl) return;
     const interval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= currentTrack.durationSeconds) {
@@ -282,14 +333,61 @@ export default function App() {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [isPlaying, currentTrack.durationSeconds, repeatMode]);
+  }, [isPlaying, currentTrack.durationSeconds, currentTrack.audioUrl, repeatMode]);
 
-  const handlePlayTrack = useCallback((track: Track) => {
+  const handlePlayTrack = useCallback(async (incomingTrack: Track) => {
+    let track = incomingTrack;
+
+    // Resolve audio preview URL if missing
+    if (!track.audioUrl) {
+      try {
+        const res = await fetch(
+          `http://127.0.0.1:8001/api/resolve?title=${encodeURIComponent(track.title)}&artist=${encodeURIComponent(track.artist)}`,
+          { signal: AbortSignal.timeout(3000) }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.audioUrl) {
+            track = {
+              ...track,
+              audioUrl: data.audioUrl,
+              durationSeconds: data.durationSeconds || track.durationSeconds,
+              coverUrl: data.coverUrl || track.coverUrl,
+            };
+          }
+        }
+      } catch {
+        // Fallback to direct iTunes search
+        try {
+          const itunesRes = await fetch(
+            `https://itunes.apple.com/search?term=${encodeURIComponent(`${track.title} ${track.artist}`)}&entity=song&limit=1`,
+            { signal: AbortSignal.timeout(3000) }
+          );
+          if (itunesRes.ok) {
+            const itunesData = await itunesRes.json();
+            if (itunesData.results?.[0]?.previewUrl) {
+              track = {
+                ...track,
+                audioUrl: itunesData.results[0].previewUrl,
+                coverUrl:
+                  (itunesData.results[0].artworkUrl100 || '').replace('100x100bb', '600x600bb') ||
+                  track.coverUrl,
+              };
+            }
+          }
+        } catch {
+          // Keep original track
+        }
+      }
+    }
+
     setQueue((prev) => {
       const existingIdx = prev.findIndex((t) => t.id === track.id);
       if (existingIdx !== -1) {
+        const copy = [...prev];
+        copy[existingIdx] = track;
         setCurrentTrackIndex(existingIdx);
-        return prev;
+        return copy;
       }
       setCurrentTrackIndex(prev.length);
       return [...prev, track];
@@ -297,6 +395,14 @@ export default function App() {
 
     setProgress(0);
     setIsPlaying(true);
+
+    if (audioRef.current && track.audioUrl) {
+      audioRef.current.src = track.audioUrl;
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch((err) => {
+        console.warn('Direct audio play error:', err);
+      });
+    }
 
     // Record into history
     setHistoryTracks((prev) => [track, ...prev.filter((t) => t.id !== track.id)]);
@@ -317,9 +423,17 @@ export default function App() {
     if (queue.length === 0) return;
     if (progress > 3) {
       setProgress(0);
+      if (audioRef.current) audioRef.current.currentTime = 0;
     } else {
       setCurrentTrackIndex((prev) => (prev - 1 + queue.length) % queue.length);
       setProgress(0);
+    }
+  };
+
+  const handleSeek = (sec: number) => {
+    setProgress(sec);
+    if (audioRef.current && isFinite(sec)) {
+      audioRef.current.currentTime = sec;
     }
   };
 
@@ -382,7 +496,7 @@ export default function App() {
             onRepeatToggle={handleRepeatToggle}
             progressSeconds={progress}
             totalDurationSeconds={currentTrack.durationSeconds}
-            onSeek={(sec) => setProgress(sec)}
+            onSeek={handleSeek}
             volume={volume}
             isMuted={isMuted}
             onVolumeChange={setVolume}
@@ -610,6 +724,33 @@ export default function App() {
         isOpen={isOnboardingOpen}
         onClose={() => setIsOnboardingOpen(false)}
         onComplete={() => setIsOnboardingOpen(false)}
+      />
+
+      {/* Hidden real audio element for genuine audio playback */}
+      <audio
+        ref={audioRef}
+        preload="auto"
+        onTimeUpdate={(e) => {
+          setProgress(Math.floor(e.currentTarget.currentTime));
+        }}
+        onDurationChange={(e) => {
+          const dur = Math.floor(e.currentTarget.duration);
+          if (dur > 0 && (!currentTrack.durationSeconds || currentTrack.durationSeconds === 0)) {
+            setQueue((prev) =>
+              prev.map((t, idx) => (idx === currentTrackIndex ? { ...t, durationSeconds: dur } : t))
+            );
+          }
+        }}
+        onEnded={() => {
+          if (repeatMode === 'one') {
+            if (audioRef.current) {
+              audioRef.current.currentTime = 0;
+              audioRef.current.play().catch(console.warn);
+            }
+          } else {
+            handleNextTrack();
+          }
+        }}
       />
     </>
   );

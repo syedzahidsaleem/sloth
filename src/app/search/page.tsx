@@ -32,6 +32,7 @@ export const ALL_SEARCHABLE_TRACKS: Track[] = [
     album: 'Single',
     durationSeconds: 208,
     coverUrl: 'https://i.ytimg.com/vi/PJWemSzExXs/hq720.jpg',
+    audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/22/a0/7d/22a07d46-b904-0717-95da-ec335aac6407/mzaf_13582924850644616784.plus.aac.p.m4a',
     isFavorite: true,
   },
   {
@@ -41,6 +42,7 @@ export const ALL_SEARCHABLE_TRACKS: Track[] = [
     album: 'Acoustic Sessions',
     durationSeconds: 215,
     coverUrl: 'https://i.ytimg.com/vi/NLKwRW2y-sg/hq720.jpg',
+    audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/22/a0/7d/22a07d46-b904-0717-95da-ec335aac6407/mzaf_13582924850644616784.plus.aac.p.m4a',
     isFavorite: false,
   },
   {
@@ -50,6 +52,7 @@ export const ALL_SEARCHABLE_TRACKS: Track[] = [
     album: 'Baarishein - Single',
     durationSeconds: 260,
     coverUrl: 'https://i.ytimg.com/vi/6fTilfKvxbo/hq720.jpg',
+    audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/b4/f2/75/b4f2758c-0124-3da6-420a-074656306afa/mzaf_136391431314283786.plus.aac.p.m4a',
     isFavorite: true,
   },
   {
@@ -59,6 +62,7 @@ export const ALL_SEARCHABLE_TRACKS: Track[] = [
     album: "Hurry Up, We're Dreaming",
     durationSeconds: 243,
     coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80',
+    audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/24/09/79/2409794c-3d5d-af26-580e-7dc00ee4f207/mzaf_369629549966021675.plus.aac.p.m4a',
     isFavorite: true,
   },
   {
@@ -68,6 +72,7 @@ export const ALL_SEARCHABLE_TRACKS: Track[] = [
     album: 'Starboy',
     durationSeconds: 230,
     coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80',
+    audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/11/71/d6/1171d6ad-3c96-e027-2af6-58028426588c/mzaf_15137631797407745471.plus.aac.p.m4a',
     isFavorite: false,
   },
   {
@@ -77,6 +82,7 @@ export const ALL_SEARCHABLE_TRACKS: Track[] = [
     album: 'Odyssey',
     durationSeconds: 212,
     coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80',
+    audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/33/bb/1a/33bb1a1a-1448-3118-6891-639e61784145/mzaf_3810752549913623044.plus.aac.p.m4a',
     isFavorite: true,
   },
   {
@@ -86,6 +92,7 @@ export const ALL_SEARCHABLE_TRACKS: Track[] = [
     album: 'Random Access Memories',
     durationSeconds: 337,
     coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80',
+    audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/dc/1e/c2/dc1ec21b-96a0-470c-ee89-2b09346fa847/mzaf_7827098614541126525.plus.aac.p.m4a',
     isFavorite: false,
   },
 ];
@@ -178,6 +185,7 @@ export const SearchPage: FC<SearchPageProps> = ({
                   album: r.album || 'Single',
                   durationSeconds: r.durationSeconds || 210,
                   coverUrl: r.coverUrl,
+                  audioUrl: r.audioUrl,
                   isFavorite: favoriteIds.has(r.id),
                 })),
               );
@@ -207,6 +215,7 @@ export const SearchPage: FC<SearchPageProps> = ({
                   album: r.collectionName,
                   durationSeconds: Math.round((r.trackTimeMillis || 210000) / 1000),
                   coverUrl: (r.artworkUrl100 || '').replace('100x100bb', '600x600bb'),
+                  audioUrl: r.previewUrl,
                   isFavorite: favoriteIds.has(`itunes-${r.trackId}`),
                 })),
               );

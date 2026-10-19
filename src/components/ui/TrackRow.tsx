@@ -22,6 +22,8 @@ export type Track = {
   isFavorite?: boolean;
   isDiscoverySlot?: boolean;
   badge?: string;
+  audioUrl?: string;
+  streamUrl?: string;
 };
 
 export type TrackRowProps = {

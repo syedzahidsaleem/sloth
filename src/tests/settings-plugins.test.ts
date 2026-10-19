@@ -240,4 +240,33 @@ describe('Sloth Plugin System & Store', () => {
     expect(updated.discoveryVariety).toBe(25);
     expect(updated.crossfadeMs).toBe(2500);
   });
+
+  it('persists stream resolution, plugin update, and update check preferences', () => {
+    // Check initial defaults
+    const defaults = getSlothSettings();
+    expect(defaults.streamResolutionRetries).toBe(3);
+    expect(defaults.streamVerification).toBe(true);
+    expect(defaults.onlineVerification).toBe(true);
+    expect(defaults.autoUpdatePlugins).toBe(true);
+    expect(defaults.checkForUpdatesOnStartup).toBe(true);
+    expect(defaults.autoInstallUpdates).toBe(false);
+
+    // Save customized settings
+    saveSlothSettings({
+      streamResolutionRetries: 5,
+      streamVerification: false,
+      onlineVerification: false,
+      autoUpdatePlugins: false,
+      checkForUpdatesOnStartup: false,
+      autoInstallUpdates: true,
+    });
+
+    const updated = getSlothSettings();
+    expect(updated.streamResolutionRetries).toBe(5);
+    expect(updated.streamVerification).toBe(false);
+    expect(updated.onlineVerification).toBe(false);
+    expect(updated.autoUpdatePlugins).toBe(false);
+    expect(updated.checkForUpdatesOnStartup).toBe(false);
+    expect(updated.autoInstallUpdates).toBe(true);
+  });
 });

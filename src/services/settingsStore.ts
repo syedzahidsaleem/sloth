@@ -97,8 +97,18 @@ export interface SlothSettings {
   preferSyncedLyrics?: boolean;
   lyricsFontSize?: number;
 
-  // Playback (Nuclear Reference)
+  // Playback & Stream Resolution (Nuclear Reference)
   crossfadeMs?: number;
+  streamResolutionRetries?: number;
+  streamVerification?: boolean;
+  onlineVerification?: boolean;
+
+  // Plugins (Nuclear Reference)
+  autoUpdatePlugins?: boolean;
+
+  // Updates (Nuclear Reference)
+  checkForUpdatesOnStartup?: boolean;
+  autoInstallUpdates?: boolean;
 
   // Integrations
   lastFmEnabled: boolean;
@@ -165,6 +175,13 @@ export const DEFAULT_SETTINGS: SlothSettings = {
   autoScrollLyrics: true,
   preferSyncedLyrics: true,
   lyricsFontSize: 16,
+
+  streamResolutionRetries: 3,
+  streamVerification: true,
+  onlineVerification: true,
+  autoUpdatePlugins: true,
+  checkForUpdatesOnStartup: true,
+  autoInstallUpdates: false,
 
   lastFmEnabled: false,
   lastFmUsername: '',
