@@ -207,30 +207,30 @@ export const LyricsView: React.FC<LyricsViewProps> = ({
   };
 
   return (
-    <div className="relative w-full h-full min-h-0 flex flex-col bg-[var(--background)] select-none overflow-hidden">
+    <div className="relative w-full h-full min-h-0 flex flex-col surface-background select-none overflow-hidden font-sans text-foreground">
       {/* Top Controls Bar */}
-      <div className="h-14 shrink-0 px-6 border-b border-[var(--border)] bg-[var(--surface)] flex items-center justify-between z-10">
-        {/* Track info pill */}
+      <div className="h-14 shrink-0 px-6 border-b-(length:--border-width) border-border surface-panel flex items-center justify-between z-10">
+        {/* Track info */}
         <div className="flex items-center gap-3 min-w-0">
           <div className="flex flex-col min-w-0">
-            <span className="text-xs font-bold text-[var(--text-primary)] truncate">
+            <span className="text-sm font-bold font-heading text-foreground truncate">
               {trackTitle}
             </span>
-            <span className="text-[11px] text-[var(--text-muted)] truncate font-mono">
+            <span className="text-xs text-foreground/60 truncate font-sans">
               {artistName} {albumName ? `• ${albumName}` : ''}
             </span>
           </div>
         </div>
 
         {/* Center Tabs: Lyrics | Translation */}
-        <div className="flex items-center p-1 rounded-[4px] bg-[var(--background)] border border-[var(--border)]">
+        <div className="flex items-center p-1 rounded-md surface-input border-(length:--border-width) border-border shadow-shadow">
           <button
             type="button"
             onClick={() => setActiveTab('lyrics')}
-            className={`px-3 py-1 rounded-[3px] text-xs font-medium transition-colors cursor-pointer ${
+            className={`px-3 py-1 rounded-sm text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'lyrics'
-                ? 'bg-[var(--surface-raised)] text-[var(--color-accent)] font-semibold shadow-xs'
-                : 'text-[var(--text-muted)] hover:text-white'
+                ? 'surface-primary text-foreground shadow-xs'
+                : 'text-foreground/70 hover:text-foreground'
             }`}
           >
             Lyrics
@@ -243,10 +243,10 @@ export const LyricsView: React.FC<LyricsViewProps> = ({
                 handleTranslate();
               }
             }}
-            className={`flex items-center gap-1 px-3 py-1 rounded-[3px] text-xs font-medium transition-colors cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-sm text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'translation'
-                ? 'bg-[var(--surface-raised)] text-[var(--color-accent)] font-semibold shadow-xs'
-                : 'text-[var(--text-muted)] hover:text-white'
+                ? 'surface-primary text-foreground shadow-xs'
+                : 'text-foreground/70 hover:text-foreground'
             }`}
           >
             <Languages size={13} />
@@ -261,13 +261,13 @@ export const LyricsView: React.FC<LyricsViewProps> = ({
             type="button"
             onClick={() => setAutoScroll(!autoScroll)}
             title={autoScroll ? 'Disable Auto-scroll' : 'Enable Auto-scroll'}
-            className={`hidden sm:flex items-center gap-1 px-2 py-1 rounded-[4px] border text-xs cursor-pointer font-mono text-[11px] transition-colors ${
+            className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-md border-(length:--border-width) text-xs cursor-pointer font-sans font-bold shadow-shadow transition-all ${
               autoScroll
-                ? 'bg-[var(--surface-raised)] border-[var(--color-accent)] text-[var(--color-accent)]'
-                : 'bg-[var(--background)] border-[var(--border)] text-[var(--text-muted)] opacity-60'
+                ? 'surface-primary border-border text-foreground'
+                : 'surface-input border-border text-foreground/60 hover:text-foreground'
             }`}
           >
-            <ScrollText size={12} />
+            <ScrollText size={13} />
             <span>Scroll</span>
           </button>
 
@@ -276,21 +276,21 @@ export const LyricsView: React.FC<LyricsViewProps> = ({
             type="button"
             onClick={() => setKaraokeMode(!karaokeMode)}
             title={karaokeMode ? 'Switch to Plain Mode' : 'Switch to Karaoke Mode'}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] border text-xs cursor-pointer transition-colors ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border-(length:--border-width) text-xs cursor-pointer font-sans font-bold shadow-shadow transition-all ${
               karaokeMode
-                ? 'bg-[var(--surface-raised)] border-[var(--color-accent)] text-[var(--color-accent)]'
-                : 'bg-[var(--background)] border-[var(--border)] text-[var(--text-secondary)] hover:text-white'
+                ? 'surface-primary border-border text-foreground'
+                : 'surface-input border-border text-foreground/60 hover:text-foreground'
             }`}
           >
             {karaokeMode ? <MicVocal size={13} /> : <AlignLeft size={13} />}
-            <span className="font-mono text-[11px]">{karaokeMode ? 'Karaoke' : 'Plain'}</span>
+            <span>{karaokeMode ? 'Karaoke' : 'Plain'}</span>
           </button>
 
           {/* Close button */}
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-[4px] bg-[var(--background)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-white cursor-pointer hover:border-[var(--color-accent)] transition-colors"
+            className="p-1.5 rounded-md surface-input border-(length:--border-width) border-border text-foreground/70 hover:text-foreground cursor-pointer shadow-shadow hover:translate-x-0.5 hover:translate-y-0.5 transition-all"
             title="Close Lyrics View"
           >
             <X size={15} />
@@ -300,7 +300,7 @@ export const LyricsView: React.FC<LyricsViewProps> = ({
 
       {/* Translation Error Banner */}
       {translationError && (
-        <div className="px-6 py-2 bg-red-950/40 border-b border-red-800/40 text-red-300 text-xs font-mono flex items-center justify-between">
+        <div className="px-6 py-2 bg-red-950/40 border-b border-red-800/40 text-red-300 text-xs font-sans flex items-center justify-between">
           <span>Translation notice: {translationError}</span>
           <button
             type="button"
@@ -314,10 +314,10 @@ export const LyricsView: React.FC<LyricsViewProps> = ({
 
       {/* Sub-bar for Translation options */}
       {activeTab === 'translation' && (
-        <div className="h-10 px-6 border-b border-[var(--border)] bg-[var(--surface)]/60 flex items-center justify-between text-xs font-mono">
+        <div className="h-11 px-6 border-b-(length:--border-width) border-border surface-panel flex items-center justify-between text-xs font-sans">
           <div className="flex items-center gap-3">
-            <span className="text-[var(--text-muted)] text-[11px]">Claude AI:</span>
-            <div className="flex items-center gap-1">
+            <span className="text-foreground/60 font-semibold text-xs">Engine:</span>
+            <div className="flex items-center gap-1.5">
               {(['Translated', 'Romanized', 'Transcribed'] as TranslationMode[]).map((mode) => (
                 <button
                   key={mode}
@@ -325,10 +325,10 @@ export const LyricsView: React.FC<LyricsViewProps> = ({
                   onClick={() => {
                     setTransMode(mode);
                   }}
-                  className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold transition-colors cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer border-(length:--border-width) border-border shadow-xs ${
                     transMode === mode
-                      ? 'bg-[var(--color-accent)] text-black'
-                      : 'bg-[var(--background)] text-[var(--text-muted)] hover:text-white border border-[var(--border)]'
+                      ? 'surface-primary text-foreground'
+                      : 'surface-input text-foreground/70 hover:text-foreground'
                   }`}
                 >
                   {mode}
@@ -340,7 +340,7 @@ export const LyricsView: React.FC<LyricsViewProps> = ({
             <select
               value={targetLang}
               onChange={(e) => setTargetLang(e.target.value)}
-              className="bg-[var(--background)] border border-[var(--border)] rounded px-2 py-0.5 text-xs text-[var(--text-primary)] cursor-pointer focus:outline-hidden focus:border-[var(--color-accent)]"
+              className="surface-input border-(length:--border-width) border-border rounded-md px-2.5 py-1 text-xs text-foreground cursor-pointer font-sans shadow-xs outline-none"
             >
               {Object.values(LANGUAGE_OPTIONS).map((name) => (
                 <option key={name} value={name}>
@@ -354,7 +354,7 @@ export const LyricsView: React.FC<LyricsViewProps> = ({
             type="button"
             onClick={handleTranslate}
             disabled={isTranslating}
-            className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-[3px] bg-[var(--surface-raised)] border border-[var(--border)] text-[var(--color-accent)] hover:border-[var(--color-accent)] text-[11px] font-bold cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-md surface-primary border-(length:--border-width) border-border text-foreground text-xs font-bold shadow-shadow cursor-pointer disabled:opacity-50"
           >
             {isTranslating ? (
               <>
@@ -380,22 +380,22 @@ export const LyricsView: React.FC<LyricsViewProps> = ({
         {/* Loading State */}
         {isLoading ? (
           <div className="max-w-2xl mx-auto py-24 space-y-6 text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[4px] bg-[var(--surface)] border border-[var(--border)] text-xs text-[var(--text-secondary)] font-mono">
-              <Loader2 size={14} className="animate-spin text-[var(--color-accent)]" />
-              <span>Fetching synchronized LRC from LRCLib...</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md surface-panel border-(length:--border-width) border-border text-xs text-foreground font-sans shadow-shadow">
+              <Loader2 size={14} className="animate-spin text-primary" />
+              <span>Fetching synchronized lyrics...</span>
             </div>
             <div className="space-y-4 max-w-lg mx-auto opacity-40">
-              <div className="h-6 bg-[var(--surface-raised)] rounded animate-pulse w-3/4 mx-auto" />
-              <div className="h-6 bg-[var(--surface-raised)] rounded animate-pulse w-5/6 mx-auto" />
-              <div className="h-8 bg-[var(--surface-raised)] rounded animate-pulse w-2/3 mx-auto" />
-              <div className="h-6 bg-[var(--surface-raised)] rounded animate-pulse w-4/5 mx-auto" />
+              <div className="h-6 surface-input rounded-md animate-pulse w-3/4 mx-auto" />
+              <div className="h-6 surface-input rounded-md animate-pulse w-5/6 mx-auto" />
+              <div className="h-8 surface-input rounded-md animate-pulse w-2/3 mx-auto" />
+              <div className="h-6 surface-input rounded-md animate-pulse w-4/5 mx-auto" />
             </div>
           </div>
         ) : isTranslating && lines.length === 0 ? (
           <div className="max-w-2xl mx-auto py-24 space-y-4 text-center">
-            <Loader2 size={24} className="animate-spin text-[var(--color-accent)] mx-auto" />
-            <p className="text-sm font-mono text-[var(--text-secondary)]">
-              Translating lyrics with Claude (claude-sonnet-4-6)...
+            <Loader2 size={24} className="animate-spin text-primary mx-auto" />
+            <p className="text-sm font-sans text-foreground/80">
+              Translating lyrics...
             </p>
           </div>
         ) : lines.length > 0 ? (
@@ -437,16 +437,16 @@ export const LyricsView: React.FC<LyricsViewProps> = ({
           </div>
         ) : (
           /* Empty / Not Found State */
-          <div className="max-w-md mx-auto py-32 text-center space-y-4">
-            <div className="size-12 rounded-[4px] bg-[var(--surface)] border border-[var(--border)] flex items-center justify-center mx-auto text-[var(--text-muted)]">
-              <MicVocal size={24} />
+          <div className="max-w-md mx-auto py-32 text-center space-y-4 font-sans">
+            <div className="size-12 rounded-md surface-panel border-(length:--border-width) border-border flex items-center justify-center mx-auto text-foreground/60 shadow-shadow">
+              <MicVocal size={22} />
             </div>
             <div>
-              <h3 className="text-base font-bold text-[var(--text-primary)]">
+              <h3 className="text-base font-bold font-heading text-foreground">
                 No Synchronized Lyrics Found
               </h3>
-              <p className="text-xs text-[var(--text-muted)] mt-1 font-mono">
-                LRCLib does not have timestamps for this title yet.
+              <p className="text-xs text-foreground/60 mt-1 font-sans">
+                Lyrics are not available for this track yet.
               </p>
             </div>
           </div>
