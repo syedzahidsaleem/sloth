@@ -41,8 +41,9 @@ export class QobuzAudioSource implements AudioSource {
   private country: string;
 
   constructor(config: QobuzConfig = {}) {
-    this.appId = config.appId || (typeof process !== 'undefined' ? process.env?.QOBUZ_APP_ID : undefined);
-    this.appSecret = config.appSecret || (typeof process !== 'undefined' ? process.env?.QOBUZ_APP_SECRET : undefined);
+    const globalProcess = typeof globalThis !== 'undefined' ? (globalThis as any).process : undefined;
+    this.appId = config.appId || globalProcess?.env?.QOBUZ_APP_ID;
+    this.appSecret = config.appSecret || globalProcess?.env?.QOBUZ_APP_SECRET;
     this.userAuthToken = config.userAuthToken;
     this.mirrors = config.mirrorBaseUrls || [
       'https://qobuz.squid.wtf',
