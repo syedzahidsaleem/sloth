@@ -259,26 +259,21 @@ export default function App() {
 
   const handlePlayTrack = useCallback((track: Track) => {
     setQueue((prev) => {
-      const exists = prev.some((t) => t.id === track.id);
-      if (!exists) {
-        return [...prev, track];
+      const existingIdx = prev.findIndex((t) => t.id === track.id);
+      if (existingIdx !== -1) {
+        setCurrentTrackIndex(existingIdx);
+        return prev;
       }
-      return prev;
+      setCurrentTrackIndex(prev.length);
+      return [...prev, track];
     });
-
-    const existingIdx = queue.findIndex((t) => t.id === track.id);
-    if (existingIdx !== -1) {
-      setCurrentTrackIndex(existingIdx);
-    } else {
-      setCurrentTrackIndex(queue.length);
-    }
 
     setProgress(0);
     setIsPlaying(true);
 
     // Record into history
     setHistoryTracks((prev) => [track, ...prev.filter((t) => t.id !== track.id)]);
-  }, [queue]);
+  }, []);
 
   const handleNextTrack = () => {
     if (queue.length === 0) return;
@@ -317,10 +312,8 @@ export default function App() {
   };
 
   const handleSearchSubmit = () => {
-    if (searchQuery.trim().length > 0) {
-      setActiveTab('search');
-      setRoute({ view: 'search' });
-    }
+    setActiveTab('search');
+    setRoute({ view: 'search' });
   };
 
   return (
@@ -468,6 +461,15 @@ export default function App() {
               <SearchPage
                 initialQuery={searchQuery}
                 onPlayTrack={handlePlayTrack}
+                onPlayAll={(tracks) => {
+                  setQueue(tracks);
+                  setCurrentTrackIndex(0);
+                  setProgress(0);
+                  setIsPlaying(true);
+                }}
+                onAddAll={(tracks) => {
+                  setQueue((prev) => [...prev, ...tracks.filter((t) => !prev.some((p) => p.id === t.id))]);
+                }}
                 onSelectArtist={(artId) => setRoute({ view: 'artist', id: artId })}
                 onSelectAlbum={(albId) => setRoute({ view: 'album', id: albId })}
                 currentTrackId={currentTrack.id}
@@ -524,6 +526,7 @@ export default function App() {
               onTrackSelect={handlePlayTrack}
               onRemoveTrack={(trackId) => setQueue((prev) => prev.filter((t) => t.id !== trackId))}
               onClearQueue={() => setQueue([])}
+              onToggleCollapse={() => setIsRightCollapsed(!isRightCollapsed)}
             />
           </PlayerWorkspace.RightSidebar>
         </PlayerWorkspace>

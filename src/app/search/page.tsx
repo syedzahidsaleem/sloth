@@ -1,327 +1,473 @@
-/**
- * Ensure any repository we take reference from or code from isn't referenced or spoken about anywhere either in files or readme or code
- * Original: packages/player/src/views/Search/Search.tsx
- * Adapted for Sloth by syedzahidsaleem2@gmail.com
- * Changes: [styling system, data layer, routing, instant debounced search, tabbed view]
- */
-
-import { useState, useEffect, useMemo } from 'react';
-import { Search as SearchIcon, X, Music2, Disc3, User, Sparkles } from 'lucide-react';
-import { TrackRow, AlbumCard, ArtistCard, Track, Input, Button } from '@/components/ui';
+import { useState, useEffect, useMemo, FC } from 'react';
+import {
+  Play,
+  Pause,
+  Plus,
+  Heart,
+  Image as ImageIcon,
+  SlidersHorizontal,
+  X,
+  Music,
+  Loader2,
+} from 'lucide-react';
+import { Track } from '@/components/ui/TrackRow';
+import { cn } from '@/lib/utils';
 
 export interface SearchPageProps {
   initialQuery?: string;
   onPlayTrack?: (track: Track) => void;
+  onPlayAll?: (tracks: Track[]) => void;
+  onAddAll?: (tracks: Track[]) => void;
   onSelectArtist?: (artistId: string) => void;
   onSelectAlbum?: (albumId: string) => void;
   currentTrackId?: string;
   isPlaying?: boolean;
 }
 
-type SearchTab = 'all' | 'tracks' | 'artists' | 'albums';
-
 export const ALL_SEARCHABLE_TRACKS: Track[] = [
-  { id: 'trk-anarkali', title: 'Anarkali Disco Chali', artist: 'Mamta Sharma, Sukhwinder Singh', album: 'Housefull 2', durationSeconds: 278, coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80', isFavorite: true },
-  { id: 'trk-anarkali-acoustic', title: 'Anarkali (Unplugged)', artist: 'Sajid-Wajid', album: 'Bollywood Unplugged', durationSeconds: 215, coverUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&q=80', isFavorite: false },
-  { id: 'trk-chaiyya', title: 'Chaiyya Chaiyya', artist: 'Sukhwinder Singh, Sapna Awasthi', album: 'Dil Se', durationSeconds: 394, coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80', isFavorite: true },
-  { id: 'trk-tum-hi-ho', title: 'Tum Hi Ho', artist: 'Arijit Singh', album: 'Aashiqui 2', durationSeconds: 262, coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80', isFavorite: false },
-  { id: 'trk-1', title: 'Midnight City', artist: 'M83', album: "Hurry Up, We're Dreaming", durationSeconds: 243, coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80', isFavorite: true },
-  { id: 'trk-2', title: 'Starboy', artist: 'The Weeknd, Daft Punk', album: 'Starboy', durationSeconds: 230, coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80', isFavorite: false },
-  { id: 'trk-3', title: 'Resonance', artist: 'HOME', album: 'Odyssey', durationSeconds: 212, coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80', isFavorite: true },
-  { id: 'trk-4', title: 'Instant Crush', artist: 'Daft Punk, Julian Casablancas', album: 'Random Access Memories', durationSeconds: 337, coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80', isFavorite: false },
-  { id: 'trk-5', title: 'Veridis Quo', artist: 'Daft Punk', album: 'Discovery', durationSeconds: 344, coverUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&q=80', isFavorite: true },
-  { id: 'trk-6', title: 'Days of Thunder', artist: 'The Midnight', album: 'Days of Thunder', durationSeconds: 329, coverUrl: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=300&q=80', isFavorite: false },
-  { id: 'trk-7', title: 'Wait', artist: 'M83', album: "Hurry Up, We're Dreaming", durationSeconds: 343, coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=120&q=80' },
-  { id: 'trk-8', title: 'Outro', artist: 'M83', album: "Hurry Up, We're Dreaming", durationSeconds: 247, coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=120&q=80' },
+  {
+    id: 'yt-PJWemSzExXs',
+    title: 'BAARISHEIN (Studio) Anuv Jain',
+    artist: 'Anuv Jain',
+    album: 'Single',
+    durationSeconds: 208,
+    coverUrl: 'https://i.ytimg.com/vi/PJWemSzExXs/hq720.jpg',
+    isFavorite: true,
+  },
+  {
+    id: 'yt-NLKwRW2y-sg',
+    title: 'Anuv Jain - BAARISHEIN (ACOUSTIC)',
+    artist: 'Anuv Jain',
+    album: 'Acoustic Sessions',
+    durationSeconds: 215,
+    coverUrl: 'https://i.ytimg.com/vi/NLKwRW2y-sg/hq720.jpg',
+    isFavorite: false,
+  },
+  {
+    id: 'yt-Arko-Atif',
+    title: 'BAARISHEIN Song | Arko Feat. Atif Aslam',
+    artist: 'Arko Feat. Atif Aslam',
+    album: 'Baarishein - Single',
+    durationSeconds: 260,
+    coverUrl: 'https://i.ytimg.com/vi/6fTilfKvxbo/hq720.jpg',
+    isFavorite: true,
+  },
+  {
+    id: 'trk-1',
+    title: 'Midnight City',
+    artist: 'M83',
+    album: "Hurry Up, We're Dreaming",
+    durationSeconds: 243,
+    coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80',
+    isFavorite: true,
+  },
+  {
+    id: 'trk-2',
+    title: 'Starboy',
+    artist: 'The Weeknd, Daft Punk',
+    album: 'Starboy',
+    durationSeconds: 230,
+    coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80',
+    isFavorite: false,
+  },
+  {
+    id: 'trk-3',
+    title: 'Resonance',
+    artist: 'HOME',
+    album: 'Odyssey',
+    durationSeconds: 212,
+    coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80',
+    isFavorite: true,
+  },
+  {
+    id: 'trk-4',
+    title: 'Instant Crush',
+    artist: 'Daft Punk, Julian Casablancas',
+    album: 'Random Access Memories',
+    durationSeconds: 337,
+    coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80',
+    isFavorite: false,
+  },
 ];
 
-export const ALL_SEARCHABLE_ARTISTS = [
-  { id: 'sajid-wajid', name: 'Sajid-Wajid', imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80', role: 'Bollywood Composer Duo' },
-  { id: 'sukhwinder-singh', name: 'Sukhwinder Singh', imageUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80', role: 'Playback Singer' },
-  { id: 'arijit-singh', name: 'Arijit Singh', imageUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80', role: 'Playback Singer' },
-  { id: 'm83', name: 'M83', imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80', role: 'French Synth / Electronic' },
-  { id: 'daft-punk', name: 'Daft Punk', imageUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&q=80', role: 'Electronic Duo' },
-  { id: 'the-weeknd', name: 'The Weeknd', imageUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80', role: 'R&B / Synthpop' },
-  { id: 'the-midnight', name: 'The Midnight', imageUrl: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=300&q=80', role: 'Synthwave' },
-  { id: 'home', name: 'HOME', imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80', role: 'Chillwave' },
+export const ALL_SEARCHABLE_ARTISTS: { id: string; name: string; role: string; imageUrl?: string }[] = [
+  { id: 'anuv-jain', name: 'Anuv Jain', role: 'Singer-Songwriter' },
+  { id: 'atif-aslam', name: 'Atif Aslam', role: 'Playback Singer' },
+  { id: 'm83', name: 'M83', role: 'Electronic / Synth' },
+  { id: 'daft-punk', name: 'Daft Punk', role: 'French House Duo' },
+  { id: 'the-weeknd', name: 'The Weeknd', role: 'R&B / Pop' },
+  { id: 'home', name: 'HOME', role: 'Chillwave' },
 ];
 
-export const ALL_SEARCHABLE_ALBUMS = [
-  { id: 'alb-housefull2', title: 'Housefull 2', subtitle: 'Sajid-Wajid • 2012', coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80' },
-  { id: 'alb-dilse', title: 'Dil Se', subtitle: 'A.R. Rahman • 1998', coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80' },
-  { id: 'alb-aashiqui2', title: 'Aashiqui 2', subtitle: 'Mithoon, Ankit Tiwari • 2013', coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80' },
-  { id: 'alb-1', title: "Hurry Up, We're Dreaming", subtitle: 'M83 • 2011', coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80' },
-  { id: 'alb-2', title: 'Starboy', subtitle: 'The Weeknd • 2016', coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80' },
-  { id: 'alb-3', title: 'Odyssey', subtitle: 'HOME • 2014', coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80' },
-  { id: 'alb-4', title: 'Random Access Memories', subtitle: 'Daft Punk • 2013', coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80' },
-  { id: 'alb-5', title: 'Discovery', subtitle: 'Daft Punk • 2001', coverUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&q=80' },
+export const ALL_SEARCHABLE_ALBUMS: { id: string; title: string; subtitle: string; coverUrl?: string }[] = [
+  { id: 'alb-hurry-up', title: "Hurry Up, We're Dreaming", subtitle: 'M83 • 2011' },
+  { id: 'alb-random-access', title: 'Random Access Memories', subtitle: 'Daft Punk • 2013' },
+  { id: 'alb-odyssey', title: 'Odyssey', subtitle: 'HOME • 2014' },
+  { id: 'alb-starboy', title: 'Starboy', subtitle: 'The Weeknd • 2016' },
 ];
 
-export const POPULAR_SEARCH_TAGS = ['Anarkali', 'M83', 'Daft Punk', 'Synthwave', 'Bollywood', 'Starboy', 'Discovery'];
+export const POPULAR_SEARCH_TAGS: string[] = [
+  'Baarishein',
+  'Anuv Jain',
+  'Atif Aslam',
+  'M83',
+  'Daft Punk',
+  'The Weeknd',
+];
 
-export default function SearchPage({
-  initialQuery = '',
+const formatSeconds = (sec?: number) => {
+  if (!sec || isNaN(sec)) return '0:00';
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
+};
+
+export const SearchPage: FC<SearchPageProps> = ({
+  initialQuery = 'baarishein',
   onPlayTrack,
-  onSelectArtist,
-  onSelectAlbum,
+  onPlayAll,
+  onAddAll,
   currentTrackId,
-  isPlaying,
-}: SearchPageProps) {
+  isPlaying = false,
+}) => {
   const [query, setQuery] = useState(initialQuery);
   const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
-  const [activeTab, setActiveTab] = useState<SearchTab>('all');
+  const [activeTab, setActiveTab] = useState<'tracks' | 'albums' | 'artists'>('tracks');
+  const [filterText, setFilterText] = useState('');
+  const [tracks, setTracks] = useState<Track[]>(ALL_SEARCHABLE_TRACKS);
+  const [isLoading, setIsLoading] = useState(false);
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set(['yt-PJWemSzExXs', 'trk-1', 'trk-3']));
 
+  // Update query when initialQuery changes from topbar
   useEffect(() => {
-    if (initialQuery) {
+    if (initialQuery !== undefined) {
       setQuery(initialQuery);
-      setDebouncedQuery(initialQuery);
+      setDebouncedQuery(initialQuery.trim());
     }
   }, [initialQuery]);
 
-  const [engineTracks, setEngineTracks] = useState<Track[]>([]);
-
-  // 300ms debounce
+  // Debounce query typing
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedQuery(query.trim().toLowerCase());
-    }, 300);
+      setDebouncedQuery(query.trim());
+    }, 350);
     return () => clearTimeout(timer);
   }, [query]);
 
-  // Query engine /search/natural when query changes
+  // Fetch real tracks from engine / YouTube / iTunes
   useEffect(() => {
-    if (!debouncedQuery || debouncedQuery.length < 2) {
-      setEngineTracks([]);
-      return;
-    }
+    const searchTerm = debouncedQuery || 'baarishein';
+    let isCancelled = false;
+    setIsLoading(true);
 
-    let isMounted = true;
-    fetch('http://127.0.0.1:8001/search/natural', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: debouncedQuery, limit: 15 }),
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!isMounted || !data || !Array.isArray(data.results)) return;
-        const tracks: Track[] = data.results.map((r: any) => ({
-          id: r.track_id,
-          title: r.title,
-          artist: r.artist,
-          album: r.album,
-          durationSeconds: Math.round(r.bpm ? (60 / r.bpm) * 400 : 210),
-          coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80',
-          badge: `Neural Match ${(r.score * 100).toFixed(0)}%`,
-        }));
-        setEngineTracks(tracks);
-      })
-      .catch(() => {
-        // Fallback silently to local catalog
-      });
+    const fetchTracks = async () => {
+      try {
+        // Try Python FastAPI engine endpoint
+        const res = await fetch(
+          `http://127.0.0.1:8001/api/search?q=${encodeURIComponent(searchTerm)}&limit=30`,
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Array.isArray(data.results) && data.results.length > 0) {
+            if (!isCancelled) {
+              setTracks(
+                data.results.map((r: any) => ({
+                  id: r.id || `trk-${Math.random()}`,
+                  title: r.title,
+                  artist: r.artist,
+                  album: r.album || 'Single',
+                  durationSeconds: r.durationSeconds || 210,
+                  coverUrl: r.coverUrl,
+                  isFavorite: favoriteIds.has(r.id),
+                })),
+              );
+              setIsLoading(false);
+              return;
+            }
+          }
+        }
+      } catch (err) {
+        // Engine request failed, proceed to iTunes fallback
+      }
+
+      // Fallback: iTunes Search API (fast, 100% genuine artist, title, artwork)
+      try {
+        const itunesRes = await fetch(
+          `https://itunes.apple.com/search?term=${encodeURIComponent(searchTerm)}&entity=song&limit=30`,
+        );
+        if (itunesRes.ok) {
+          const itunesData = await itunesRes.json();
+          if (itunesData && Array.isArray(itunesData.results) && itunesData.results.length > 0) {
+            if (!isCancelled) {
+              setTracks(
+                itunesData.results.map((r: any) => ({
+                  id: `itunes-${r.trackId}`,
+                  title: r.trackName,
+                  artist: r.artistName,
+                  album: r.collectionName,
+                  durationSeconds: Math.round((r.trackTimeMillis || 210000) / 1000),
+                  coverUrl: (r.artworkUrl100 || '').replace('100x100bb', '600x600bb'),
+                  isFavorite: favoriteIds.has(`itunes-${r.trackId}`),
+                })),
+              );
+              setIsLoading(false);
+              return;
+            }
+          }
+        }
+      } catch (err) {
+        // Network fallback
+      }
+
+      if (!isCancelled) {
+        // Filter from seed catalog if both remote sources fail
+        const matched = ALL_SEARCHABLE_TRACKS.filter(
+          (t) =>
+            t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            t.artist.toLowerCase().includes(searchTerm.toLowerCase()),
+        );
+        setTracks(matched.length > 0 ? matched : ALL_SEARCHABLE_TRACKS);
+        setIsLoading(false);
+      }
+    };
+
+    fetchTracks();
 
     return () => {
-      isMounted = false;
+      isCancelled = true;
     };
   }, [debouncedQuery]);
 
-  const localFilteredTracks = useMemo(() => {
-    if (!debouncedQuery) return [];
-    return ALL_SEARCHABLE_TRACKS.filter(
-      (t) =>
-        t.title.toLowerCase().includes(debouncedQuery) ||
-        t.artist.toLowerCase().includes(debouncedQuery) ||
-        (t.album && t.album.toLowerCase().includes(debouncedQuery)),
-    );
-  }, [debouncedQuery]);
-
-  const filteredTracks = useMemo(() => {
-    const combined = [...localFilteredTracks];
-    for (const et of engineTracks) {
-      if (!combined.some((t) => t.id === et.id || t.title.toLowerCase() === et.title.toLowerCase())) {
-        combined.push(et);
+  const toggleFavorite = (trackId: string) => {
+    setFavoriteIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(trackId)) {
+        next.delete(trackId);
+      } else {
+        next.add(trackId);
       }
+      return next;
+    });
+  };
+
+  // Filtered tracks based on the toolbar "Filter tracks" input
+  const filteredTracks = useMemo(() => {
+    if (!filterText.trim()) return tracks;
+    const lower = filterText.toLowerCase();
+    return tracks.filter(
+      (t) =>
+        t.title.toLowerCase().includes(lower) ||
+        t.artist.toLowerCase().includes(lower) ||
+        (t.album && t.album.toLowerCase().includes(lower)),
+    );
+  }, [tracks, filterText]);
+
+  const handlePlayAll = () => {
+    if (filteredTracks.length === 0) return;
+    if (onPlayAll) {
+      onPlayAll(filteredTracks);
+    } else if (onPlayTrack) {
+      onPlayTrack(filteredTracks[0]);
     }
-    return combined;
-  }, [localFilteredTracks, engineTracks]);
+  };
 
-  const filteredArtists = useMemo(() => {
-    if (!debouncedQuery) return [];
-    return ALL_SEARCHABLE_ARTISTS.filter((a) =>
-      a.name.toLowerCase().includes(debouncedQuery),
-    );
-  }, [debouncedQuery]);
-
-  const filteredAlbums = useMemo(() => {
-    if (!debouncedQuery) return [];
-    return ALL_SEARCHABLE_ALBUMS.filter(
-      (alb) =>
-        alb.title.toLowerCase().includes(debouncedQuery) ||
-        alb.subtitle.toLowerCase().includes(debouncedQuery),
-    );
-  }, [debouncedQuery]);
-
-  const totalResultsCount =
-    filteredTracks.length + filteredArtists.length + filteredAlbums.length;
+  const handleAddAll = () => {
+    if (filteredTracks.length === 0) return;
+    if (onAddAll) {
+      onAddAll(filteredTracks);
+    }
+  };
 
   return (
-    <div className="surface-background p-6 space-y-6 select-none" data-testid="search-page">
-      {/* Search Input Bar */}
-      <div className="relative max-w-2xl">
-        <Input
-          tone="primary"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search tracks, artists, albums, or ISRC..."
-          startAddon={<SearchIcon size={16} className="text-muted-foreground" />}
-          endAddon={
-            query ? (
-              <button
-                type="button"
-                onClick={() => setQuery('')}
-                className="text-muted-foreground hover:text-foreground cursor-pointer"
-                title="Clear search"
-              >
-                <X size={15} />
-              </button>
-            ) : null
-          }
-          data-testid="search-input-field"
-        />
+    <div
+      data-testid="search-page"
+      className="surface-background min-h-full p-6 text-foreground font-sans select-none"
+    >
+      {/* Title & Query Header (Image 2) */}
+      <div className="flex flex-col gap-1 pb-4">
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+          Search
+        </h1>
+        <div className="text-sm font-medium text-foreground/60">
+          Query: &ldquo;{debouncedQuery || query || 'baarishein'}&rdquo;
+        </div>
       </div>
 
-      {/* When no query is entered: Quick Popular Tags */}
-      {!debouncedQuery && (
-        <div className="space-y-3 pt-2">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            <Sparkles size={13} className="text-primary" />
-            <span>Popular Searches</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {POPULAR_SEARCH_TAGS.map((tag) => (
-              <Button
-                key={tag}
-                size="sm"
-                variant="secondary"
-                onClick={() => setQuery(tag)}
-                className="text-xs"
+      {/* Tabs Row (Image 2: Tracks pill) */}
+      <div className="flex items-center gap-2 pb-4">
+        <button
+          type="button"
+          onClick={() => setActiveTab('tracks')}
+          className={cn(
+            'px-3.5 py-1.5 rounded-md text-xs font-bold border-2 border-border shadow-[2px_2px_0px_var(--border)] cursor-pointer transition-transform hover:scale-105 active:scale-95',
+            activeTab === 'tracks'
+              ? 'bg-[var(--primary)] text-foreground'
+              : 'surface-muted text-foreground/70',
+          )}
+        >
+          Tracks
+        </button>
+      </div>
+
+      {/* Action Toolbar (Image 2: Play all, Add all, Filter tracks) */}
+      <div className="flex items-center justify-between gap-4 pb-3">
+        {/* Left: Play all, Add all */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handlePlayAll}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-[var(--primary)] text-foreground font-bold text-xs border-2 border-border shadow-[2px_2px_0px_var(--border)] cursor-pointer hover:scale-105 active:scale-95 transition-transform"
+          >
+            <Play size={13} fill="currentColor" />
+            <span>Play all</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleAddAll}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-md surface-muted text-foreground font-bold text-xs border-2 border-border shadow-[2px_2px_0px_var(--border)] cursor-pointer hover:scale-105 active:scale-95 transition-transform"
+          >
+            <Plus size={14} />
+            <span>Add all</span>
+          </button>
+        </div>
+
+        {/* Right: Filter tracks input + filter icon */}
+        <div className="flex items-center gap-1.5">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Filter tracks"
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+              className="h-7.5 w-44 rounded-md border-2 border-border surface-background text-foreground placeholder:text-foreground/50 px-2.5 text-xs font-medium shadow-[2px_2px_0px_var(--border)] outline-none focus:border-foreground transition-colors"
+            />
+            {filterText && (
+              <button
+                type="button"
+                onClick={() => setFilterText('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground/50 hover:text-foreground cursor-pointer"
               >
-                {tag}
-              </Button>
-            ))}
+                <X size={12} />
+              </button>
+            )}
           </div>
+          <button
+            type="button"
+            className="size-7.5 rounded-md border-2 border-border surface-muted text-foreground flex items-center justify-center shadow-[2px_2px_0px_var(--border)] cursor-pointer hover:scale-105 active:scale-95 transition-transform"
+            title="Filter options"
+          >
+            <SlidersHorizontal size={13} />
+          </button>
         </div>
-      )}
+      </div>
 
-      {/* Tabbed Result Filter (All | Tracks | Artists | Albums) */}
-      {debouncedQuery && (
-        <div className="space-y-6">
-          <div className="flex items-center gap-2 border-b-(length:--border-width) border-border pb-2">
-            <Button
-              size="sm"
-              variant={activeTab === 'all' ? 'default' : 'text'}
-              onClick={() => setActiveTab('all')}
-            >
-              All ({totalResultsCount})
-            </Button>
-            <Button
-              size="sm"
-              variant={activeTab === 'tracks' ? 'default' : 'text'}
-              onClick={() => setActiveTab('tracks')}
-            >
-              Tracks ({filteredTracks.length})
-            </Button>
-            <Button
-              size="sm"
-              variant={activeTab === 'artists' ? 'default' : 'text'}
-              onClick={() => setActiveTab('artists')}
-            >
-              Artists ({filteredArtists.length})
-            </Button>
-            <Button
-              size="sm"
-              variant={activeTab === 'albums' ? 'default' : 'text'}
-              onClick={() => setActiveTab('albums')}
-            >
-              Albums ({filteredAlbums.length})
-            </Button>
+      {/* Main Track Table (Image 2) */}
+      <div className="rounded-md border-2 border-border surface-card overflow-hidden shadow-[2px_2px_0px_var(--border)]">
+        {/* Table Header with Pink background & 2px border */}
+        <div className="grid grid-cols-[44px_48px_minmax(140px,1.2fr)_minmax(160px,2fr)_80px] items-center bg-[var(--primary)] text-foreground border-b-2 border-border px-3 py-2 text-xs font-bold select-none">
+          <div className="flex justify-center">
+            <Heart size={15} />
           </div>
-
-          {/* Results Empty State */}
-          {totalResultsCount === 0 && (
-            <div className="surface-card border-border flex flex-col items-center justify-center p-12 text-center rounded-[4px] border-(length:--border-width)">
-              <Music2 size={40} className="text-muted-foreground/40 mb-3" />
-              <h3 className="text-sm font-bold text-foreground">
-                No results found for &ldquo;{debouncedQuery}&rdquo;
-              </h3>
-              <p className="text-muted-foreground mt-1 max-w-sm text-xs font-mono">
-                Try searching for a different song title, artist name, or album name.
-              </p>
-            </div>
-          )}
-
-          {/* Tab Content Rendering */}
-          {(activeTab === 'all' || activeTab === 'artists') && filteredArtists.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                <User size={14} className="text-primary" />
-                <span>Artists</span>
-              </h3>
-              <div className="flex items-center gap-4 overflow-x-auto pb-2 [scrollbar-width:none]">
-                {filteredArtists.map((artist) => (
-                  <ArtistCard
-                    key={artist.id}
-                    name={artist.name}
-                    role={artist.role}
-                    imageUrl={artist.imageUrl}
-                    onClick={() => onSelectArtist?.(artist.id)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {(activeTab === 'all' || activeTab === 'tracks') && filteredTracks.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                <Music2 size={14} className="text-primary" />
-                <span>Tracks</span>
-              </h3>
-              <div className="space-y-1">
-                {filteredTracks.map((track, idx) => (
-                  <TrackRow
-                    key={track.id}
-                    track={track}
-                    index={idx}
-                    isCurrent={track.id === currentTrackId}
-                    isPlaying={isPlaying && track.id === currentTrackId}
-                    onPlay={() => onPlayTrack?.(track)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {(activeTab === 'all' || activeTab === 'albums') && filteredAlbums.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                <Disc3 size={14} className="text-primary" />
-                <span>Albums</span>
-              </h3>
-              <div className="flex items-center gap-4 overflow-x-auto pb-2 [scrollbar-width:none]">
-                {filteredAlbums.map((album) => (
-                  <AlbumCard
-                    key={album.id}
-                    title={album.title}
-                    subtitle={album.subtitle}
-                    coverUrl={album.coverUrl}
-                    onClick={() => onSelectAlbum?.(album.id)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+          <div className="flex justify-center">
+            <ImageIcon size={15} />
+          </div>
+          <div className="text-left font-bold tracking-tight">Artist</div>
+          <div className="text-left font-bold tracking-tight">Title</div>
+          <div className="text-right pr-2 font-bold tracking-tight">Duration</div>
         </div>
-      )}
+
+        {/* Table Body */}
+        {isLoading && tracks.length === 0 ? (
+          <div className="flex items-center justify-center py-16 gap-2 text-foreground/60 text-xs font-medium">
+            <Loader2 size={16} className="animate-spin text-foreground" />
+            <span>Searching genuine music sources...</span>
+          </div>
+        ) : filteredTracks.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-2 text-foreground/60 text-xs">
+            <Music size={28} className="opacity-40" />
+            <span>No matching tracks found</span>
+          </div>
+        ) : (
+          <div className="divide-y divide-border/20">
+            {filteredTracks.map((track) => {
+              const isCurrent = track.id === currentTrackId;
+              const isFav = favoriteIds.has(track.id) || track.isFavorite;
+
+              return (
+                <div
+                  key={track.id}
+                  onClick={() => onPlayTrack?.(track)}
+                  className={cn(
+                    'grid grid-cols-[44px_48px_minmax(140px,1.2fr)_minmax(160px,2fr)_80px] items-center px-3 py-2 text-xs cursor-pointer transition-colors group select-none',
+                    isCurrent
+                      ? 'bg-black/10 dark:bg-white/10 font-bold'
+                      : 'hover:bg-black/5 dark:hover:bg-white/5',
+                  )}
+                >
+                  {/* Heart / Favorite button */}
+                  <div className="flex justify-center">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite(track.id);
+                      }}
+                      className="text-foreground/60 hover:text-red-500 cursor-pointer transition-colors p-1"
+                      title={isFav ? 'Remove from favorites' : 'Add to favorites'}
+                    >
+                      <Heart
+                        size={14}
+                        fill={isFav ? '#ef4444' : 'none'}
+                        className={isFav ? 'text-red-500' : ''}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Artwork Image */}
+                  <div className="flex justify-center">
+                    <div className="size-8 rounded overflow-hidden border border-border/40 bg-black/10 shrink-0 relative">
+                      {track.coverUrl ? (
+                        <img
+                          src={track.coverUrl}
+                          alt=""
+                          className="size-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="size-full flex items-center justify-center text-foreground/40">
+                          <Music size={14} />
+                        </div>
+                      )}
+                      {isCurrent && (
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white">
+                          {isPlaying ? <Pause size={12} /> : <Play size={12} />}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Artist */}
+                  <div className="truncate pr-2 font-medium text-foreground">
+                    {track.artist}
+                  </div>
+
+                  {/* Title */}
+                  <div className="truncate pr-2 font-bold text-foreground">
+                    {track.title}
+                  </div>
+
+                  {/* Duration */}
+                  <div className="font-mono text-xs tabular-nums text-foreground/80 text-right pr-2">
+                    {formatSeconds(track.durationSeconds)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
-}
+};
+
+export default SearchPage;
