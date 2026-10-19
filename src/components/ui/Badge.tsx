@@ -1,9 +1,16 @@
-import { cva, type VariantProps } from 'class-variance-authority';
-import { FC, ReactNode } from 'react';
+/**
+ * Ensure any repository we take reference from or code from isn't referenced or spoken about anywhere either in files or readme or code
+ * Original: packages/ui/src/components/Badge/Badge.tsx
+ * Adapted for Sloth by syedzahidsaleem2@gmail.com
+ * Changes: [styling system, data layer, routing]
+ */
+
+import { cva, VariantProps } from 'class-variance-authority';
+import { ComponentProps, FC, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 export const badgeVariants = cva(
-  'border-border inline-flex items-center justify-center border-(length:--border-width) whitespace-nowrap',
+  'border-border inline-flex items-center justify-center border-(length:--border-width) whitespace-nowrap select-none',
   {
     variants: {
       variant: {
@@ -27,46 +34,113 @@ export const badgeVariants = cva(
       },
     },
     compoundVariants: [
-      { variant: 'dot', color: 'green', className: 'surface-accent-green' },
-      { variant: 'dot', color: 'cyan', className: 'surface-accent-cyan' },
-      { variant: 'dot', color: 'orange', className: 'surface-accent-orange' },
-      { variant: 'dot', color: 'red', className: 'surface-accent-red' },
-      { variant: 'dot', color: 'yellow', className: 'surface-accent-yellow' },
-      { variant: 'dot', color: 'purple', className: 'surface-accent-purple' },
-      { variant: 'dot', color: 'blue', className: 'surface-accent-blue' },
-
-      { variant: 'pill', color: 'secondary', className: 'bg-background text-foreground' },
-      { variant: 'pill', color: 'inverted', className: 'bg-foreground text-muted' },
-      { variant: 'pill', color: 'green', className: 'surface-accent-green' },
-      { variant: 'pill', color: 'cyan', className: 'surface-accent-cyan' },
-      { variant: 'pill', color: 'orange', className: 'surface-accent-orange' },
-      { variant: 'pill', color: 'red', className: 'surface-accent-red' },
-      { variant: 'pill', color: 'yellow', className: 'surface-accent-yellow' },
-      { variant: 'pill', color: 'purple', className: 'surface-accent-purple' },
-      { variant: 'pill', color: 'blue', className: 'surface-accent-blue' },
+      {
+        variant: 'dot',
+        color: 'green',
+        className: 'surface-accent-green',
+      },
+      {
+        variant: 'dot',
+        color: 'cyan',
+        className: 'surface-accent-cyan',
+      },
+      {
+        variant: 'dot',
+        color: 'orange',
+        className: 'surface-accent-orange',
+      },
+      {
+        variant: 'dot',
+        color: 'red',
+        className: 'surface-accent-red',
+      },
+      {
+        variant: 'dot',
+        color: 'yellow',
+        className: 'surface-accent-yellow',
+      },
+      {
+        variant: 'dot',
+        color: 'purple',
+        className: 'surface-accent-purple',
+      },
+      {
+        variant: 'dot',
+        color: 'blue',
+        className: 'surface-accent-blue',
+      },
+      {
+        variant: 'pill',
+        color: 'secondary',
+        className: 'bg-background text-foreground',
+      },
+      {
+        variant: 'pill',
+        color: 'inverted',
+        className: 'bg-foreground text-muted',
+      },
+      {
+        variant: 'pill',
+        color: 'green',
+        className: 'surface-accent-green',
+      },
+      {
+        variant: 'pill',
+        color: 'cyan',
+        className: 'surface-accent-cyan',
+      },
+      {
+        variant: 'pill',
+        color: 'orange',
+        className: 'surface-accent-orange',
+      },
+      {
+        variant: 'pill',
+        color: 'red',
+        className: 'surface-accent-red',
+      },
+      {
+        variant: 'pill',
+        color: 'yellow',
+        className: 'surface-accent-yellow',
+      },
+      {
+        variant: 'pill',
+        color: 'purple',
+        className: 'surface-accent-purple',
+      },
+      {
+        variant: 'pill',
+        color: 'blue',
+        className: 'surface-accent-blue',
+      },
     ],
     defaultVariants: {
-      variant: 'pill',
-      color: 'secondary',
+      variant: 'dot',
+      color: 'green',
       animated: false,
     },
   },
 );
 
-export type BadgeProps = VariantProps<typeof badgeVariants> & {
-  className?: string;
-  children?: ReactNode;
-};
+export type BadgeProps = Omit<ComponentProps<'span'>, 'children'> &
+  VariantProps<typeof badgeVariants> & {
+    children?: ReactNode;
+  };
 
 export const Badge: FC<BadgeProps> = ({
+  children,
+  className,
   variant,
   color,
   animated,
-  className,
-  children,
+  ...props
 }) => {
   return (
-    <span className={cn(badgeVariants({ variant, color, animated, className }))}>
+    <span
+      className={cn(badgeVariants({ variant, color, animated, className }))}
+      {...props}
+    >
       {children}
     </span>
   );
