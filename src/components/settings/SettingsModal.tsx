@@ -161,7 +161,23 @@ export const SettingsModal: FC<SettingsModalProps> = ({
             className="absolute inset-0 bg-black/60 backdrop-blur-xs"
           />
 
-          <div className="surface-background text-foreground border-border shadow-nav relative flex h-full max-h-[820px] w-full max-w-5xl rounded-lg border-(length:--border-width) overflow-hidden z-10">
+          {/* Modal Container with Nuclear spring transition */}
+          <motion.div
+            initial={shouldReduce ? { opacity: 0 } : { opacity: 0, scale: 0.94, y: 16 }}
+            animate={shouldReduce ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+            exit={shouldReduce ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 12 }}
+            transition={
+              shouldReduce
+                ? { duration: 0.15 }
+                : {
+                    type: 'spring',
+                    stiffness: 400,
+                    damping: 24,
+                    mass: 0.8,
+                  }
+            }
+            className="surface-background text-foreground border-border shadow-nav relative flex h-full max-h-[820px] w-full max-w-5xl rounded-lg border-(length:--border-width) overflow-hidden z-10"
+          >
         {/* Close Button top-right */}
         <Button
           size="icon-sm"
@@ -1007,7 +1023,7 @@ export const SettingsModal: FC<SettingsModalProps> = ({
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
     </div>
   )}
 </AnimatePresence>
