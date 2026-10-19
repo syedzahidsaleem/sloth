@@ -1,229 +1,151 @@
 import { FC, ReactNode } from 'react';
-import { motion, useReducedMotion } from 'motion/react';
 import {
-  Home,
-  Search,
-  Library,
+  Gauge,
+  Disc,
+  Music,
+  User,
   ListMusic,
-  Settings,
-  Radio,
-  Sliders,
+  History,
+  MicVocal,
+  Cable,
   Package,
+  Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { AccentPalette, ACCENTS, setAccentPalette, getCurrentAccent } from '@/styles/tokens';
-import { DownloadManager } from '@/features/download';
-import { MoodSlider, MoodCoordinates } from './MoodSlider';
 
-export type NavItemKey = 'home' | 'search' | 'library' | 'playlists' | 'plugins' | 'settings';
+export type NavItemKey =
+  | 'dashboard'
+  | 'favorite-albums'
+  | 'favorite-tracks'
+  | 'favorite-artists'
+  | 'playlists'
+  | 'history'
+  | 'lyrics'
+  | 'sources'
+  | 'plugins'
+  | 'preferences'
+  // Compatibility keys
+  | 'home'
+  | 'search'
+  | 'library'
+  | 'settings';
 
 export interface SidebarProps {
   activeTab: NavItemKey;
   onTabChange: (tab: NavItemKey) => void;
-  currentAccent?: AccentPalette;
-  onAccentChange?: (accent: AccentPalette) => void;
-  onMoodChange?: (coords: MoodCoordinates) => void;
-  connectedSources?: {
-    name: string;
-    status: 'online' | 'standby' | 'offline';
-  }[];
+  onOpenPreferences?: () => void;
+  isCompact?: boolean;
   className?: string;
   footerAddon?: ReactNode;
 }
 
-const NAV_ITEMS: { key: NavItemKey; label: string; icon: typeof Home }[] = [
-  { key: 'home', label: 'Home', icon: Home },
-  { key: 'search', label: 'Search', icon: Search },
-  { key: 'library', label: 'Library', icon: Library },
-  { key: 'playlists', label: 'Playlists', icon: ListMusic },
-  { key: 'plugins', label: 'Plugins', icon: Package },
-  { key: 'settings', label: 'Settings', icon: Settings },
+export const NAV_ITEMS = [
+  { key: 'dashboard' as NavItemKey, label: 'Dashboard', icon: Gauge },
+  { key: 'favorite-albums' as NavItemKey, label: 'Favorite albums', icon: Disc },
+  { key: 'favorite-tracks' as NavItemKey, label: 'Favorite tracks', icon: Music },
+  { key: 'favorite-artists' as NavItemKey, label: 'Favorite artists', icon: User },
+  { key: 'playlists' as NavItemKey, label: 'Playlists', icon: ListMusic },
+  { key: 'history' as NavItemKey, label: 'History', icon: History },
+  { key: 'lyrics' as NavItemKey, label: 'Lyrics', icon: MicVocal },
+  { key: 'sources' as NavItemKey, label: 'Sources', icon: Cable },
+  { key: 'plugins' as NavItemKey, label: 'Plugins', icon: Package },
 ];
 
 export const Sidebar: FC<SidebarProps> = ({
   activeTab,
   onTabChange,
-  currentAccent,
-  onAccentChange,
-  onMoodChange,
-  connectedSources = [
-    { name: 'YouTube Music', status: 'online' },
-    { name: 'Piped Engine', status: 'online' },
-    { name: 'FastAPI Recommender', status: 'online' },
-  ],
+  onOpenPreferences,
+  isCompact = false,
   className,
   footerAddon,
 }) => {
-  const prefersReduced = useReducedMotion();
-  const selectedAccent = currentAccent ?? (typeof document !== 'undefined' ? getCurrentAccent() : 'green');
-
-  const handleAccentSelect = (accent: AccentPalette) => {
-    setAccentPalette(accent);
-    if (onAccentChange) {
-      onAccentChange(accent);
-    }
+  const isSelected = (key: NavItemKey) => {
+    if (activeTab === key) return true;
+    if (key === 'dashboard' && activeTab === 'home') return true;
+    if (key === 'preferences' && (activeTab === 'settings' || activeTab === 'preferences')) return true;
+    return false;
   };
 
   return (
-    <aside
+    <nav
+      data-testid="sidebar-navigation"
       className={cn(
-        'w-[220px] min-w-[220px] max-w-[220px] shrink-0 h-full flex flex-col justify-between',
-        'bg-[var(--surface)] text-[var(--text-primary)] border-r border-[var(--border)]',
-        'select-none p-3 overflow-hidden font-sans',
+        'flex flex-1 flex-col justify-between h-full select-none font-sans',
         className,
       )}
-      style={{ width: '220px' }}
       aria-label="Sidebar Navigation"
     >
-      {/* Brand & Top Area */}
-      <div className="flex flex-col gap-4">
-        {/* App Title / Logo */}
-        <div className="flex items-center gap-2.5 px-2 py-1.5 border-b border-[var(--border)] pb-3">
-          <div className="size-8 rounded-[4px] bg-[var(--color-accent)] text-[var(--color-accent-foreground)] flex items-center justify-center font-bold text-base shadow-sm">
-            🦥
-          </div>
-          <div className="flex flex-col">
-            <span className="font-extrabold text-sm tracking-tight leading-none text-[var(--text-primary)]">
-              SLOTH
-            </span>
-            <span className="text-[10px] font-mono tracking-wider text-[var(--text-muted)] uppercase mt-0.5">
-              v0.1.0 • Desktop
-            </span>
-          </div>
-        </div>
+      {/* Navigation Links */}
+      <div className="flex flex-1 flex-col gap-1 overflow-y-auto">
+        {NAV_ITEMS.map((item) => {
+          const active = isSelected(item.key);
+          const Icon = item.icon;
 
-        {/* Navigation Links */}
-        <nav className="flex flex-col gap-1" aria-label="Main navigation">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.key;
-
-            return (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => onTabChange(item.key)}
-                aria-current={isActive ? 'page' : undefined}
-                className={cn(
-                  'group relative flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-[4px]',
-                  'transition-colors duration-150 outline-none text-left w-full cursor-pointer',
-                  'focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--surface)]',
-                  isActive
-                    ? 'bg-[var(--surface-raised)] text-[var(--color-accent)] border border-[var(--border)] font-bold shadow-xs'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-raised)]/60 border border-transparent',
-                )}
-              >
-                {/* Active Indicator Bar on left edge */}
-                {isActive && (
-                  <motion.span
-                    layoutId={prefersReduced ? undefined : 'active-sidebar-pill'}
-                    className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-[2px] bg-[var(--color-accent)]"
-                    transition={{ type: 'spring', stiffness: 450, damping: 30 }}
-                  />
-                )}
-                <Icon
-                  size={16}
-                  className={cn(
-                    'shrink-0 transition-transform duration-150',
-                    isActive ? 'text-[var(--color-accent)]' : 'text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]',
-                  )}
-                  aria-hidden="true"
-                />
-                <span className="truncate flex-1 tracking-tight">{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-
-      {/* Middle Scrollable Section: Mood Guidance & Download Manager Panel */}
-      <div className="flex-1 flex flex-col gap-2.5 my-2 min-h-0 overflow-y-auto pr-0.5">
-        <MoodSlider onChange={onMoodChange} />
-        <DownloadManager />
-      </div>
-
-      {/* Footer Area: Accent Palettes & Source Status */}
-      <div className="flex flex-col gap-3 pt-3 border-t border-[var(--border)]">
-        {/* Accent Palette Selector */}
-        <div className="flex flex-col gap-1.5 px-2">
-          <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-[var(--text-muted)]">
-            <span className="flex items-center gap-1">
-              <Sliders size={10} aria-hidden="true" /> Accent
-            </span>
-            <span className="font-semibold text-[var(--color-accent)] capitalize">
-              {selectedAccent}
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5" role="group" aria-label="Theme accent color options">
-            {(Object.keys(ACCENTS) as AccentPalette[]).map((paletteKey) => {
-              const def = ACCENTS[paletteKey];
-              const isSelected = selectedAccent === paletteKey;
-
-              return (
-                <button
-                  key={paletteKey}
-                  type="button"
-                  onClick={() => handleAccentSelect(paletteKey)}
-                  title={def.label}
-                  aria-label={`Select ${def.label} theme`}
-                  aria-pressed={isSelected}
-                  className={cn(
-                    'size-5 rounded-[3px] transition-transform duration-100 cursor-pointer flex items-center justify-center border',
-                    isSelected
-                      ? 'scale-110 border-white ring-2 ring-[var(--color-accent)]/40 ring-offset-1 ring-offset-[var(--surface)]'
-                      : 'border-black/30 hover:scale-105 opacity-80 hover:opacity-100',
-                  )}
-                  style={{ backgroundColor: def.hex }}
-                >
-                  {isSelected && (
-                    <span className="size-1.5 rounded-full bg-black/80" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Connected Sources Status Badge */}
-        <div className="flex flex-col gap-1 bg-[var(--background)] p-2 rounded-[4px] border border-[var(--border)]">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-mono tracking-wider text-[var(--text-muted)] uppercase flex items-center gap-1">
-              <Radio size={10} className="text-[var(--color-accent)]" aria-hidden="true" />
-              Sources
-            </span>
-            <span className="text-[9px] font-mono text-[var(--color-accent)] bg-[var(--surface-raised)] px-1 py-0.2 rounded-[2px] border border-[var(--border)]">
-              ACTIVE
-            </span>
-          </div>
-
-          <div className="flex flex-col gap-1 mt-1">
-            {connectedSources.map((source) => (
-              <div
-                key={source.name}
-                className="flex items-center justify-between text-[11px] text-[var(--text-secondary)]"
-              >
-                <span className="truncate pr-1 text-[10px]">{source.name}</span>
-                <span className="flex items-center gap-1 shrink-0">
-                  <span
-                    className={cn(
-                      'size-1.5 rounded-full',
-                      source.status === 'online'
-                        ? 'bg-[var(--color-accent)] shadow-[0_0_6px_var(--color-accent)]'
-                        : 'bg-[var(--text-muted)]',
-                    )}
-                    aria-hidden="true"
-                  />
-                  <span className="text-[9px] font-mono capitalize text-[var(--text-muted)]">
-                    {source.status}
-                  </span>
-                </span>
+          return (
+            <button
+              key={item.key}
+              type="button"
+              data-testid={`sidebar-item-${item.key}`}
+              onClick={() => onTabChange(item.key)}
+              title={isCompact ? item.label : undefined}
+              className={cn(
+                'flex w-full items-center overflow-hidden rounded-md border-(length:--border-width) transition-colors cursor-pointer text-left',
+                active
+                  ? 'surface-primary border-border font-bold shadow-xs'
+                  : 'border-transparent text-foreground hover:bg-foreground/10',
+              )}
+            >
+              <div className="flex size-8 shrink-0 items-center justify-center">
+                <Icon size={18} />
               </div>
-            ))}
-          </div>
-        </div>
-
-        {footerAddon}
+              <span
+                className={cn(
+                  'text-sm whitespace-nowrap transition-opacity duration-150 pr-2',
+                  isCompact ? 'opacity-0 w-0' : 'opacity-100',
+                )}
+              >
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
       </div>
-    </aside>
+
+      {/* Bottom Preferences Button */}
+      <div className="mt-auto pt-2 border-t-(length:--border-width) border-border/20 flex flex-col gap-1">
+        <button
+          type="button"
+          data-testid="sidebar-item-preferences"
+          onClick={() => {
+            if (onOpenPreferences) {
+              onOpenPreferences();
+            } else {
+              onTabChange('preferences');
+            }
+          }}
+          title={isCompact ? 'Preferences' : undefined}
+          className={cn(
+            'flex w-full items-center overflow-hidden rounded-md border-(length:--border-width) transition-colors cursor-pointer text-left',
+            isSelected('preferences')
+              ? 'surface-primary border-border font-bold shadow-xs'
+              : 'border-transparent text-foreground hover:bg-foreground/10',
+          )}
+        >
+          <div className="flex size-8 shrink-0 items-center justify-center">
+            <Settings size={18} />
+          </div>
+          <span
+            className={cn(
+              'text-sm whitespace-nowrap transition-opacity duration-150 pr-2 font-medium',
+              isCompact ? 'opacity-0 w-0' : 'opacity-100',
+            )}
+          >
+            Preferences
+          </span>
+        </button>
+
+        {footerAddon && !isCompact && <div className="pt-2">{footerAddon}</div>}
+      </div>
+    </nav>
   );
 };
