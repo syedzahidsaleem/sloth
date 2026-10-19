@@ -193,7 +193,7 @@ export const SettingsModal: FC<SettingsModalProps> = ({
         <nav className="border-border flex w-56 shrink-0 flex-col border-r-(length:--border-width) p-3 justify-between">
           <div className="flex flex-col gap-1 overflow-y-auto">
             {/* SETTINGS Category (Matches Screenshot 2: Clean bold text, no icons) */}
-            <div className="font-heading text-foreground/60 px-2 pt-2 pb-1 text-xs font-extrabold tracking-wider uppercase">
+            <div className="font-heading text-foreground/70 px-2 pt-2 pb-1 text-xs font-extrabold tracking-wider uppercase">
               Settings
             </div>
 
@@ -275,7 +275,7 @@ export const SettingsModal: FC<SettingsModalProps> = ({
             </Button>
 
             {/* APP Category (Matches Screenshot 2: Icons present) */}
-            <div className="font-heading text-foreground/60 px-2 pt-4 pb-1 text-xs font-extrabold tracking-wider uppercase">
+            <div className="font-heading text-foreground/70 px-2 pt-4 pb-1 text-xs font-extrabold tracking-wider uppercase">
               App
             </div>
 
