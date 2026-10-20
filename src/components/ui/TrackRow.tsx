@@ -237,14 +237,13 @@ export const TrackRow: FC<TrackRowProps> = ({
 
           {/* Context Menu Trigger */}
           <TrackContextMenuTrigger>
-            <Button
-              size="icon-sm"
-              variant="text"
-              className="opacity-0 transition-opacity group-hover:opacity-100 text-foreground/70 hover:text-foreground"
-              aria-label="More options"
+            <div
+              role="button"
+              className="size-7 flex items-center justify-center rounded text-foreground/70 hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+              title="More options"
             >
               <EllipsisVertical size={15} />
-            </Button>
+            </div>
           </TrackContextMenuTrigger>
         </div>
       </div>

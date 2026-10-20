@@ -42,12 +42,15 @@ export interface LibraryStore {
   // Queries
   isLiked: (trackId: string) => boolean;
   isFollowed: (artistId: string) => boolean;
+  isArtistFollowed: (artistId: string) => boolean;
   isAlbumSaved: (albumId: string) => boolean;
 
   // Mutations
   toggleLikeSong: (track: Track) => boolean;
   toggleFollowArtist: (artist: { id: string; name: string; imageUrl?: string }) => boolean;
   toggleSaveAlbum: (album: { id: string; title: string; artist?: string; coverUrl?: string; releaseYear?: number }) => boolean;
+  saveAlbum: (album: { id: string; title: string; artist?: string; coverUrl?: string; releaseYear?: number }) => void;
+  removeAlbum: (albumId: string) => void;
 
   // Bulk
   setLikedSongs: (songs: LikedSongItem[]) => void;
@@ -99,11 +102,29 @@ export const useLibraryStore = create<LibraryStore>((set, get) => {
       );
     },
 
+    isArtistFollowed: (artistId: string) => {
+      return get().isFollowed(artistId);
+    },
+
     isAlbumSaved: (albumId: string) => {
       const clean = albumId.toLowerCase().trim();
       return get().savedAlbums.some(
         (a) => a.id.toLowerCase().trim() === clean || a.title.toLowerCase().trim() === clean
       );
+    },
+
+    saveAlbum: (album) => {
+      const { isAlbumSaved } = get();
+      if (!isAlbumSaved(album.id)) {
+        get().toggleSaveAlbum(album);
+      }
+    },
+
+    removeAlbum: (albumId: string) => {
+      const { isAlbumSaved } = get();
+      if (isAlbumSaved(albumId)) {
+        get().toggleSaveAlbum({ id: albumId, title: albumId });
+      }
     },
 
     toggleLikeSong: (track: Track) => {

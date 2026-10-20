@@ -51,7 +51,7 @@ export const AlbumCard: FC<AlbumCardProps> = ({
   onCopyLink,
   className,
 }) => {
-  const { isAlbumSaved, saveAlbum, removeAlbum } = useLibraryStore();
+  const { isAlbumSaved, saveAlbum, removeAlbum, toggleSaveAlbum } = useLibraryStore();
   const { showToast } = useToastStore();
 
   const albumId = id || title;
@@ -63,15 +63,25 @@ export const AlbumCard: FC<AlbumCardProps> = ({
       return;
     }
     if (isSavedAlbum) {
-      removeAlbum(albumId);
+      if (typeof removeAlbum === 'function') removeAlbum(albumId);
+      else toggleSaveAlbum({ id: albumId, title });
       showToast({ title: 'Removed album from library', variant: 'info' });
     } else {
-      saveAlbum({
-        id: albumId,
-        title,
-        artist: subtitle || 'Unknown Artist',
-        coverUrl,
-      });
+      if (typeof saveAlbum === 'function') {
+        saveAlbum({
+          id: albumId,
+          title,
+          artist: subtitle || 'Unknown Artist',
+          coverUrl,
+        });
+      } else {
+        toggleSaveAlbum({
+          id: albumId,
+          title,
+          artist: subtitle || 'Unknown Artist',
+          coverUrl,
+        });
+      }
       showToast({ title: 'Saved album to library', variant: 'success' });
     }
   };
@@ -91,7 +101,6 @@ export const AlbumCard: FC<AlbumCardProps> = ({
   return (
     <TrackContextMenuRoot triggerOnContextMenu className={cn('w-44 shrink-0', className)}>
       <div
-        role="button"
         tabIndex={0}
         data-testid="card"
         onKeyDown={(e) => {

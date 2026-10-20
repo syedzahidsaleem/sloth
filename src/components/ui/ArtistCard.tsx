@@ -48,11 +48,18 @@ export const ArtistCard: FC<ArtistCardProps> = ({
   onCopyLink,
   className,
 }) => {
-  const { isArtistFollowed, toggleFollowArtist } = useLibraryStore();
+  const { isFollowed: checkFollowed, isArtistFollowed, toggleFollowArtist } = useLibraryStore();
   const { showToast } = useToastStore();
 
   const artistId = id || name;
-  const isFollowedArtist = isFollowed !== undefined ? isFollowed : isArtistFollowed(artistId);
+  const isFollowedArtist =
+    isFollowed !== undefined
+      ? isFollowed
+      : typeof isArtistFollowed === 'function'
+        ? isArtistFollowed(artistId)
+        : typeof checkFollowed === 'function'
+          ? checkFollowed(artistId)
+          : false;
 
   const handleFollowToggle = () => {
     if (onFollowToggle) {
@@ -85,7 +92,6 @@ export const ArtistCard: FC<ArtistCardProps> = ({
   return (
     <TrackContextMenuRoot triggerOnContextMenu className={cn('w-40 shrink-0', className)}>
       <div
-        role="button"
         tabIndex={0}
         data-testid="artist-card"
         onKeyDown={(e) => {

@@ -100,23 +100,31 @@ export type TrackContextMenuTriggerProps = {
   asChild?: boolean;
 };
 
-export const TrackContextMenuTrigger = forwardRef<HTMLButtonElement, TrackContextMenuTriggerProps>(
+export const TrackContextMenuTrigger = forwardRef<HTMLDivElement, TrackContextMenuTriggerProps>(
   function TrackContextMenuTrigger({ children }, ref) {
     const { isOpen, setIsOpen } = useTrackContextMenu();
     return (
-      <button
+      <div
         ref={ref}
-        type="button"
+        role="button"
+        tabIndex={0}
         aria-haspopup="menu"
         aria-expanded={isOpen}
         onClick={(e) => {
           e.stopPropagation();
           setIsOpen(!isOpen);
         }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsOpen(!isOpen);
+          }
+        }}
         className="inline-flex cursor-pointer items-center justify-center"
       >
         {children}
-      </button>
+      </div>
     );
   },
 );

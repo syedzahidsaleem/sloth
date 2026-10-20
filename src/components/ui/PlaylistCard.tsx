@@ -98,7 +98,6 @@ export const PlaylistCard: FC<PlaylistCardProps> = ({
   return (
     <TrackContextMenuRoot triggerOnContextMenu className={cn('w-44 shrink-0', className)}>
       <div
-        role="button"
         tabIndex={0}
         data-testid="playlist-card"
         onKeyDown={(e) => {
