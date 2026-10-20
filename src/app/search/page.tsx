@@ -439,6 +439,7 @@ export const SearchPage: FC<SearchPageProps> = ({
               <button
                 key={tab.id}
                 type="button"
+                data-testid={`search-tab-${tab.id}`}
                 onClick={() => setActiveTab(tab.id as SearchTab)}
                 className={cn(
                   'px-3.5 py-1.5 rounded-md text-xs font-bold border-2 border-border shadow-[2px_2px_0px_var(--border)] cursor-pointer transition-transform hover:scale-105 active:scale-95',
