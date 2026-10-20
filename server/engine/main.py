@@ -556,3 +556,57 @@ def smart_shuffle_order(req: ShuffleOrderRequest):
     }
 
 
+class MoodUpdateRequest(BaseModel):
+    valence: float = Field(..., ge=0.0, le=1.0, description="Russell circumplex valence [0.0 - 1.0]")
+    arousal: float = Field(..., ge=0.0, le=1.0, description="Russell circumplex arousal [0.0 - 1.0]")
+    user_id: Optional[str] = Field(default="user_primary", description="User ID for preference update")
+
+
+CURRENT_MOOD_BIAS = {"valence": 0.5, "arousal": 0.5}
+
+
+@app.post("/api/engine/mood")
+@app.post("/engine/mood")
+def update_engine_mood(req: MoodUpdateRequest):
+    """
+    Updates the active recommendation engine mood bias in Russell's circumplex space.
+    Affects subsequent recommendation seeds and playlist diffusion.
+    """
+    global CURRENT_MOOD_BIAS
+    CURRENT_MOOD_BIAS["valence"] = req.valence
+    CURRENT_MOOD_BIAS["arousal"] = req.arousal
+
+    # Persist into user_prefs SQLite table if available
+    db_path = DEFAULT_DB_PATH
+    try:
+        if os.path.exists(db_path):
+            conn = sqlite3.connect(db_path, timeout=2.0)
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT OR REPLACE INTO user_prefs (key, value) VALUES (?, ?)",
+                ("mood_arc", json.dumps({"valence": req.valence, "arousal": req.arousal})),
+            )
+            conn.commit()
+            conn.close()
+    except Exception as e:
+        logger.warning(f"Could not persist mood_arc to user_prefs: {e}")
+
+    return {
+        "status": "ok",
+        "valence": req.valence,
+        "arousal": req.arousal,
+        "bias": CURRENT_MOOD_BIAS,
+    }
+
+
+@app.get("/api/engine/mood")
+@app.get("/engine/mood")
+def get_engine_mood():
+    return {
+        "status": "ok",
+        "valence": CURRENT_MOOD_BIAS["valence"],
+        "arousal": CURRENT_MOOD_BIAS["arousal"],
+    }
+
+
+

@@ -644,6 +644,19 @@ export default function App() {
               onTabChange={handleTabChange}
               onOpenPreferences={() => openSettingsTab('appearance')}
               isCompact={isLeftCollapsed}
+              currentTrack={currentTrack}
+              onNavigate={(r) => {
+                setRoute(r);
+                if (r.view === 'dashboard' || r.view === 'home') {
+                  setActiveTab('dashboard');
+                } else if (r.view === 'playlists') {
+                  setActiveTab('playlists');
+                } else if (r.view === 'favorite-artists') {
+                  setActiveTab('favorite-artists');
+                } else if (r.view === 'favorite-albums') {
+                  setActiveTab('favorite-albums');
+                }
+              }}
             />
           </PlayerWorkspace.LeftSidebar>
 
