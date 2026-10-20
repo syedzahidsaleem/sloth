@@ -342,38 +342,36 @@ export class MetrolistLyricsFetcher {
     const cleanedA = cleanArtist(artist);
 
     let bestTrack: LrcLibTrack | null = null;
+    let bestScore = -1;
 
-    if (duration === -1) {
-      // Pick best by string similarity and preference for synced lyrics
-      let bestScore = -1;
-      for (const track of tracks) {
-        let score = 0;
-        if (track.syncedLyrics) score += 1.0;
+    for (const track of tracks) {
+      const raw = track.syncedLyrics || track.plainLyrics;
+      if (!raw) continue;
 
-        const titleSim = calculateStringSimilarity(cleanedT, track.trackName);
-        const artistSim = calculateStringSimilarity(cleanedA, track.artistName);
-        score += (titleSim + artistSim) / 2.0;
+      let score = 0;
+      // High priority bonus for synced lyrics
+      if (track.syncedLyrics) score += 2.0;
 
-        if (score > bestScore) {
-          bestScore = score;
-          bestTrack = track;
+      // Title & artist string similarity (highest weight)
+      const titleSim = calculateStringSimilarity(cleanedT, track.trackName);
+      const artistSim = calculateStringSimilarity(cleanedA, track.artistName);
+      score += titleSim * 2.5 + artistSim * 1.5;
+
+      // Duration proximity (relaxed tolerance for music video intros/outros)
+      if (duration > 0 && track.duration > 0) {
+        const diff = Math.abs(track.duration - duration);
+        if (diff <= 10) {
+          score += 1.0;
+        } else if (diff <= 40) {
+          score += 0.5;
+        } else {
+          score -= Math.min(1.0, (diff - 40) / 100);
         }
       }
-    } else {
-      // Metrolist Relaxed duration matching: ±5 seconds
-      const candidates = tracks.filter((t) => Math.abs(t.duration - duration) <= 5);
-      if (candidates.length > 0) {
-        // Prioritize synced lyrics, then closest duration
-        candidates.sort((a, b) => {
-          if (a.syncedLyrics && !b.syncedLyrics) return -1;
-          if (!a.syncedLyrics && b.syncedLyrics) return 1;
-          return Math.abs(a.duration - duration) - Math.abs(b.duration - duration);
-        });
-        bestTrack = candidates[0];
-      } else {
-        // Fallback to closest duration overall
-        const sorted = [...tracks].sort((a, b) => Math.abs(a.duration - duration) - Math.abs(b.duration - duration));
-        bestTrack = sorted[0];
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestTrack = track;
       }
     }
 
