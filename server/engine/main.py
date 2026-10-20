@@ -279,16 +279,71 @@ def search_catalog(q: str = Query(..., min_length=1), limit: int = Query(default
     return {"query": q, "results": tracks}
 
 
+STREAM_CACHE: Dict[str, Any] = {}
+
+
+@app.get("/api/stream/resolve")
 @app.get("/api/resolve")
 @app.get("/resolve")
-def resolve_track_audio(title: str = Query(...), artist: str = Query(default=""), id: Optional[str] = Query(default=None)):
+def resolve_track_audio(
+    q: Optional[str] = Query(default=None),
+    title: Optional[str] = Query(default=None),
+    artist: str = Query(default=""),
+    id: Optional[str] = Query(default=None),
+):
     """
-    Instantly resolves a playable audio stream for any track by title and artist.
+    Instantly resolves a genuine full-length playable audio stream starting from 0:00.
+    Prioritizes YouTube Music via yt_dlp for complete track playback and accurate duration;
+    gracefully falls back to iTunes if needed.
     """
     import urllib.request
     import urllib.parse
 
-    query = f"{title} {artist}".strip()
+    query = (q or f"{title or ''} {artist}".strip()).strip()
+    if not query and id:
+        query = id
+
+    if not query:
+        return {"status": "error", "message": "No query provided"}
+
+    # 1. Check in-memory stream cache
+    if query in STREAM_CACHE:
+        return STREAM_CACHE[query]
+
+    # 2. Extract genuine full audio stream via yt_dlp starting at 0:00
+    try:
+        import yt_dlp
+        ydl_opts = {
+            'format': 'bestaudio[ext=m4a]/bestaudio/best',
+            'quiet': True,
+            'extract_flat': False,
+            'noplaylist': True,
+            'default_search': 'ytsearch1',
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            target = query if (query.startswith("http") or query.startswith("yt-")) else f"ytsearch1:{query}"
+            if query.startswith("yt-"):
+                target = query.replace("yt-", "")
+            info = ydl.extract_info(target, download=False)
+            entry = info['entries'][0] if ('entries' in info and info['entries']) else info
+            stream_url = entry.get('url')
+            if stream_url:
+                result = {
+                    "status": "ok",
+                    "audioUrl": stream_url,
+                    "streamUrl": stream_url,
+                    "title": entry.get("title") or title or query,
+                    "artist": entry.get("uploader") or artist or "",
+                    "durationSeconds": entry.get("duration") or 210,
+                    "coverUrl": entry.get("thumbnail"),
+                    "source": "youtube",
+                }
+                STREAM_CACHE[query] = result
+                return result
+    except Exception as e:
+        logger.warning(f"yt_dlp stream resolve error for '{query}': {e}")
+
+    # 3. Fallback: query iTunes if yt_dlp is unavailable or times out
     try:
         itunes_url = f"https://itunes.apple.com/search?term={urllib.parse.quote(query)}&entity=song&limit=3"
         req = urllib.request.Request(itunes_url, headers={"User-Agent": "Mozilla/5.0"})
@@ -296,16 +351,20 @@ def resolve_track_audio(title: str = Query(...), artist: str = Query(default="")
         results = res.get("results", [])
         if results:
             best = results[0]
-            return {
+            result = {
                 "status": "ok",
                 "audioUrl": best.get("previewUrl"),
+                "streamUrl": best.get("previewUrl"),
                 "title": best.get("trackName"),
                 "artist": best.get("artistName"),
                 "durationSeconds": int(best.get("trackTimeMillis", 0) / 1000) or 210,
-                "coverUrl": (best.get("artworkUrl100") or "").replace("100x100bb", "600x600bb")
+                "coverUrl": (best.get("artworkUrl100") or "").replace("100x100bb", "600x600bb"),
+                "source": "itunes",
             }
+            STREAM_CACHE[query] = result
+            return result
     except Exception as e:
-        logger.warning(f"Stream resolve error: {e}")
+        logger.warning(f"iTunes stream resolve error: {e}")
 
     return {"status": "error", "message": "No stream found"}
 
