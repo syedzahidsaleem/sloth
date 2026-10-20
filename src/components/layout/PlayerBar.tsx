@@ -1,4 +1,4 @@
-import { FC, useRef } from 'react';
+import { FC, useRef, useState } from 'react';
 import {
   Play,
   Pause,
@@ -12,6 +12,7 @@ import {
   Music2,
   Heart,
   ListMusic,
+  Mic2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Slider } from '@/components/ui/Slider';
@@ -40,6 +41,9 @@ export interface PlayerBarProps {
   onMuteToggle?: () => void;
   isQueueOpen?: boolean;
   onQueueToggle?: () => void;
+  isLyricsOpen?: boolean;
+  onLyricsToggle?: () => void;
+  onArtworkClick?: () => void;
   onTitleClick?: () => void;
   onArtistClick?: () => void;
   className?: string;
@@ -75,6 +79,9 @@ export const PlayerBar: FC<PlayerBarProps> = ({
   onMuteToggle,
   isQueueOpen = false,
   onQueueToggle,
+  isLyricsOpen = false,
+  onLyricsToggle,
+  onArtworkClick,
   onTitleClick,
   onArtistClick,
   className = '',
@@ -87,6 +94,11 @@ export const PlayerBar: FC<PlayerBarProps> = ({
   const remainingSeconds = Math.max(0, totalDurationSeconds - progressSeconds);
 
   const seekRef = useRef<HTMLDivElement>(null);
+  const lastPrevClickRef = useRef<number>(0);
+
+  // Hover timestamp tooltip preview on seekbar
+  const [hoverTime, setHoverTime] = useState<number | null>(null);
+  const [hoverPercent, setHoverPercent] = useState<number | null>(null);
 
   const calculateAndSeek = (clientX: number) => {
     if (!onSeek || totalDurationSeconds <= 0 || !seekRef.current) return;
@@ -117,6 +129,37 @@ export const PlayerBar: FC<PlayerBarProps> = ({
     window.addEventListener('mouseup', onMouseUp);
   };
 
+  const handleSeekMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!seekRef.current || totalDurationSeconds <= 0) return;
+    const rect = seekRef.current.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    setHoverTime(ratio * totalDurationSeconds);
+    setHoverPercent(ratio * 100);
+  };
+
+  const handleSeekMouseLeave = () => {
+    setHoverTime(null);
+    setHoverPercent(null);
+  };
+
+  // Previous button double-click vs single-click logic
+  const handlePrevClick = () => {
+    const now = Date.now();
+    const isDoubleClick = now - lastPrevClickRef.current < 400;
+    lastPrevClickRef.current = now;
+
+    if (isDoubleClick) {
+      onPrevious?.();
+      return;
+    }
+
+    if (progressSeconds > 3 && onSeek) {
+      onSeek(0);
+    } else {
+      onPrevious?.();
+    }
+  };
+
   return (
     <footer
       data-testid="player-bar"
@@ -126,14 +169,26 @@ export const PlayerBar: FC<PlayerBarProps> = ({
       )}
       aria-label="Audio Player Controls"
     >
-      {/* 1. Full-Width Top Progress / Seek Bar */}
+      {/* 1. Full-Width Top Progress / Seek Bar with Hover Timestamp Preview */}
       <div
         ref={seekRef}
         data-testid="player-seek-bar"
         className="border-border surface-seekbar-track relative h-4 w-full cursor-pointer border-t-(length:--border-width) select-none"
         onClick={handleSeekClick}
         onMouseDown={handleMouseDown}
+        onMouseMove={handleSeekMouseMove}
+        onMouseLeave={handleSeekMouseLeave}
       >
+        {/* Floating Timestamp Tooltip Preview */}
+        {hoverTime !== null && hoverPercent !== null && (
+          <div
+            style={{ left: `${hoverPercent}%` }}
+            className="pointer-events-none absolute -top-7 -translate-x-1/2 z-30 px-1.5 py-0.5 rounded bg-black/90 text-white text-[10px] font-mono border border-border/40 shadow-sm whitespace-nowrap"
+          >
+            {formatTime(hoverTime)}
+          </div>
+        )}
+
         {/* Timecodes: elapsed left, remaining right */}
         <div className="pointer-events-none absolute inset-0 z-10 flex flex-row items-center justify-between px-2 text-[11px] font-mono leading-none font-medium pt-0.5">
           <span className="tabular-nums text-foreground">{formatTime(progressSeconds)}</span>
@@ -151,7 +206,14 @@ export const PlayerBar: FC<PlayerBarProps> = ({
       <div className="grid h-14 w-full grid-cols-[1fr_auto_1fr] items-center px-4 gap-4">
         {/* LEFT COLUMN: Square Artwork + Track Info + Favorite */}
         <div className="flex min-w-0 items-center gap-3">
-          <div className="border-border bg-muted size-11 shrink-0 overflow-hidden rounded-md border-(length:--border-width)">
+          <div
+            className={cn(
+              'border-border bg-muted size-11 shrink-0 overflow-hidden rounded-md border-(length:--border-width)',
+              onArtworkClick && 'cursor-pointer hover:opacity-90 active:scale-95 transition-transform'
+            )}
+            onClick={onArtworkClick}
+            title={title ? `View ${title}` : undefined}
+          >
             {coverUrl ? (
               <img
                 src={coverUrl}
@@ -198,6 +260,7 @@ export const PlayerBar: FC<PlayerBarProps> = ({
               aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
               aria-pressed={isFavorite}
               className="shrink-0"
+              data-testid="player-favorite-button"
             >
               <Heart
                 size={16}
@@ -225,11 +288,12 @@ export const PlayerBar: FC<PlayerBarProps> = ({
             <Shuffle size={16} />
           </Button>
 
-          {/* Previous Button */}
+          {/* Previous Button (Single-click / double-click logic) */}
           <Button
             size="icon"
             variant="text"
-            onClick={onPrevious}
+            onClick={handlePrevClick}
+            data-testid="player-prev-button"
             title="Previous track"
             aria-label="Previous track"
           >
@@ -270,6 +334,7 @@ export const PlayerBar: FC<PlayerBarProps> = ({
             size="icon"
             variant={repeatMode !== 'off' ? 'default' : 'text'}
             onClick={onRepeatToggle}
+            data-testid="player-repeat-button"
             title={`Repeat: ${repeatMode}`}
             aria-label="Repeat"
             aria-pressed={repeatMode !== 'off'}
@@ -278,8 +343,25 @@ export const PlayerBar: FC<PlayerBarProps> = ({
           </Button>
         </div>
 
-        {/* RIGHT COLUMN: Queue Toggle + Volume Icon & Horizontal Slider */}
+        {/* RIGHT COLUMN: Lyrics Toggle + Queue Toggle + Volume Icon & Horizontal Slider */}
         <div className="flex items-center justify-end gap-2">
+          {onLyricsToggle && (
+            <Button
+              size="icon-sm"
+              variant={isLyricsOpen ? 'default' : 'text'}
+              onClick={onLyricsToggle}
+              data-testid="player-lyrics-button"
+              title={isLyricsOpen ? 'Close Lyrics' : 'Open Lyrics'}
+              aria-label="Lyrics"
+              aria-pressed={isLyricsOpen}
+              className={cn('size-8 transition-transform active:scale-95', {
+                'border-2 border-border shadow-[2px_2px_0px_var(--border)]': isLyricsOpen,
+              })}
+            >
+              <Mic2 size={16} />
+            </Button>
+          )}
+
           {onQueueToggle && (
             <Button
               size="icon-sm"
@@ -301,13 +383,24 @@ export const PlayerBar: FC<PlayerBarProps> = ({
             size="icon-sm"
             variant="text"
             onClick={onMuteToggle}
+            data-testid="player-mute-button"
             title={isMuted ? 'Unmute' : 'Mute'}
             aria-label={isMuted ? 'Unmute' : 'Mute'}
           >
             {isMuted || volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
           </Button>
 
-          <div className="w-24" data-testid="player-volume-slider">
+          {/* Volume slider with mouse wheel support */}
+          <div
+            className="w-24 cursor-pointer"
+            data-testid="player-volume-slider"
+            title="Volume (scroll to adjust)"
+            onWheel={(e) => {
+              e.preventDefault();
+              const step = e.deltaY < 0 ? 5 : -5;
+              onVolumeChange?.(Math.max(0, Math.min(100, (volume ?? 80) + step)));
+            }}
+          >
             <Slider
               value={isMuted ? 0 : volume}
               min={0}

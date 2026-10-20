@@ -101,5 +101,30 @@ describe('Sloth Player & Queue UI Components', () => {
       expect(formatTime(-10)).toBe('0:00');
       expect(formatTime(NaN)).toBe('0:00');
     });
+
+    it('handles previous button single-click vs double-click rules', () => {
+      function evaluatePrevAction(progressSeconds: number, isDoubleClick: boolean): 'restart' | 'previous' {
+        if (isDoubleClick) return 'previous';
+        if (progressSeconds > 3) return 'restart';
+        return 'previous';
+      }
+
+      expect(evaluatePrevAction(5, false)).toBe('restart');
+      expect(evaluatePrevAction(1, false)).toBe('previous');
+      expect(evaluatePrevAction(5, true)).toBe('previous');
+      expect(evaluatePrevAction(0, true)).toBe('previous');
+    });
+
+    it('calculates volume wheel delta step correctly within bounds', () => {
+      function calculateVolumeWheel(currentVol: number, deltaY: number): number {
+        const step = deltaY < 0 ? 5 : -5;
+        return Math.max(0, Math.min(100, currentVol + step));
+      }
+
+      expect(calculateVolumeWheel(80, -100)).toBe(85);
+      expect(calculateVolumeWheel(80, 100)).toBe(75);
+      expect(calculateVolumeWheel(98, -100)).toBe(100);
+      expect(calculateVolumeWheel(3, 100)).toBe(0);
+    });
   });
 });

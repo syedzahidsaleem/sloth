@@ -570,6 +570,31 @@ export default function App() {
             onMuteToggle={() => setIsMuted(!isMuted)}
             isQueueOpen={!isRightCollapsed}
             onQueueToggle={() => setIsRightCollapsed((prev) => !prev)}
+            isLyricsOpen={route.view === 'lyrics'}
+            onLyricsToggle={() => {
+              if (route.view === 'lyrics') {
+                setRoute({ view: 'dashboard' });
+                setActiveTab('dashboard');
+              } else {
+                setRoute({ view: 'lyrics' });
+                setActiveTab('lyrics' as any);
+              }
+            }}
+            onArtworkClick={() => {
+              if (currentTrack.album) {
+                setRoute({ view: 'album', id: currentTrack.album });
+              }
+            }}
+            onTitleClick={() => {
+              if (currentTrack.album) {
+                setRoute({ view: 'album', id: currentTrack.album });
+              }
+            }}
+            onArtistClick={() => {
+              if (currentTrack.artist) {
+                setRoute({ view: 'artist', id: currentTrack.artist });
+              }
+            }}
           />
         }
       >
@@ -752,9 +777,24 @@ export default function App() {
               isPlaying={isPlaying}
               isCollapsed={isRightCollapsed}
               onTrackSelect={handlePlayTrack}
+              onTrackPlay={handlePlayTrack}
               onRemoveTrack={(trackId) => setQueue((prev) => prev.filter((t) => t.id !== trackId))}
               onClearQueue={() => setQueue([])}
               onToggleCollapse={() => setIsRightCollapsed(!isRightCollapsed)}
+              onPlayNext={(track) => {
+                const nextIdx = currentTrackIndex + 1;
+                const without = queue.filter((t) => t.id !== track.id);
+                without.splice(nextIdx, 0, track);
+                setQueue(without);
+              }}
+              onReorderQueue={(fromIdx, toIdx) => {
+                const updated = [...queue];
+                const [moved] = updated.splice(fromIdx, 1);
+                updated.splice(toIdx, 0, moved);
+                setQueue(updated);
+              }}
+              onNavigateToArtist={(art) => setRoute({ view: 'artist', id: art })}
+              onNavigateToAlbum={(alb) => setRoute({ view: 'album', id: alb })}
               recommendations={recommendations}
               onAddRecommendationToQueue={(track) => setQueue((prev) => [...prev, track])}
               isLoadingRecommendations={isLoadingRecommendations}
