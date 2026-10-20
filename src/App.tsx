@@ -191,6 +191,10 @@ export default function App() {
   // History tracking
   const [historyTracks, setHistoryTracks] = useState<Track[]>([]);
 
+  // Engine recommendations & Autoplay queue
+  const [recommendations, setRecommendations] = useState<Track[]>([]);
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState<boolean>(false);
+
   // Ask Sloth natural language command palette
   const askSloth = useAskSloth();
 
@@ -292,6 +296,52 @@ export default function App() {
       }
     }
   }, [isPlaying]);
+
+  // Fetch engine recommendations based on currently playing track
+  useEffect(() => {
+    if (!currentTrack.title) return;
+    let isCancelled = false;
+    setIsLoadingRecommendations(true);
+
+    const fetchRecommendations = async () => {
+      try {
+        const res = await fetch(
+          `http://127.0.0.1:8001/api/engine/recommend/next?title=${encodeURIComponent(
+            currentTrack.title
+          )}&artist=${encodeURIComponent(currentTrack.artist || '')}&limit=15`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (!isCancelled && data && Array.isArray(data.recommendations) && data.recommendations.length > 0) {
+            setRecommendations(
+              data.recommendations.map((r: any) => ({
+                id: r.id || `rec-${Math.random()}`,
+                title: r.title,
+                artist: r.artist,
+                album: r.album || 'Single',
+                durationSeconds: r.durationSeconds || 210,
+                coverUrl: r.coverUrl,
+                audioUrl: r.audioUrl,
+                isFavorite: false,
+              }))
+            );
+            setIsLoadingRecommendations(false);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Recommendation fetch failed:', err);
+      }
+      if (!isCancelled) {
+        setIsLoadingRecommendations(false);
+      }
+    };
+
+    fetchRecommendations();
+    return () => {
+      isCancelled = true;
+    };
+  }, [currentTrack.title, currentTrack.artist]);
 
   // Sync volume and mute to real audio element
   useEffect(() => {
@@ -400,14 +450,40 @@ export default function App() {
   }, []);
 
   const handleNextTrack = () => {
-    if (queue.length === 0) return;
+    if (queue.length === 0) {
+      if (recommendations.length > 0) {
+        const nextTrack = recommendations[0];
+        setRecommendations((prev) => prev.slice(1));
+        handlePlayTrack(nextTrack);
+      }
+      return;
+    }
+
     if (isShuffle) {
       const nextIdx = Math.floor(Math.random() * queue.length);
       setCurrentTrackIndex(nextIdx);
-    } else {
-      setCurrentTrackIndex((prev) => (prev + 1) % queue.length);
+      setProgress(0);
+      return;
     }
-    setProgress(0);
+
+    // If at the end of the current queue:
+    if (currentTrackIndex >= queue.length - 1) {
+      if (repeatMode === 'all') {
+        setCurrentTrackIndex(0);
+        setProgress(0);
+      } else if (recommendations.length > 0) {
+        // Autoplay next recommended song based on previous track!
+        const nextTrack = recommendations[0];
+        setRecommendations((prev) => prev.slice(1));
+        handlePlayTrack(nextTrack);
+      } else {
+        setCurrentTrackIndex(0);
+        setProgress(0);
+      }
+    } else {
+      setCurrentTrackIndex((prev) => prev + 1);
+      setProgress(0);
+    }
   };
 
   const handlePreviousTrack = () => {
@@ -492,6 +568,8 @@ export default function App() {
             isMuted={isMuted}
             onVolumeChange={setVolume}
             onMuteToggle={() => setIsMuted(!isMuted)}
+            isQueueOpen={!isRightCollapsed}
+            onQueueToggle={() => setIsRightCollapsed((prev) => !prev)}
           />
         }
       >
@@ -595,8 +673,9 @@ export default function App() {
                 trackTitle={currentTrack.title}
                 artistName={currentTrack.artist}
                 albumName={currentTrack.album}
+                durationSeconds={currentTrack.durationSeconds}
                 progressSeconds={progress}
-                onSeek={(sec) => setProgress(sec)}
+                onSeek={handleSeek}
               />
             )}
 
@@ -676,6 +755,9 @@ export default function App() {
               onRemoveTrack={(trackId) => setQueue((prev) => prev.filter((t) => t.id !== trackId))}
               onClearQueue={() => setQueue([])}
               onToggleCollapse={() => setIsRightCollapsed(!isRightCollapsed)}
+              recommendations={recommendations}
+              onAddRecommendationToQueue={(track) => setQueue((prev) => [...prev, track])}
+              isLoadingRecommendations={isLoadingRecommendations}
             />
           </PlayerWorkspace.RightSidebar>
         </PlayerWorkspace>
