@@ -276,9 +276,9 @@ export default function App() {
     }
   }, [isPlaying]);
 
-  // Fetch engine recommendations based on currently playing track
+  // Fetch engine recommendations based on currently playing track and populate Spotify-style autoplay queue
   useEffect(() => {
-    if (!currentTrack.title) return;
+    if (!currentTrack.title || currentTrack.title === 'No track playing') return;
     let isCancelled = false;
     setIsLoadingRecommendations(true);
 
@@ -292,18 +292,37 @@ export default function App() {
         if (res.ok) {
           const data = await res.json();
           if (!isCancelled && data && Array.isArray(data.recommendations) && data.recommendations.length > 0) {
-            setRecommendations(
-              data.recommendations.map((r: any) => ({
-                id: r.id || `rec-${Math.random()}`,
-                title: r.title,
-                artist: r.artist,
-                album: r.album || 'Single',
-                durationSeconds: r.durationSeconds || 210,
-                coverUrl: r.coverUrl,
-                audioUrl: r.audioUrl,
-                isFavorite: false,
-              }))
-            );
+            const recTracks: Track[] = data.recommendations.map((r: any) => ({
+              id: r.id || `rec-${Math.random()}`,
+              title: r.title,
+              artist: r.artist,
+              album: r.album || 'Single',
+              durationSeconds: r.durationSeconds || 210,
+              coverUrl: r.coverUrl,
+              audioUrl: r.audioUrl,
+              isFavorite: false,
+            }));
+
+            setRecommendations(recTracks);
+
+            // Spotify Autoplay: Automatically populate upcoming queue with seed-matched songs!
+            setQueue((prevQueue) => {
+              if (prevQueue.length <= 1) {
+                const seed = prevQueue[0] || currentTrack;
+                const filtered = recTracks.filter(
+                  (t) => t.id !== seed.id && t.title.toLowerCase() !== seed.title.toLowerCase()
+                );
+                return [seed, ...filtered];
+              }
+              const upcomingCount = prevQueue.length - (currentTrackIndex + 1);
+              if (upcomingCount < 3) {
+                const existingIds = new Set(prevQueue.map((t) => t.id));
+                const newItems = recTracks.filter((t) => !existingIds.has(t.id));
+                return [...prevQueue, ...newItems];
+              }
+              return prevQueue;
+            });
+
             setIsLoadingRecommendations(false);
             return;
           }
@@ -320,7 +339,7 @@ export default function App() {
     return () => {
       isCancelled = true;
     };
-  }, [currentTrack.title, currentTrack.artist]);
+  }, [currentTrack.title, currentTrack.artist, currentTrackIndex]);
 
   // Sync volume and mute to real audio element
   useEffect(() => {

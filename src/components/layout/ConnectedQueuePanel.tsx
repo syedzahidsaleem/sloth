@@ -1,4 +1,11 @@
-import { FC, useState, useRef } from 'react';
+/**
+ * Sloth UI — Connected Queue Panel Component
+ * Spotify-Style Unified Queue with Now Playing, Up Next, Live Drag Reordering,
+ * Double-click Playback, Context Menus, and Autoplay Integration.
+ * Author: Syed Zahid Saleem <syedzahidsaleem2@gmail.com>
+ */
+
+import { FC, useState } from 'react';
 import {
   Music,
   Trash2,
@@ -6,9 +13,6 @@ import {
   Pause,
   X,
   MoreHorizontal,
-  Sparkles,
-  Plus,
-  Check,
   GripVertical,
   ListPlus,
   ListOrdered,
@@ -17,6 +21,7 @@ import {
   Disc,
   Share2,
   ListMusic,
+  Radio,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Track } from '@/components/ui/TrackRow';
@@ -78,24 +83,16 @@ export const ConnectedQueuePanel: FC<ConnectedQueuePanelProps> = ({
   onAddToLikedSongs,
   onNavigateToArtist,
   onNavigateToAlbum,
-  recommendations: propRecommendations,
-  onAddRecommendationToQueue,
-  isLoadingRecommendations: propIsLoadingRecs,
 }) => {
-  // Store fallback integration
   const store = useQueueStore();
   const { playlists, addTrackToPlaylist } = usePlaylistStore();
   const { showToast } = useToastStore();
+
   const queue = propQueue ?? store.items;
   const currentTrackId =
     propCurrentTrackId ?? (store.items[store.currentIndex]?.id || '');
   const isPlaying = propIsPlaying ?? store.isPlaying;
-  const recommendations = propRecommendations ?? store.recommendations;
-  const isLoadingRecommendations =
-    propIsLoadingRecs ?? store.isLoadingRecommendations;
 
-  const [activeTab, setActiveTab] = useState<'queue' | 'recommended'>('queue');
-  const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
@@ -103,32 +100,19 @@ export const ConnectedQueuePanel: FC<ConnectedQueuePanelProps> = ({
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const [playlistName, setPlaylistName] = useState('My Queue Playlist');
 
+  const currentIndex = queue.findIndex((t) => t.id === currentTrackId);
   const currentTrack =
-    queue.find((t) => t.id === currentTrackId) || queue[0];
+    currentIndex !== -1 ? queue[currentIndex] : queue[0];
+  const upcomingTracks =
+    currentIndex !== -1 ? queue.slice(currentIndex + 1) : queue;
 
-  const handleAddRec = (track: Track) => {
-    if (onAddRecommendationToQueue) {
-      onAddRecommendationToQueue(track);
-    } else {
-      store.addToQueue(track);
-    }
-    setAddedIds((prev) => new Set([...prev, track.id]));
-    setTimeout(() => {
-      setAddedIds((prev) => {
-        const next = new Set(prev);
-        next.delete(track.id);
-        return next;
-      });
-    }, 2000);
-  };
-
-  const handlePlayDirect = (track: Track, index: number) => {
+  const handlePlayDirect = (track: Track, globalIndex: number) => {
     if (onTrackPlay) {
       onTrackPlay(track);
     } else if (onTrackSelect) {
       onTrackSelect(track);
     } else {
-      store.playTrackAtIndex(index);
+      store.playTrackAtIndex(globalIndex);
     }
   };
 
@@ -154,7 +138,6 @@ export const ConnectedQueuePanel: FC<ConnectedQueuePanelProps> = ({
     if (onSaveAsPlaylist) {
       onSaveAsPlaylist(playlistName.trim(), trackIds);
     } else {
-      // Store in localStorage saved playlists
       try {
         const existingRaw = localStorage.getItem('sloth:playlists');
         const existing = existingRaw ? JSON.parse(existingRaw) : [];
@@ -174,9 +157,10 @@ export const ConnectedQueuePanel: FC<ConnectedQueuePanelProps> = ({
       }
     }
     setIsPlaylistModalOpen(false);
+    showToast({ title: `Saved queue as playlist "${playlistName.trim()}"`, variant: 'success' });
   };
 
-  // Drag and Drop reordering handlers
+  // Drag and Drop reordering handlers (maps upcoming relative index to global queue index)
   const handleDragStart = (idx: number) => {
     setDraggedIdx(idx);
   };
@@ -189,10 +173,12 @@ export const ConnectedQueuePanel: FC<ConnectedQueuePanelProps> = ({
 
   const handleDrop = (idx: number) => {
     if (draggedIdx !== null && draggedIdx !== idx) {
+      const globalFrom = currentIndex !== -1 ? currentIndex + 1 + draggedIdx : draggedIdx;
+      const globalTo = currentIndex !== -1 ? currentIndex + 1 + idx : idx;
       if (onReorderQueue) {
-        onReorderQueue(draggedIdx, idx);
+        onReorderQueue(globalFrom, globalTo);
       } else {
-        store.reorderQueue(draggedIdx, idx);
+        store.reorderQueue(globalFrom, globalTo);
       }
     }
     setDraggedIdx(null);
@@ -242,390 +228,330 @@ export const ConnectedQueuePanel: FC<ConnectedQueuePanelProps> = ({
       data-testid="queue-panel"
       className="flex h-full flex-col overflow-hidden select-none font-sans"
     >
-      {/* Top Header & Tab Switcher */}
-      <div className="flex flex-col gap-2 px-2 pb-2 border-b-2 border-border/20">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1 bg-black/10 p-0.5 rounded-md border border-border/40">
-            <button
-              type="button"
-              data-testid="queue-tab-button"
-              onClick={() => setActiveTab('queue')}
-              className={cn(
-                'px-2.5 py-1 text-xs font-bold rounded cursor-pointer transition-colors',
-                activeTab === 'queue'
-                  ? 'bg-[var(--primary)] text-foreground shadow-[1px_1px_0px_var(--border)]'
-                  : 'text-foreground/70 hover:text-foreground',
-              )}
-            >
-              Queue ({queue.length})
-            </button>
-            <button
-              type="button"
-              data-testid="recommended-tab-button"
-              onClick={() => setActiveTab('recommended')}
-              className={cn(
-                'px-2.5 py-1 text-xs font-bold rounded cursor-pointer transition-colors flex items-center gap-1',
-                activeTab === 'recommended'
-                  ? 'bg-[var(--primary)] text-foreground shadow-[1px_1px_0px_var(--border)]'
-                  : 'text-foreground/70 hover:text-foreground',
-              )}
-            >
-              <Sparkles size={12} />
-              Recommended ({recommendations.length})
-            </button>
-          </div>
+      {/* Top Header: Queue Title & Actions */}
+      <div className="flex items-center justify-between px-3 py-2.5 border-b-2 border-border/20 shrink-0">
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-extrabold uppercase tracking-wider text-foreground">
+            Queue
+          </h2>
+          <span className="text-xs font-mono text-foreground/60">
+            ({queue.length})
+          </span>
+        </div>
 
-          <div className="flex items-center gap-1.5">
-            {activeTab === 'queue' && queue.length > 0 && (
-              <>
-                <Button
-                  size="icon-sm"
-                  variant="default"
-                  onClick={() => setIsPlaylistModalOpen(true)}
-                  className="size-7 rounded p-0 flex items-center justify-center border-2 border-border shadow-[2px_2px_0px_var(--border)]"
-                  title="Save queue as playlist"
-                  data-testid="save-queue-playlist-button"
-                >
-                  <ListPlus size={13} />
-                </Button>
+        <div className="flex items-center gap-1.5">
+          {queue.length > 0 && (
+            <>
+              <Button
+                size="icon-sm"
+                variant="default"
+                onClick={() => setIsPlaylistModalOpen(true)}
+                className="size-7 rounded p-0 flex items-center justify-center border-2 border-border shadow-[2px_2px_0px_var(--border)] cursor-pointer hover:scale-105 active:scale-95"
+                title="Save queue as playlist"
+                data-testid="save-queue-playlist-button"
+              >
+                <ListPlus size={13} />
+              </Button>
 
-                <Button
-                  size="icon-sm"
-                  variant="default"
-                  onClick={handleClear}
-                  className="size-7 rounded p-0 flex items-center justify-center border-2 border-border shadow-[2px_2px_0px_var(--border)]"
-                  title="Clear queue"
-                  data-testid="clear-queue-button"
-                >
-                  <Trash2 size={13} />
-                </Button>
-              </>
-            )}
-          </div>
+              <Button
+                size="icon-sm"
+                variant="default"
+                onClick={handleClear}
+                className="size-7 rounded p-0 flex items-center justify-center border-2 border-border shadow-[2px_2px_0px_var(--border)] cursor-pointer hover:scale-105 active:scale-95"
+                title="Clear queue"
+                data-testid="clear-queue-button"
+              >
+                <Trash2 size={13} />
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Main Tab Content */}
-      <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-2">
-        {activeTab === 'queue' ? (
-          /* TAB 1: ZONE A (NEXT UP) */
-          queue.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-              <Music size={44} className="opacity-40 text-foreground" />
-              <div>
-                <div className="text-sm font-bold text-foreground">
-                  Queue is empty
-                </div>
-                <div className="mt-1 text-xs opacity-60 text-foreground">
-                  Tracks you play will appear here.
-                </div>
+      {/* Main Scrollable Queue View */}
+      <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-3">
+        {queue.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+            <Music size={44} className="opacity-40 text-foreground" />
+            <div>
+              <div className="text-sm font-bold text-foreground">
+                Queue is empty
+              </div>
+              <div className="mt-1 text-xs opacity-60 text-foreground">
+                Play a song to start intelligent autoplay queue.
               </div>
             </div>
-          ) : (
-            queue.map((track, index) => {
-              const isCurrent = track.id === currentTrackId;
-              const isDragging = draggedIdx === index;
-              const isDragOver = dragOverIdx === index;
+          </div>
+        ) : (
+          <>
+            {/* 1. NOW PLAYING CARD */}
+            {currentTrack && (
+              <div className="flex flex-col gap-1.5 shrink-0">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-foreground/60 px-1">
+                  Now Playing
+                </span>
 
-              return (
                 <div
-                  key={`${track.id}-${index}`}
-                  data-testid={`queue-item-${track.id}`}
-                  draggable
-                  onDragStart={() => handleDragStart(index)}
-                  onDragOver={(e) => handleDragOver(e, index)}
-                  onDrop={() => handleDrop(index)}
-                  onDragEnd={handleDragEnd}
-                  onDoubleClick={() => handlePlayDirect(track, index)}
-                  className={cn(
-                    'group relative flex items-center gap-2 rounded-md p-1.5 border-2 border-border transition-all cursor-default select-none',
-                    isCurrent
-                      ? 'bg-[var(--primary)] text-foreground font-bold shadow-[2px_2px_0px_var(--border)]'
-                      : 'surface-muted text-foreground hover:bg-black/5 hover:shadow-[2px_2px_0px_var(--border)]',
-                    isDragging && 'opacity-40 border-dashed',
-                    isDragOver && 'border-t-4 border-t-[var(--primary)]'
-                  )}
+                  data-testid={`queue-item-${currentTrack.id}`}
+                  className="flex items-center gap-2.5 p-2 rounded-md border-2 border-border bg-[var(--primary)] text-foreground font-bold shadow-[2px_2px_0px_var(--border)]"
                 >
-                  {/* Left Drag Handle (revealed on hover) */}
-                  <div
-                    title="Drag to reorder"
-                    className="cursor-grab active:cursor-grabbing text-foreground/40 hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity p-0.5"
-                  >
-                    <GripVertical size={13} />
-                  </div>
-
-                  {/* Thumbnail / Play Button on Hover */}
-                  <div className="size-10 shrink-0 rounded overflow-hidden border border-border bg-black/10 relative">
-                    {track.coverUrl ? (
+                  {/* Artwork with Playing Equalizer */}
+                  <div className="size-11 shrink-0 rounded overflow-hidden border border-border bg-black/10 relative">
+                    {currentTrack.coverUrl ? (
                       <img
-                        src={track.coverUrl}
+                        src={currentTrack.coverUrl}
                         alt=""
                         className="size-full object-cover"
                       />
                     ) : (
                       <div className="size-full flex items-center justify-center text-foreground/40">
-                        <Music size={14} />
+                        <Music size={16} />
                       </div>
                     )}
-
-                    {/* Playing indicator or Hover Play button */}
-                    {isCurrent ? (
+                    {isPlaying && (
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white">
-                        {isPlaying ? <Pause size={13} /> : <Play size={13} />}
+                        <div className="flex items-end gap-0.5 h-3.5 w-3.5 text-white">
+                          <span className="w-0.5 bg-current animate-pulse h-full" />
+                          <span className="w-0.5 bg-current animate-pulse h-2/3" />
+                          <span className="w-0.5 bg-current animate-pulse h-4/5" />
+                        </div>
                       </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlePlayDirect(track, index);
-                        }}
-                        title="Play track"
-                        className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity cursor-pointer"
-                      >
-                        <Play size={12} className="fill-current" />
-                      </button>
                     )}
                   </div>
 
                   {/* Title & Artist */}
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-xs font-bold leading-snug">
-                      {track.title}
+                    <div className="truncate text-xs font-extrabold leading-snug">
+                      {currentTrack.title}
                     </div>
-                    <div className="truncate text-[11px] opacity-75 leading-tight mt-0.5">
-                      {track.artist}
-                    </div>
-                  </div>
-
-                  {/* Duration & More (...) menu button */}
-                  <div className="flex items-center gap-1 shrink-0">
-                    <span className="text-xs font-mono tabular-nums opacity-80 group-hover:hidden">
-                      {formatSeconds(track.durationSeconds)}
-                    </span>
-
-                    {/* ··· Context Menu Button */}
-                    <div className="hidden group-hover:flex items-center gap-1">
-                      <TrackContextMenuRoot>
-                        <TrackContextMenuTrigger>
-                          <div
-                            role="button"
-                            title="Track options"
-                            data-testid={`queue-item-menu-${track.id}`}
-                            className="size-6 flex items-center justify-center rounded border border-border surface-muted text-foreground hover:bg-black/10 cursor-pointer"
-                          >
-                            <MoreHorizontal size={13} />
-                          </div>
-                        </TrackContextMenuTrigger>
-
-                        <TrackContextMenuContent className="w-48 z-50">
-                          <TrackContextMenuHeader
-                            title={track.title}
-                            subtitle={track.artist}
-                            coverUrl={track.coverUrl}
-                          />
-
-                          <TrackContextMenuAction
-                            icon={<ListOrdered size={14} />}
-                            onClick={() => {
-                              if (onPlayNext) onPlayNext(track);
-                              else store.playNext(track);
-                            }}
-                          >
-                            Play next
-                          </TrackContextMenuAction>
-
-                          {playlists.length > 0 && (
-                            <TrackContextMenuSubmenu
-                              icon={<ListMusic size={14} />}
-                              label="Add to playlist"
-                            >
-                              {playlists.map((pl) => (
-                                <TrackContextMenuAction
-                                  key={pl.id}
-                                  onClick={() => {
-                                    addTrackToPlaylist(pl.id, track);
-                                    showToast({
-                                      title: `Added "${track.title}" to ${pl.name}`,
-                                      variant: 'success',
-                                    });
-                                  }}
-                                >
-                                  {pl.name}
-                                </TrackContextMenuAction>
-                              ))}
-                            </TrackContextMenuSubmenu>
-                          )}
-
-                          <TrackContextMenuAction
-                            icon={<Heart size={14} />}
-                            onClick={() => {
-                              if (onAddToLikedSongs) onAddToLikedSongs(track);
-                            }}
-                          >
-                            Save to Liked Songs
-                          </TrackContextMenuAction>
-
-                          {track.artist && (
-                            <TrackContextMenuAction
-                              icon={<User size={14} />}
-                              onClick={() => {
-                                onNavigateToArtist?.(track.artist);
-                              }}
-                            >
-                              Go to artist
-                            </TrackContextMenuAction>
-                          )}
-
-                          {track.album && (
-                            <TrackContextMenuAction
-                              icon={<Disc size={14} />}
-                              onClick={() => {
-                                onNavigateToAlbum?.(track.album);
-                              }}
-                            >
-                              Go to album
-                            </TrackContextMenuAction>
-                          )}
-
-                          <TrackContextMenuAction
-                            icon={<Share2 size={14} />}
-                            onClick={() => {
-                              if (typeof navigator !== 'undefined' && navigator.clipboard) {
-                                navigator.clipboard.writeText(`sloth://track/${track.id}`);
-                              }
-                              showToast({ title: 'Track link copied to clipboard', variant: 'success' });
-                            }}
-                          >
-                            Copy share link
-                          </TrackContextMenuAction>
-
-                          <TrackContextMenuDivider />
-
-                          <TrackContextMenuAction
-                            danger
-                            icon={<Trash2 size={14} />}
-                            onClick={() => handleRemove(track.id)}
-                          >
-                            Remove from queue
-                          </TrackContextMenuAction>
-                        </TrackContextMenuContent>
-                      </TrackContextMenuRoot>
-
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemove(track.id);
-                        }}
-                        className="size-6 flex items-center justify-center rounded border border-border surface-muted text-foreground hover:bg-red-500 hover:text-white cursor-pointer"
-                        title="Remove from queue"
-                      >
-                        <X size={12} />
-                      </button>
+                    <div className="truncate text-[11px] opacity-80 leading-tight mt-0.5 font-medium">
+                      {currentTrack.artist}
                     </div>
                   </div>
+
+                  <span className="text-xs font-mono tabular-nums opacity-90 pr-1">
+                    {formatSeconds(currentTrack.durationSeconds)}
+                  </span>
                 </div>
-              );
-            })
-          )
-        ) : (
-          /* TAB 2: ZONE B (RECOMMENDATIONS) */
-          <div className="flex flex-col gap-2">
-            <div className="px-1 py-1 text-[11px] font-medium text-foreground/70 flex items-center gap-1.5 border-b border-border/20 mb-1">
-              <Sparkles size={12} className="text-[var(--primary)]" />
-              <span>
-                Based on{' '}
-                <strong className="text-foreground">
-                  {currentTrack?.title || 'your taste'}
-                </strong>
-              </span>
-            </div>
+              </div>
+            )}
 
-            {isLoadingRecommendations ? (
-              <div className="flex h-40 flex-col items-center justify-center gap-2 p-6 text-center">
-                <div className="size-5 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
-                <span className="text-xs text-foreground/70 font-medium">
-                  Finding similar tracks...
+            {/* 2. NEXT IN QUEUE */}
+            <div className="flex flex-col gap-1.5 flex-1 min-h-0">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-foreground/60">
+                  Next in Queue
+                </span>
+                <span className="text-[10px] font-mono text-foreground/50">
+                  {upcomingTracks.length} upcoming
                 </span>
               </div>
-            ) : recommendations.length === 0 ? (
-              <div className="flex h-40 flex-col items-center justify-center gap-2 p-6 text-center">
-                <Sparkles size={36} className="opacity-30 text-foreground" />
-                <div className="text-xs opacity-70 text-foreground">
-                  Play a song to get engine recommendations
+
+              {upcomingTracks.length === 0 ? (
+                <div className="text-center py-6 text-foreground/40 text-xs">
+                  No upcoming tracks in queue
                 </div>
-              </div>
-            ) : (
-              recommendations.map((track) => {
-                const isAdded = addedIds.has(track.id);
+              ) : (
+                <div className="flex flex-col gap-1.5">
+                  {upcomingTracks.map((track, relativeIndex) => {
+                    const globalIndex = currentIndex !== -1 ? currentIndex + 1 + relativeIndex : relativeIndex;
+                    const isDragging = draggedIdx === relativeIndex;
+                    const isDragOver = dragOverIdx === relativeIndex;
 
-                return (
-                  <div
-                    key={track.id}
-                    data-testid={`rec-item-${track.id}`}
-                    className="group relative flex items-center gap-2.5 rounded-md p-2 border-2 border-border surface-muted hover:bg-black/5 hover:shadow-[2px_2px_0px_var(--border)] transition-all"
-                  >
-                    {/* Thumbnail */}
-                    <div
-                      className="size-11 shrink-0 rounded overflow-hidden border border-border bg-black/10 relative cursor-pointer"
-                      onClick={() => handlePlayDirect(track, 0)}
-                      title="Play now"
-                    >
-                      {track.coverUrl ? (
-                        <img
-                          src={track.coverUrl}
-                          alt=""
-                          className="size-full object-cover"
-                        />
-                      ) : (
-                        <div className="size-full flex items-center justify-center text-foreground/40">
-                          <Music size={16} />
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
-                        <Play size={14} className="fill-current" />
-                      </div>
-                    </div>
-
-                    {/* Title & Artist */}
-                    <div
-                      className="min-w-0 flex-1 cursor-pointer"
-                      onClick={() => handlePlayDirect(track, 0)}
-                    >
-                      <div className="truncate text-xs font-bold leading-snug">
-                        {track.title}
-                      </div>
-                      <div className="truncate text-[11px] opacity-75 leading-tight mt-0.5">
-                        {track.artist}
-                      </div>
-                    </div>
-
-                    {/* Add to Queue Button */}
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => handleAddRec(track)}
-                        title={isAdded ? 'Added to queue' : 'Add to queue'}
+                    return (
+                      <div
+                        key={`${track.id}-${globalIndex}`}
+                        data-testid={`queue-item-${track.id}`}
+                        draggable
+                        onDragStart={() => handleDragStart(relativeIndex)}
+                        onDragOver={(e) => handleDragOver(e, relativeIndex)}
+                        onDrop={() => handleDrop(relativeIndex)}
+                        onDragEnd={handleDragEnd}
+                        onDoubleClick={() => handlePlayDirect(track, globalIndex)}
                         className={cn(
-                          'size-7 rounded flex items-center justify-center border-2 border-border cursor-pointer shadow-[1px_1px_0px_var(--border)] transition-transform active:scale-90',
-                          isAdded
-                            ? 'bg-emerald-500 text-white'
-                            : 'bg-[var(--primary)] text-foreground hover:scale-105',
+                          'group relative flex items-center gap-2 rounded-md p-1.5 border-2 border-border transition-all cursor-default select-none surface-muted text-foreground hover:bg-black/5 hover:shadow-[2px_2px_0px_var(--border)]',
+                          isDragging && 'opacity-40 border-dashed',
+                          isDragOver && 'border-t-4 border-t-[var(--primary)]'
                         )}
                       >
-                        {isAdded ? (
-                          <Check size={12} strokeWidth={3} />
-                        ) : (
-                          <Plus size={14} strokeWidth={2.5} />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
+                        {/* Drag Handle on hover */}
+                        <div
+                          title="Drag to reorder"
+                          className="cursor-grab active:cursor-grabbing text-foreground/40 hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity p-0.5"
+                        >
+                          <GripVertical size={13} />
+                        </div>
+
+                        {/* Thumbnail / Hover Play Button */}
+                        <div className="size-9 shrink-0 rounded overflow-hidden border border-border bg-black/10 relative">
+                          {track.coverUrl ? (
+                            <img
+                              src={track.coverUrl}
+                              alt=""
+                              className="size-full object-cover"
+                            />
+                          ) : (
+                            <div className="size-full flex items-center justify-center text-foreground/40">
+                              <Music size={14} />
+                            </div>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePlayDirect(track, globalIndex);
+                            }}
+                            title="Play track"
+                            className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity cursor-pointer"
+                          >
+                            <Play size={12} className="fill-current" />
+                          </button>
+                        </div>
+
+                        {/* Title & Artist */}
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-xs font-bold leading-snug">
+                            {track.title}
+                          </div>
+                          <div className="truncate text-[11px] opacity-75 leading-tight mt-0.5">
+                            {track.artist}
+                          </div>
+                        </div>
+
+                        {/* Duration & More (...) menu */}
+                        <div className="flex items-center gap-1 shrink-0">
+                          <span className="text-xs font-mono tabular-nums opacity-80 group-hover:hidden">
+                            {formatSeconds(track.durationSeconds)}
+                          </span>
+
+                          <div className="hidden group-hover:flex items-center gap-1">
+                            <TrackContextMenuRoot>
+                              <TrackContextMenuTrigger>
+                                <div
+                                  role="button"
+                                  title="Track options"
+                                  data-testid={`queue-item-menu-${track.id}`}
+                                  className="size-6 flex items-center justify-center rounded border border-border surface-muted text-foreground hover:bg-black/10 cursor-pointer"
+                                >
+                                  <MoreHorizontal size={13} />
+                                </div>
+                              </TrackContextMenuTrigger>
+
+                              <TrackContextMenuContent className="w-48 z-50">
+                                <TrackContextMenuHeader
+                                  title={track.title}
+                                  subtitle={track.artist}
+                                  coverUrl={track.coverUrl}
+                                />
+
+                                <TrackContextMenuAction
+                                  icon={<ListOrdered size={14} />}
+                                  onClick={() => {
+                                    if (onPlayNext) onPlayNext(track);
+                                    else store.playNext(track);
+                                  }}
+                                >
+                                  Play next
+                                </TrackContextMenuAction>
+
+                                {playlists.length > 0 && (
+                                  <TrackContextMenuSubmenu
+                                    icon={<ListMusic size={14} />}
+                                    label="Add to playlist"
+                                  >
+                                    {playlists.map((pl) => (
+                                      <TrackContextMenuAction
+                                        key={pl.id}
+                                        onClick={() => {
+                                          addTrackToPlaylist(pl.id, track);
+                                          showToast({
+                                            title: `Added "${track.title}" to ${pl.name}`,
+                                            variant: 'success',
+                                          });
+                                        }}
+                                      >
+                                        {pl.name}
+                                      </TrackContextMenuAction>
+                                    ))}
+                                  </TrackContextMenuSubmenu>
+                                )}
+
+                                <TrackContextMenuAction
+                                  icon={<Heart size={14} />}
+                                  onClick={() => {
+                                    if (onAddToLikedSongs) onAddToLikedSongs(track);
+                                  }}
+                                >
+                                  Save to Liked Songs
+                                </TrackContextMenuAction>
+
+                                {track.artist && (
+                                  <TrackContextMenuAction
+                                    icon={<User size={14} />}
+                                    onClick={() => {
+                                      onNavigateToArtist?.(track.artist);
+                                    }}
+                                  >
+                                    Go to artist
+                                  </TrackContextMenuAction>
+                                )}
+
+                                {track.album && (
+                                  <TrackContextMenuAction
+                                    icon={<Disc size={14} />}
+                                    onClick={() => {
+                                      onNavigateToAlbum?.(track.album);
+                                    }}
+                                  >
+                                    Go to album
+                                  </TrackContextMenuAction>
+                                )}
+
+                                <TrackContextMenuAction
+                                  icon={<Share2 size={14} />}
+                                  onClick={() => {
+                                    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                                      navigator.clipboard.writeText(`sloth://track/${track.id}`);
+                                    }
+                                    showToast({ title: 'Track link copied to clipboard', variant: 'success' });
+                                  }}
+                                >
+                                  Copy share link
+                                </TrackContextMenuAction>
+
+                                <TrackContextMenuDivider />
+
+                                <TrackContextMenuAction
+                                  danger
+                                  icon={<Trash2 size={14} />}
+                                  onClick={() => handleRemove(track.id)}
+                                >
+                                  Remove from queue
+                                </TrackContextMenuAction>
+                              </TrackContextMenuContent>
+                            </TrackContextMenuRoot>
+
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemove(track.id);
+                              }}
+                              className="size-6 flex items-center justify-center rounded border border-border surface-muted text-foreground hover:bg-red-500 hover:text-white cursor-pointer"
+                              title="Remove from queue"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </>
         )}
       </div>
 
@@ -683,24 +609,20 @@ export const ConnectedQueuePanel: FC<ConnectedQueuePanelProps> = ({
         </div>
       )}
 
-      {/* Footer: Stream Verification status & button */}
-      <div className="mt-auto flex items-center justify-between border-t-2 border-border/30 px-3 py-2 surface-muted">
+      {/* Footer: Spotify-style Autoplay Radio Indicator */}
+      <div className="mt-auto flex items-center justify-between border-t-2 border-border/30 px-3 py-2 surface-muted shrink-0">
         <div className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-full border-2 border-foreground/80 inline-block shrink-0" />
-          <span className="text-xs font-medium text-foreground">
-            Verified Engine
+          <Radio size={13} className="text-accent-green" />
+          <span className="text-xs font-bold text-foreground">
+            Autoplay Active
           </span>
         </div>
-        <button
-          type="button"
-          onClick={() =>
-            setActiveTab(activeTab === 'queue' ? 'recommended' : 'queue')
-          }
-          className="px-2.5 py-0.5 rounded-md bg-[var(--primary)] text-foreground border-2 border-border font-bold text-xs shadow-[1px_1px_0px_var(--border)] hover:scale-105 active:scale-95 transition-transform cursor-pointer"
-        >
-          {activeTab === 'queue' ? 'See Recs' : 'Back to Queue'}
-        </button>
+        <span className="text-[10px] font-mono text-foreground/60">
+          Vibe-Matched Queue
+        </span>
       </div>
     </div>
   );
 };
+
+export default ConnectedQueuePanel;
