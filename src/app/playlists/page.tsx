@@ -1,8 +1,6 @@
 /**
- * Ensure any repository we take reference from or code from isn't referenced or spoken about anywhere either in files or readme or code
- * Original: packages/player/src/views/Playlists/Playlists.tsx
- * Adapted for Sloth by syedzahidsaleem2@gmail.com
- * Changes: [styling system, data layer, routing, create playlist dialog, mosaic cards]
+ * Sloth Playlists Page
+ * Author: Syed Zahid Saleem <syedzahidsaleem2@gmail.com>
  */
 
 import { useState, useMemo } from 'react';
@@ -30,39 +28,7 @@ export interface PlaylistItem {
   thumbnails: string[];
 }
 
-const INITIAL_PLAYLISTS: PlaylistItem[] = [
-  {
-    id: 'pl-1',
-    name: 'Synthwave Odyssey',
-    itemCount: 18,
-    thumbnails: [
-      'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=300&q=80',
-      'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80',
-      'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80',
-      'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80',
-    ],
-  },
-  {
-    id: 'pl-2',
-    name: 'French Touch & House Classics',
-    itemCount: 24,
-    thumbnails: [
-      'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80',
-      'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&q=80',
-      'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80',
-      'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80',
-    ],
-  },
-  {
-    id: 'pl-3',
-    name: 'Late Night Chill & Ambient',
-    itemCount: 12,
-    thumbnails: [
-      'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80',
-      'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80',
-    ],
-  },
-];
+const INITIAL_PLAYLISTS: PlaylistItem[] = [];
 
 export default function PlaylistsPage({
   onSelectPlaylist,
