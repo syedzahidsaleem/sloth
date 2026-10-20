@@ -3,21 +3,45 @@ import { Music2 } from 'lucide-react';
 import { ViewShell } from '@/components/ui/ViewShell';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { TrackRow, Track } from '@/components/ui/TrackRow';
+import { useLibraryStore } from '@/stores/libraryStore';
 
 export interface FavoriteTracksPageProps {
   tracks?: Track[];
   currentTrackId?: string;
   isPlaying?: boolean;
   onPlayTrack?: (track: Track) => void;
+  onFavoriteToggle?: (track: Track) => void;
 }
 
 export const FavoriteTracksPage: FC<FavoriteTracksPageProps> = ({
-  tracks = [],
+  tracks,
   currentTrackId,
   isPlaying,
   onPlayTrack,
+  onFavoriteToggle,
 }) => {
-  const favoriteTracks = tracks.filter((t) => t.isFavorite);
+  const { likedSongs, toggleLikeSong } = useLibraryStore();
+
+  const handleToggle = (track: Track) => {
+    if (onFavoriteToggle) {
+      onFavoriteToggle(track);
+    } else {
+      toggleLikeSong(track);
+    }
+  };
+
+  const favoriteTracks: Track[] =
+    tracks && tracks.length > 0
+      ? tracks.filter((t) => t.isFavorite)
+      : likedSongs.map((s) => ({
+          id: s.id,
+          title: s.title,
+          artist: s.artist,
+          album: s.album,
+          coverUrl: s.coverUrl,
+          durationSeconds: s.durationSeconds,
+          isFavorite: true,
+        }));
 
   return (
     <ViewShell data-testid="favorite-tracks-view" title="Favorite tracks">
@@ -40,6 +64,7 @@ export const FavoriteTracksPage: FC<FavoriteTracksPageProps> = ({
               isCurrent={track.id === currentTrackId}
               isPlaying={isPlaying && track.id === currentTrackId}
               onPlay={onPlayTrack}
+              onFavoriteToggle={() => handleToggle(track)}
             />
           ))}
         </div>

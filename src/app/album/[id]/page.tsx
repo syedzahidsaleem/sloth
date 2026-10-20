@@ -5,8 +5,9 @@
 
 import { useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
-import { Play, Shuffle, Download, Disc3, Clock, Calendar, Check } from 'lucide-react';
+import { Play, Shuffle, Download, Disc3, Clock, Calendar, Check, Heart } from 'lucide-react';
 import { TrackRow, Track, Button, Badge } from '@/components/ui';
+import { useLibraryStore } from '@/stores/libraryStore';
 
 export interface AlbumPageProps {
   albumId?: string;
@@ -103,20 +104,28 @@ export default function AlbumPage({
 }: AlbumPageProps) {
   const shouldReduceMotion = useReducedMotion();
   const [isDownloaded, setIsDownloaded] = useState(false);
+  const { isAlbumSaved, toggleSaveAlbum, isLiked, toggleLikeSong } = useLibraryStore();
 
-  const album = SAMPLE_ALBUMS[albumId] || SAMPLE_ALBUMS['alb-1'];
+  const album =
+    SAMPLE_ALBUMS[albumId] ||
+    Object.values(SAMPLE_ALBUMS).find(
+      (a) => a.title.toLowerCase() === albumId.toLowerCase()
+    ) ||
+    SAMPLE_ALBUMS['alb-1'];
+
+  const isSaved = isAlbumSaved(album.id) || isAlbumSaved(album.title);
 
   return (
     <div className="surface-background p-6 space-y-8 select-none" data-testid="album-page">
-      {/* Top Album Card: Artwork + Title + Metadata Chips + Actions */}
+      {/* Album Top Header Hero */}
       <motion.div
-        initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
+        initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2 }}
-        className="surface-card border-border shadow-shadow flex flex-col md:flex-row items-start gap-6 p-6 rounded-[4px] border-(length:--border-width)"
+        transition={{ duration: 0.25 }}
+        className="flex flex-col md:flex-row items-center md:items-end gap-6 bg-muted/40 p-6 rounded-lg border-2 border-border shadow-shadow"
       >
-        {/* Cover Artwork */}
-        <div className="border-border shadow-shadow relative size-48 md:size-56 shrink-0 overflow-hidden rounded-[4px] border-(length:--border-width) bg-muted/60">
+        {/* Album Cover Art */}
+        <div className="border-border size-48 md:size-56 shrink-0 overflow-hidden rounded-md border-2 bg-muted/80 shadow-shadow">
           <img
             src={album.coverUrl}
             alt={album.title}
@@ -124,47 +133,45 @@ export default function AlbumPage({
           />
         </div>
 
-        {/* Album Details & Metadata */}
-        <div className="min-w-0 flex-1 flex flex-col justify-between self-stretch">
-          <div className="space-y-2">
-            <Badge variant="pill" color="purple" className="text-[10px] font-mono">
-              Album
-            </Badge>
-            <h1 className="text-foreground text-3xl md:text-5xl font-extrabold tracking-tight">
-              {album.title}
-            </h1>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>by</span>
-              <button
-                type="button"
-                onClick={() => onSelectArtist?.(album.artistId)}
-                className="font-bold text-foreground hover:text-primary hover:underline cursor-pointer"
-              >
-                {album.artist}
-              </button>
-            </div>
-
-            {/* Metadata Badges / Stat Chips */}
-            <div className="flex flex-wrap items-center gap-2 pt-2">
-              <Badge variant="pill" color="cyan" className="text-xs font-mono">
-                <Calendar size={12} className="mr-1" />
-                {album.releaseYear}
-              </Badge>
-              <Badge variant="pill" color="green" className="text-xs font-mono">
-                <Disc3 size={12} className="mr-1" />
-                {album.tracks.length} tracks
-              </Badge>
-              <Badge variant="pill" color="orange" className="text-xs font-mono">
-                <Clock size={12} className="mr-1" />
-                {formatDuration(album.totalDurationSeconds)}
-              </Badge>
-              <Badge variant="pill" color="purple" className="text-xs">
-                {album.genre}
-              </Badge>
-            </div>
+        {/* Metadata Details */}
+        <div className="flex flex-col justify-end gap-2 flex-1 text-center md:text-left min-w-0">
+          <Badge variant="pill" color="purple" className="text-[10px] font-mono">
+            Album
+          </Badge>
+          <h1 className="text-foreground text-3xl md:text-5xl font-extrabold tracking-tight">
+            {album.title}
+          </h1>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>by</span>
+            <button
+              type="button"
+              onClick={() => onSelectArtist?.(album.artistId || album.artist)}
+              className="font-bold text-foreground hover:text-primary hover:underline cursor-pointer"
+            >
+              {album.artist}
+            </button>
           </div>
 
-          {/* Action Row: Play All, Shuffle, Add to Playlist, Download All */}
+          {/* Metadata Badges / Stat Chips */}
+          <div className="flex flex-wrap items-center gap-2 pt-2">
+            <Badge variant="pill" color="cyan" className="text-xs font-mono">
+              <Calendar size={12} className="mr-1" />
+              {album.releaseYear}
+            </Badge>
+            <Badge variant="pill" color="green" className="text-xs font-mono">
+              <Disc3 size={12} className="mr-1" />
+              {album.tracks.length} tracks
+            </Badge>
+            <Badge variant="pill" color="orange" className="text-xs font-mono">
+              <Clock size={12} className="mr-1" />
+              {formatDuration(album.totalDurationSeconds)}
+            </Badge>
+            <Badge variant="pill" color="purple" className="text-xs">
+              {album.genre}
+            </Badge>
+          </div>
+
+          {/* Action Row: Play All, Shuffle, Save Album, Download All */}
           <div className="border-border flex flex-wrap items-center gap-2.5 pt-5 border-t-(length:--border-width) mt-4">
             <Button
               size="default"
@@ -184,6 +191,24 @@ export default function AlbumPage({
             >
               <Shuffle size={14} />
               <span>Shuffle</span>
+            </Button>
+            <Button
+              size="default"
+              variant={isSaved ? 'default' : 'secondary'}
+              onClick={() =>
+                toggleSaveAlbum({
+                  id: album.id,
+                  title: album.title,
+                  artist: album.artist,
+                  coverUrl: album.coverUrl,
+                  releaseYear: album.releaseYear,
+                })
+              }
+              data-testid="album-save-button"
+              className="flex items-center gap-2"
+            >
+              <Heart size={14} className={isSaved ? 'fill-current' : ''} />
+              <span>{isSaved ? 'Saved to Library' : 'Save Album'}</span>
             </Button>
             <Button
               size="default"
@@ -211,11 +236,15 @@ export default function AlbumPage({
           {album.tracks.map((track, idx) => (
             <TrackRow
               key={track.id}
-              track={track}
+              track={{
+                ...track,
+                isFavorite: isLiked(track.id),
+              }}
               index={idx}
               isCurrent={track.id === currentTrackId}
               isPlaying={isPlaying && track.id === currentTrackId}
               onPlay={() => onPlayTrack?.(track)}
+              onFavoriteToggle={() => toggleLikeSong(track)}
             />
           ))}
         </div>

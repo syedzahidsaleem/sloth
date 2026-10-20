@@ -54,6 +54,8 @@ import PluginsPage from './app/plugins/page';
 import { AskSlothModal, useAskSloth } from './features/ask-sloth';
 import { GenreQuizModal } from './components/onboarding';
 import { getSlothSettings, applyTheme } from './services/settingsStore';
+import { ToastContainer } from './components/ui/ToastContainer';
+import { useLibraryStore } from './stores/libraryStore';
 
 export const SAMPLE_TRACKS: Track[] = [
   {
@@ -170,13 +172,19 @@ export default function App() {
   // Playback state (defaults to empty queue like screenshot 1)
   const [queue, setQueue] = useState<Track[]>([]);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
-  const currentTrack = queue[currentTrackIndex] || {
-    id: 'none',
-    title: 'No track playing',
-    artist: 'Unknown artist',
-    durationSeconds: 0,
-    isFavorite: false,
-  };
+
+  const { isLiked, toggleLikeSong } = useLibraryStore();
+
+  const rawTrack = queue[currentTrackIndex];
+  const currentTrack: Track = rawTrack
+    ? { ...rawTrack, isFavorite: isLiked(rawTrack.id) }
+    : {
+        id: 'none',
+        title: 'No track playing',
+        artist: 'Unknown artist',
+        durationSeconds: 0,
+        isFavorite: false,
+      };
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -514,8 +522,9 @@ export default function App() {
   };
 
   const handleFavoriteToggle = (track: Track) => {
+    toggleLikeSong(track);
     setQueue((prev) =>
-      prev.map((t) => (t.id === track.id ? { ...t, isFavorite: !t.isFavorite } : t)),
+      prev.map((t) => (t.id === track.id ? { ...t, isFavorite: !isLiked(track.id) } : t)),
     );
   };
 
@@ -795,6 +804,7 @@ export default function App() {
               }}
               onNavigateToArtist={(art) => setRoute({ view: 'artist', id: art })}
               onNavigateToAlbum={(alb) => setRoute({ view: 'album', id: alb })}
+              onAddToLikedSongs={(track) => toggleLikeSong(track)}
               recommendations={recommendations}
               onAddRecommendationToQueue={(track) => setQueue((prev) => [...prev, track])}
               isLoadingRecommendations={isLoadingRecommendations}
@@ -877,6 +887,9 @@ export default function App() {
           console.warn('Audio element error:', e);
         }}
       />
+
+      {/* Stacked bottom-right notifications */}
+      <ToastContainer />
     </>
   );
 }

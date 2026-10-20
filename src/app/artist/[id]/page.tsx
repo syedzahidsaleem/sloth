@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { Play, Heart, Disc3, Users, FileText, Music2 } from 'lucide-react';
 import { TrackRow, AlbumCard, ArtistCard, Track, Button, Badge } from '@/components/ui';
+import { useLibraryStore } from '@/stores/libraryStore';
 
 export interface ArtistPageProps {
   artistId?: string;
@@ -94,9 +95,19 @@ export default function ArtistPage({
   const shouldReduceMotion = useReducedMotion();
   const [activeTab, setActiveTab] = useState<ArtistTab>('tracks');
   const [isBioExpanded, setIsBioExpanded] = useState(false);
-  const [isFavorited, setIsFavorited] = useState(false);
 
-  const artist = SAMPLE_ARTISTS[artistId] || SAMPLE_ARTISTS.m83;
+  const { isFollowed, toggleFollowArtist, isLiked, toggleLikeSong } = useLibraryStore();
+
+  const cleanKey = artistId.toLowerCase().replace(/\s+/g, '-');
+  const artist =
+    SAMPLE_ARTISTS[cleanKey] ||
+    SAMPLE_ARTISTS[artistId] ||
+    Object.values(SAMPLE_ARTISTS).find(
+      (a) => a.name.toLowerCase() === artistId.toLowerCase()
+    ) ||
+    SAMPLE_ARTISTS.m83;
+
+  const isFollowing = isFollowed(artist.id) || isFollowed(artist.name);
 
   return (
     <div className="surface-background relative min-h-full pb-12 select-none" data-testid="artist-page">
@@ -150,11 +161,19 @@ export default function ArtistPage({
             </Button>
             <Button
               size="icon"
-              variant={isFavorited ? 'default' : 'secondary'}
-              onClick={() => setIsFavorited(!isFavorited)}
-              aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+              variant={isFollowing ? 'default' : 'secondary'}
+              onClick={() =>
+                toggleFollowArtist({
+                  id: artist.id,
+                  name: artist.name,
+                  imageUrl: artist.avatarUrl,
+                })
+              }
+              data-testid="artist-follow-button"
+              title={isFollowing ? 'Unfollow artist' : 'Follow artist'}
+              aria-label={isFollowing ? 'Unfollow artist' : 'Follow artist'}
             >
-              <Heart size={16} className={isFavorited ? 'fill-current' : ''} />
+              <Heart size={16} className={isFollowing ? 'fill-current' : ''} />
             </Button>
           </div>
         </div>
@@ -214,11 +233,15 @@ export default function ArtistPage({
               {artist.topTracks.map((track, idx) => (
                 <TrackRow
                   key={track.id}
-                  track={track}
+                  track={{
+                    ...track,
+                    isFavorite: isLiked(track.id),
+                  }}
                   index={idx}
                   isCurrent={track.id === currentTrackId}
                   isPlaying={isPlaying && track.id === currentTrackId}
                   onPlay={() => onPlayTrack?.(track)}
+                  onFavoriteToggle={() => toggleLikeSong(track)}
                 />
               ))}
             </motion.div>

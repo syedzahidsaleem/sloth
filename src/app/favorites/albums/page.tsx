@@ -3,6 +3,7 @@ import { Disc3 } from 'lucide-react';
 import { ViewShell } from '@/components/ui/ViewShell';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { AlbumCard } from '@/components/ui/AlbumCard';
+import { useLibraryStore } from '@/stores/libraryStore';
 
 export interface FavoriteAlbumsPageProps {
   albums?: Array<{
@@ -17,12 +18,25 @@ export interface FavoriteAlbumsPageProps {
 }
 
 export const FavoriteAlbumsPage: FC<FavoriteAlbumsPageProps> = ({
-  albums = [],
+  albums,
   onSelectAlbum,
 }) => {
+  const savedAlbums = useLibraryStore((s) => s.savedAlbums);
+
+  const displayAlbums =
+    albums && albums.length > 0
+      ? albums
+      : savedAlbums.map((a) => ({
+          id: a.id,
+          title: a.title,
+          artist: a.artist,
+          coverUrl: a.coverUrl,
+          year: a.releaseYear,
+        }));
+
   return (
     <ViewShell data-testid="favorite-albums-view" title="Favorite albums">
-      {albums.length === 0 ? (
+      {displayAlbums.length === 0 ? (
         <div className="flex h-full flex-1 flex-col items-center justify-center p-8">
           <EmptyState
             icon={<Disc3 size={48} />}
@@ -33,13 +47,13 @@ export const FavoriteAlbumsPage: FC<FavoriteAlbumsPageProps> = ({
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full">
-          {albums.map((album) => (
+          {displayAlbums.map((album) => (
             <AlbumCard
               key={album.id}
               title={album.title}
               subtitle={album.artist}
               coverUrl={album.coverUrl}
-              onClick={() => onSelectAlbum?.(album.id)}
+              onClick={() => onSelectAlbum?.(album.title || album.id)}
             />
           ))}
         </div>
