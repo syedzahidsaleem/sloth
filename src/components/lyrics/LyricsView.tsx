@@ -443,11 +443,25 @@ export const LyricsView: React.FC<LyricsViewProps> = ({
             </div>
             <div>
               <h3 className="text-base font-bold font-heading text-foreground">
-                No Synchronized Lyrics Found
+                No lyrics available for this track
               </h3>
               <p className="text-xs text-foreground/60 mt-1 font-sans">
-                Lyrics are not available for this track yet.
+                Lyrics are not available in LRCLIB or local cache for this track.
               </p>
+              <button
+                type="button"
+                data-testid="search-genius-btn"
+                onClick={() => {
+                  const query = `${artistName} ${trackTitle}`.trim();
+                  const geniusUrl = `https://genius.com/search?q=${encodeURIComponent(query)}`;
+                  if (typeof window !== 'undefined') {
+                    window.open(geniusUrl, '_blank', 'noopener,noreferrer');
+                  }
+                }}
+                className="mt-4 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md surface-primary text-foreground text-xs font-bold border-(length:--border-width) border-border shadow-shadow cursor-pointer hover:scale-105 active:scale-95 transition-transform"
+              >
+                <span>Search Genius</span>
+              </button>
             </div>
           </div>
         )}
