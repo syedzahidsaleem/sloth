@@ -30,14 +30,19 @@ export function createDatabase(
   options: { autoMigrate?: boolean } = { autoMigrate: true }
 ): DatabaseConnection {
   const globalProcess = typeof globalThis !== 'undefined' ? (globalThis as any).process : undefined;
-  const resolvedPath = dbPath ?? globalProcess?.env?.DATABASE_PATH ?? 'sloth.db';
+  const isVitest = !!globalProcess?.env?.VITEST;
+  const resolvedPath = dbPath ?? (isVitest ? ':memory:' : globalProcess?.env?.DATABASE_PATH ?? 'sloth.db');
   const sqlite = new Database(resolvedPath);
 
   // WAL mode and essential SQLite performance & integrity pragmas
-  sqlite.pragma('journal_mode = WAL');
-  sqlite.pragma('foreign_keys = ON');
-  sqlite.pragma('busy_timeout = 5000');
-  sqlite.pragma('synchronous = NORMAL');
+  try {
+    sqlite.pragma('journal_mode = WAL');
+  } catch {}
+  try {
+    sqlite.pragma('foreign_keys = ON');
+    sqlite.pragma('busy_timeout = 5000');
+    sqlite.pragma('synchronous = NORMAL');
+  } catch {}
 
   if (options.autoMigrate !== false) {
     initSchema(sqlite);
