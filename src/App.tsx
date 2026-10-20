@@ -55,7 +55,9 @@ import { AskSlothModal, useAskSloth } from './features/ask-sloth';
 import { GenreQuizModal } from './components/onboarding';
 import { getSlothSettings, applyTheme } from './services/settingsStore';
 import { ToastContainer } from './components/ui/ToastContainer';
+import { toast } from './stores/toastStore';
 import { useLibraryStore } from './stores/libraryStore';
+import { usePlaylistStore } from './stores/playlistStore';
 import { useKeyboardShortcuts } from './hooks';
 
 export const SAMPLE_TRACKS: Track[] = [
@@ -426,6 +428,36 @@ export default function App() {
     }
   }, []);
 
+  // Track Selection Logic: Helper to replace queue with 5-second undo countdown toast
+  const replaceQueue = useCallback(
+    (newTracks: Track[], startIndex = 0) => {
+      if (newTracks.length === 0) return;
+      const prevQueue = [...queue];
+      const prevIndex = currentTrackIndex;
+      const prevProgress = progress;
+
+      setQueue(newTracks);
+      setCurrentTrackIndex(startIndex);
+      setProgress(0);
+      setIsPlaying(true);
+
+      if (prevQueue.length > 0) {
+        toast.undo('Queue replaced', () => {
+          setQueue(prevQueue);
+          setCurrentTrackIndex(prevIndex);
+          setProgress(prevProgress);
+          setIsPlaying(true);
+        });
+      }
+
+      const startingTrack = newTracks[startIndex];
+      if (startingTrack) {
+        handlePlayTrack(startingTrack);
+      }
+    },
+    [queue, currentTrackIndex, progress, handlePlayTrack]
+  );
+
   const handleNextTrack = () => {
     if (queue.length === 0) {
       if (recommendations.length > 0) {
@@ -684,7 +716,10 @@ export default function App() {
                   setActiveTab('plugins');
                   setRoute({ view: 'plugins' });
                 }}
-                onPlayTrack={handlePlayTrack}
+                onPlayTrack={(track) => {
+                  const idx = SAMPLE_TRACKS.findIndex((t) => t.id === track.id);
+                  replaceQueue(SAMPLE_TRACKS, idx !== -1 ? idx : 0);
+                }}
                 tracks={SAMPLE_TRACKS}
                 currentTrackId={currentTrack.id}
                 isPlaying={isPlaying}
@@ -722,8 +757,18 @@ export default function App() {
             {/* VIEW 5: PLAYLISTS */}
             {route.view === 'playlists' && (
               <PlaylistsPage
-                onPlayPlaylist={() => handlePlayTrack(SAMPLE_TRACKS[0])}
-                onSelectPlaylist={() => {}}
+                onPlayPlaylist={(plId) => {
+                  const pl = usePlaylistStore.getState().getPlaylistById(plId);
+                  if (pl && pl.tracks.length > 0) {
+                    replaceQueue(pl.tracks, 0);
+                  }
+                }}
+                onSelectPlaylist={(plId) => {
+                  const pl = usePlaylistStore.getState().getPlaylistById(plId);
+                  if (pl && pl.tracks.length > 0) {
+                    replaceQueue(pl.tracks, 0);
+                  }
+                }}
               />
             )}
 
@@ -782,6 +827,9 @@ export default function App() {
                 artistId={route.id || 'm83'}
                 onPlayTrack={handlePlayTrack}
                 onPlayArtist={() => handlePlayTrack(SAMPLE_TRACKS[0])}
+                onPlayTopTracks={(topTracks, startIndex = 0) => {
+                  replaceQueue(topTracks, startIndex);
+                }}
                 onSelectAlbum={(albumId) => setRoute({ view: 'album', id: albumId })}
                 onSelectArtist={(artistId) => setRoute({ view: 'artist', id: artistId })}
                 currentTrackId={currentTrack.id}
@@ -794,11 +842,8 @@ export default function App() {
               <AlbumPage
                 albumId={route.id || 'alb-1'}
                 onPlayTrack={handlePlayTrack}
-                onPlayAll={(albumTracks) => {
-                  setQueue(albumTracks);
-                  setCurrentTrackIndex(0);
-                  setProgress(0);
-                  setIsPlaying(true);
+                onPlayAll={(albumTracks, startIndex = 0) => {
+                  replaceQueue(albumTracks, startIndex);
                 }}
                 onSelectArtist={(artistId) => setRoute({ view: 'artist', id: artistId })}
                 currentTrackId={currentTrack.id}

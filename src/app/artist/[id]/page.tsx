@@ -13,6 +13,7 @@ export interface ArtistPageProps {
   artistId?: string;
   onPlayTrack?: (track: Track) => void;
   onPlayArtist?: (artistName: string) => void;
+  onPlayTopTracks?: (tracks: Track[], startIndex?: number) => void;
   onSelectAlbum?: (albumId: string) => void;
   onSelectArtist?: (artistId: string) => void;
   currentTrackId?: string;
@@ -240,7 +241,13 @@ export default function ArtistPage({
                   index={idx}
                   isCurrent={track.id === currentTrackId}
                   isPlaying={isPlaying && track.id === currentTrackId}
-                  onPlay={() => onPlayTrack?.(track)}
+                  onPlay={() => {
+                    if (onPlayTopTracks) {
+                      onPlayTopTracks(artist.topTracks, idx);
+                    } else if (onPlayTrack) {
+                      onPlayTrack(track);
+                    }
+                  }}
                   onFavoriteToggle={() => toggleLikeSong(track)}
                 />
               ))}

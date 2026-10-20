@@ -7,6 +7,7 @@
 
 import { create } from 'zustand';
 import { Track } from '@/components/ui/TrackRow';
+import { toast } from './toastStore';
 
 export type RepeatMode = 'off' | 'all' | 'one';
 
@@ -155,6 +156,9 @@ export const useQueueStore = create<QueueStore>((set, get) => {
         timer = setTimeout(() => {
           set({ previousQueue: null, undoTimer: null });
         }, 5000);
+        toast.undo('Queue replaced', () => {
+          get().restorePreviousQueue();
+        });
       }
 
       const clampedIndex = Math.max(0, Math.min(startIndex, tracks.length - 1));

@@ -12,7 +12,7 @@ import { useLibraryStore } from '@/stores/libraryStore';
 export interface AlbumPageProps {
   albumId?: string;
   onPlayTrack?: (track: Track) => void;
-  onPlayAll?: (tracks: Track[]) => void;
+  onPlayAll?: (tracks: Track[], startIndex?: number) => void;
   onSelectArtist?: (artistId: string) => void;
   currentTrackId?: string;
   isPlaying?: boolean;
@@ -243,7 +243,13 @@ export default function AlbumPage({
               index={idx}
               isCurrent={track.id === currentTrackId}
               isPlaying={isPlaying && track.id === currentTrackId}
-              onPlay={() => onPlayTrack?.(track)}
+              onPlay={() => {
+                if (onPlayAll) {
+                  onPlayAll(album.tracks, idx);
+                } else if (onPlayTrack) {
+                  onPlayTrack(track);
+                }
+              }}
               onFavoriteToggle={() => toggleLikeSong(track)}
             />
           ))}
