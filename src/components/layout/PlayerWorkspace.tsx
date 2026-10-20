@@ -180,7 +180,7 @@ export const PlayerWorkspaceMain: FC<PlayerWorkspaceMainProps> = ({
   return (
     <main
       data-testid="player-workspace-main"
-      className={cn('surface-background relative flex flex-1 min-h-0 overflow-auto', className)}
+      className={cn('surface-background relative flex flex-1 min-h-0 overflow-hidden', className)}
     >
       {children}
     </main>

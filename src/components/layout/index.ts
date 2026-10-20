@@ -6,3 +6,4 @@ export * from './MoodSlider';
 export * from './TopBar';
 export * from './PlayerWorkspace';
 export * from './ConnectedQueuePanel';
+export * from './RouteTransition';
