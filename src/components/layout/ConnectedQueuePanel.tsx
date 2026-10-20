@@ -15,6 +15,8 @@ import {
   Heart,
   User,
   Disc,
+  Share2,
+  ListMusic,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Track } from '@/components/ui/TrackRow';
@@ -25,8 +27,11 @@ import {
   TrackContextMenuAction,
   TrackContextMenuDivider,
   TrackContextMenuHeader,
+  TrackContextMenuSubmenu,
 } from '@/components/ui/TrackContextMenu';
 import { useQueueStore } from '@/stores/queueStore';
+import { usePlaylistStore } from '@/stores/playlistStore';
+import { useToastStore } from '@/stores/toastStore';
 import { cn } from '@/lib/utils';
 
 export type ConnectedQueuePanelProps = {
@@ -79,6 +84,8 @@ export const ConnectedQueuePanel: FC<ConnectedQueuePanelProps> = ({
 }) => {
   // Store fallback integration
   const store = useQueueStore();
+  const { playlists, addTrackToPlaylist } = usePlaylistStore();
+  const { showToast } = useToastStore();
   const queue = propQueue ?? store.items;
   const currentTrackId =
     propCurrentTrackId ?? (store.items[store.currentIndex]?.id || '');
@@ -428,6 +435,28 @@ export const ConnectedQueuePanel: FC<ConnectedQueuePanelProps> = ({
                             Play next
                           </TrackContextMenuAction>
 
+                          {playlists.length > 0 && (
+                            <TrackContextMenuSubmenu
+                              icon={<ListMusic size={14} />}
+                              label="Add to playlist"
+                            >
+                              {playlists.map((pl) => (
+                                <TrackContextMenuAction
+                                  key={pl.id}
+                                  onClick={() => {
+                                    addTrackToPlaylist(pl.id, track);
+                                    showToast({
+                                      title: `Added "${track.title}" to ${pl.name}`,
+                                      variant: 'success',
+                                    });
+                                  }}
+                                >
+                                  {pl.name}
+                                </TrackContextMenuAction>
+                              ))}
+                            </TrackContextMenuSubmenu>
+                          )}
+
                           <TrackContextMenuAction
                             icon={<Heart size={14} />}
                             onClick={() => {
@@ -459,9 +488,22 @@ export const ConnectedQueuePanel: FC<ConnectedQueuePanelProps> = ({
                             </TrackContextMenuAction>
                           )}
 
+                          <TrackContextMenuAction
+                            icon={<Share2 size={14} />}
+                            onClick={() => {
+                              if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                                navigator.clipboard.writeText(`sloth://track/${track.id}`);
+                              }
+                              showToast({ title: 'Track link copied to clipboard', variant: 'success' });
+                            }}
+                          >
+                            Copy share link
+                          </TrackContextMenuAction>
+
                           <TrackContextMenuDivider />
 
                           <TrackContextMenuAction
+                            danger
                             icon={<Trash2 size={14} />}
                             onClick={() => handleRemove(track.id)}
                           >

@@ -33,7 +33,9 @@ export interface QueueStore extends QueueStateData {
   playTrack: (track: Track) => Promise<void>;
   playTrackAtIndex: (index: number) => void;
   playNext: (track: Track) => void;
+  playTracksNext: (tracks: Track[]) => void;
   addToQueue: (track: Track) => void;
+  addTracksToQueue: (tracks: Track[]) => void;
   removeTrack: (trackId: string) => void;
   reorderQueue: (fromIndex: number, toIndex: number) => void;
   clearQueue: () => void;
@@ -246,10 +248,30 @@ export const useQueueStore = create<QueueStore>((set, get) => {
       persistState(get());
     },
 
+    playTracksNext: (tracks: Track[]) => {
+      if (tracks.length === 0) return;
+      const { items, currentIndex } = get();
+      const insertAt = items.length === 0 ? 0 : currentIndex + 1;
+      const trackIds = new Set(tracks.map((t) => t.id));
+      const cleanItems = items.filter((t) => !trackIds.has(t.id));
+      cleanItems.splice(insertAt, 0, ...tracks);
+      set({ items: cleanItems });
+      persistState(get());
+    },
+
     addToQueue: (track: Track) => {
       const { items } = get();
       const without = items.filter((t) => t.id !== track.id);
       set({ items: [...without, track] });
+      persistState(get());
+    },
+
+    addTracksToQueue: (tracks: Track[]) => {
+      if (tracks.length === 0) return;
+      const { items } = get();
+      const trackIds = new Set(tracks.map((t) => t.id));
+      const cleanItems = items.filter((t) => !trackIds.has(t.id));
+      set({ items: [...cleanItems, ...tracks] });
       persistState(get());
     },
 

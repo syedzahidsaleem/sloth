@@ -37,9 +37,14 @@ export function useTrackContextMenu() {
 export type TrackContextMenuRootProps = {
   children: ReactNode;
   className?: string;
+  triggerOnContextMenu?: boolean;
 };
 
-export const TrackContextMenuRoot: FC<TrackContextMenuRootProps> = ({ children, className }) => {
+export const TrackContextMenuRoot: FC<TrackContextMenuRootProps> = ({
+  children,
+  className,
+  triggerOnContextMenu = false,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -62,6 +67,14 @@ export const TrackContextMenuRoot: FC<TrackContextMenuRootProps> = ({ children, 
     };
   }, [isOpen]);
 
+  const handleContextMenu = (e: React.MouseEvent) => {
+    if (triggerOnContextMenu) {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsOpen(true);
+    }
+  };
+
   return (
     <TrackContextMenuContext.Provider
       value={{
@@ -70,7 +83,11 @@ export const TrackContextMenuRoot: FC<TrackContextMenuRootProps> = ({ children, 
         close: () => setIsOpen(false),
       }}
     >
-      <div ref={containerRef} className={cn('relative inline-flex', className)}>
+      <div
+        ref={containerRef}
+        onContextMenu={handleContextMenu}
+        className={cn('relative inline-flex', className)}
+      >
         {children}
       </div>
     </TrackContextMenuContext.Provider>
@@ -146,6 +163,7 @@ export type TrackContextMenuActionProps = {
   icon?: ReactNode;
   children: ReactNode;
   onClick?: () => void;
+  danger?: boolean;
   'data-testid'?: string;
 };
 
@@ -153,6 +171,7 @@ export const TrackContextMenuAction: FC<TrackContextMenuActionProps> = ({
   icon,
   children,
   onClick,
+  danger = false,
   'data-testid': testId,
 }) => {
   const { close } = useTrackContextMenu();
@@ -169,9 +188,10 @@ export const TrackContextMenuAction: FC<TrackContextMenuActionProps> = ({
       }}
       className={cn(
         'hover:surface-muted hover:border-border text-popover-foreground flex w-full cursor-pointer items-center gap-2.5 border-t border-transparent px-3 py-2 text-left text-xs font-semibold outline-none transition-colors not-last:border-b',
+        danger && 'text-accent-red hover:bg-accent-red/10',
       )}
     >
-      {icon && <span className="text-popover-foreground/70 shrink-0">{icon}</span>}
+      {icon && <span className={cn('shrink-0', danger ? 'text-accent-red' : 'text-popover-foreground/70')}>{icon}</span>}
       <span className="truncate">{children}</span>
     </button>
   );
@@ -231,6 +251,7 @@ export type TrackContextMenuContentProps = {
   children: ReactNode;
   align?: 'start' | 'end';
   sideOffset?: number;
+  className?: string;
 };
 
 export const TrackContextMenuDivider: FC = () => (
@@ -240,6 +261,7 @@ export const TrackContextMenuDivider: FC = () => (
 export const TrackContextMenuContent: FC<TrackContextMenuContentProps> = ({
   children,
   align = 'end',
+  className,
 }) => {
   const { isOpen } = useTrackContextMenu();
   const prefersReduced = useReducedMotion();
@@ -256,6 +278,7 @@ export const TrackContextMenuContent: FC<TrackContextMenuContentProps> = ({
           className={cn(
             'surface-popover border-border shadow-shadow absolute z-50 w-56 overflow-hidden rounded-[4px] border-(length:--border-width) py-1 select-none',
             align === 'end' ? 'right-0 top-full mt-1 origin-top-right' : 'left-0 top-full mt-1 origin-top-left',
+            className,
           )}
         >
           {children}
