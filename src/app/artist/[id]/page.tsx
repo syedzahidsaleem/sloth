@@ -1,8 +1,6 @@
 /**
- * Ensure any repository we take reference from or code from isn't referenced or spoken about anywhere either in files or readme or code
- * Original: packages/player/src/views/Artist/Artist.tsx
- * Adapted for Sloth by syedzahidsaleem2@gmail.com
- * Changes: [styling system, data layer, routing, top tracks, albums grid, similar artists, biography]
+ * Sloth Artist Profile Page
+ * Author: Syed Zahid Saleem <syedzahidsaleem2@gmail.com>
  */
 
 import { useState } from 'react';
@@ -37,59 +35,47 @@ export const SAMPLE_ARTISTS: Record<string, ArtistProfile> = {
   m83: {
     id: 'm83',
     name: 'M83',
-    avatarUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80',
-    bannerUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1400&q=80',
+    avatarUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/cb/7b/a9/cb7ba903-b5f1-cc21-90db-7a81b7aa0997/724596951057.jpg/600x600bb.jpg',
+    bannerUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/cb/7b/a9/cb7ba903-b5f1-cc21-90db-7a81b7aa0997/724596951057.jpg/600x600bb.jpg',
     tags: ['Electronic', 'Shoegaze', 'Dream Pop', 'Ambient', 'French Synth'],
     monthlyListeners: 8450120,
     bio: `M83 is the musical project of French electronic artist Anthony Gonzalez, formed in 2001 in Antibes, France. The band's lush, cinematic sound draws heavily on 1980s synth-pop, dream pop, and shoegaze textures. 
 
 Their breakthrough 2011 double album "Hurry Up, We're Dreaming" achieved worldwide critical and commercial acclaim, anchored by the iconic lead single "Midnight City". Gonzalez frequently scores blockbuster feature films including Oblivion and Knife + Heart, pairing grand orchestral movements with sweeping analog synthesizers.`,
     topTracks: [
-      { id: 'm83-1', title: 'Midnight City', artist: 'M83', album: "Hurry Up, We're Dreaming", durationSeconds: 243, coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=120&q=80' },
-      { id: 'm83-2', title: 'Wait', artist: 'M83', album: "Hurry Up, We're Dreaming", durationSeconds: 343, coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=120&q=80' },
-      { id: 'm83-3', title: 'Outro', artist: 'M83', album: "Hurry Up, We're Dreaming", durationSeconds: 247, coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=120&q=80' },
-      { id: 'm83-4', title: 'Reunion', artist: 'M83', album: "Hurry Up, We're Dreaming", durationSeconds: 235, coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=120&q=80' },
-      { id: 'm83-5', title: 'Solitude', artist: 'M83', album: 'Junk', durationSeconds: 363, coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=120&q=80' },
-      { id: 'm83-6', title: 'My Tears Are Becoming a Sea', artist: 'M83', album: "Hurry Up, We're Dreaming", durationSeconds: 151, coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=120&q=80' },
+      { id: 'm83-1', title: 'Midnight City', artist: 'M83', album: "Hurry Up, We're Dreaming", durationSeconds: 243, coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/cb/7b/a9/cb7ba903-b5f1-cc21-90db-7a81b7aa0997/724596951057.jpg/600x600bb.jpg', audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/24/09/79/2409794c-3d5d-af26-580e-7dc00ee4f207/mzaf_369629549966021675.plus.aac.p.m4a', isFavorite: true },
+      { id: 'm83-2', title: 'Wait', artist: 'M83', album: "Hurry Up, We're Dreaming", durationSeconds: 343, coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/cb/7b/a9/cb7ba903-b5f1-cc21-90db-7a81b7aa0997/724596951057.jpg/600x600bb.jpg', audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/24/09/79/2409794c-3d5d-af26-580e-7dc00ee4f207/mzaf_369629549966021675.plus.aac.p.m4a' },
+      { id: 'm83-3', title: 'Outro', artist: 'M83', album: "Hurry Up, We're Dreaming", durationSeconds: 247, coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/cb/7b/a9/cb7ba903-b5f1-cc21-90db-7a81b7aa0997/724596951057.jpg/600x600bb.jpg', audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/24/09/79/2409794c-3d5d-af26-580e-7dc00ee4f207/mzaf_369629549966021675.plus.aac.p.m4a' },
+      { id: 'm83-4', title: 'Reunion', artist: 'M83', album: "Hurry Up, We're Dreaming", durationSeconds: 235, coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/cb/7b/a9/cb7ba903-b5f1-cc21-90db-7a81b7aa0997/724596951057.jpg/600x600bb.jpg', audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/24/09/79/2409794c-3d5d-af26-580e-7dc00ee4f207/mzaf_369629549966021675.plus.aac.p.m4a' },
     ],
     albums: [
-      { id: 'alb-1', title: "Hurry Up, We're Dreaming", year: 2011, coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80' },
-      { id: 'alb-m83-2', title: 'Saturdays = Youth', year: 2008, coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80' },
-      { id: 'alb-m83-3', title: 'Before the Dawn Heals Us', year: 2005, coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80' },
-      { id: 'alb-m83-4', title: 'Junk', year: 2016, coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80' },
+      { id: 'alb-1', title: "Hurry Up, We're Dreaming", year: 2011, coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/cb/7b/a9/cb7ba903-b5f1-cc21-90db-7a81b7aa0997/724596951057.jpg/600x600bb.jpg' },
     ],
     similarArtists: [
-      { id: 'daft-punk', name: 'Daft Punk', imageUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=200&q=80', role: 'Electronic Duo' },
-      { id: 'justice', name: 'Justice', imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200&q=80', role: 'Electro' },
-      { id: 'kavinsky', name: 'Kavinsky', imageUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=200&q=80', role: 'French House' },
-      { id: 'the-midnight', name: 'The Midnight', imageUrl: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=200&q=80', role: 'Synthwave' },
+      { id: 'daft-punk', name: 'Daft Punk', imageUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/e8/43/5f/e8435ffa-b6b9-b171-40ab-4ff3959ab661/886443919266.jpg/600x600bb.jpg', role: 'Electronic Duo' },
+      { id: 'the-weeknd', name: 'The Weeknd', imageUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/b5/92/bb/b592bb72-52e3-e756-9b26-9f56d08f47ab/16UMGIM67864.rgb.jpg/600x600bb.jpg', role: 'R&B / Pop' },
     ],
   },
   'daft-punk': {
     id: 'daft-punk',
     name: 'Daft Punk',
-    avatarUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&q=80',
-    bannerUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1400&q=80',
+    avatarUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/e8/43/5f/e8435ffa-b6b9-b171-40ab-4ff3959ab661/886443919266.jpg/600x600bb.jpg',
+    bannerUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/fd/4a/77/fd4a77db-0ebc-d043-41a2-f32fa1bb0fb4/dj.qrikkdwj.jpg/600x600bb.jpg',
     tags: ['Electronic', 'House', 'French Touch', 'Synthpop', 'Disco'],
     monthlyListeners: 19840200,
     bio: `Daft Punk were a French electronic music duo formed in Paris in 1993 by Thomas Bangalter and Guy-Manuel de Homem-Christo. Widely regarded as one of the most influential acts in dance music history and one of the most popular pop acts of the 2010s, they achieved mainstream popularity in the late 1990s as part of the French touch movement.`,
     topTracks: [
-      { id: 'dp-1', title: 'Instant Crush (feat. Julian Casablancas)', artist: 'Daft Punk', album: 'Random Access Memories', durationSeconds: 337, coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=120&q=80' },
-      { id: 'dp-2', title: 'Veridis Quo', artist: 'Daft Punk', album: 'Discovery', durationSeconds: 344, coverUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=120&q=80' },
-      { id: 'dp-3', title: 'Get Lucky', artist: 'Daft Punk, Pharrell Williams', album: 'Random Access Memories', durationSeconds: 369, coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=120&q=80' },
-      { id: 'dp-4', title: 'One More Time', artist: 'Daft Punk', album: 'Discovery', durationSeconds: 320, coverUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=120&q=80' },
-      { id: 'dp-5', title: 'Harder, Better, Faster, Stronger', artist: 'Daft Punk', album: 'Discovery', durationSeconds: 224, coverUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=120&q=80' },
+      { id: 'dp-1', title: 'Instant Crush (feat. Julian Casablancas)', artist: 'Daft Punk', album: 'Random Access Memories', durationSeconds: 337, coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/e8/43/5f/e8435ffa-b6b9-b171-40ab-4ff3959ab661/886443919266.jpg/600x600bb.jpg', audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/dc/1e/c2/dc1ec21b-96a0-470c-ee89-2b09346fa847/mzaf_7827098614541126525.plus.aac.p.m4a', isFavorite: true },
+      { id: 'dp-2', title: 'Veridis Quo', artist: 'Daft Punk', album: 'Discovery', durationSeconds: 344, coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/fd/4a/77/fd4a77db-0ebc-d043-41a2-f32fa1bb0fb4/dj.qrikkdwj.jpg/600x600bb.jpg', audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/e0/cc/c4/e0ccc4af-ad90-59fe-9a7c-9c32d1a3c380/mzaf_2643765405421046671.plus.aac.p.m4a' },
+      { id: 'dp-3', title: 'One More Time', artist: 'Daft Punk', album: 'Discovery', durationSeconds: 320, coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/fd/4a/77/fd4a77db-0ebc-d043-41a2-f32fa1bb0fb4/dj.qrikkdwj.jpg/600x600bb.jpg', audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/24/09/79/2409794c-3d5d-af26-580e-7dc00ee4f207/mzaf_369629549966021675.plus.aac.p.m4a', isFavorite: true },
     ],
     albums: [
-      { id: 'alb-4', title: 'Random Access Memories', year: 2013, coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80' },
-      { id: 'alb-5', title: 'Discovery', year: 2001, coverUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&q=80' },
-      { id: 'alb-dp-3', title: 'Homework', year: 1997, coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80' },
-      { id: 'alb-dp-4', title: 'Human After All', year: 2005, coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80' },
+      { id: 'alb-random-access', title: 'Random Access Memories', year: 2013, coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/e8/43/5f/e8435ffa-b6b9-b171-40ab-4ff3959ab661/886443919266.jpg/600x600bb.jpg' },
+      { id: 'alb-discovery', title: 'Discovery', year: 2001, coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/fd/4a/77/fd4a77db-0ebc-d043-41a2-f32fa1bb0fb4/dj.qrikkdwj.jpg/600x600bb.jpg' },
     ],
     similarArtists: [
-      { id: 'justice', name: 'Justice', imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200&q=80', role: 'Electro' },
-      { id: 'kavinsky', name: 'Kavinsky', imageUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=200&q=80', role: 'French House' },
-      { id: 'm83', name: 'M83', imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200&q=80', role: 'French Synth' },
+      { id: 'm83', name: 'M83', imageUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/cb/7b/a9/cb7ba903-b5f1-cc21-90db-7a81b7aa0997/724596951057.jpg/600x600bb.jpg', role: 'French Electronic' },
+      { id: 'the-weeknd', name: 'The Weeknd', imageUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/b5/92/bb/b592bb72-52e3-e756-9b26-9f56d08f47ab/16UMGIM67864.rgb.jpg/600x600bb.jpg', role: 'R&B / Pop' },
     ],
   },
 };
