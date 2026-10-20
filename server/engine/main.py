@@ -12,6 +12,7 @@ import asyncio
 import json
 import logging
 import os
+import random
 import sqlite3
 import sys
 from pathlib import Path
@@ -467,4 +468,91 @@ def get_next_recommended_tracks(
     }
     RECOMMEND_CACHE[cache_key] = payload
     return payload
+
+
+class ShuffleOrderRequest(BaseModel):
+    tracks: List[Dict[str, Any]] = Field(..., description="List of track objects to shuffle")
+    current_track_id: Optional[str] = Field(default=None, description="Currently playing track ID to space apart")
+    user_id: Optional[str] = Field(default="user_primary", description="User ID for skip count lookup")
+
+
+@app.post("/api/engine/shuffle-order")
+@app.post("/engine/shuffle-order")
+def smart_shuffle_order(req: ShuffleOrderRequest):
+    """
+    Smart weighted shuffle algorithm:
+    1. Artist spacing: prevents consecutive tracks from the same artist whenever possible.
+    2. Skip penalties: tracks with recorded skip counts receive negative weight.
+    3. Preserves track objects while delivering an intelligent, fatigue-free shuffle order.
+    """
+    tracks = req.tracks
+    if not tracks or len(tracks) <= 1:
+        return {
+            "status": "ok",
+            "algorithm": "identity",
+            "shuffled_tracks": tracks,
+        }
+
+    # Extract skip counts from SQLite if available
+    db_path = DEFAULT_DB_PATH
+    skip_counts: Dict[str, int] = {}
+    try:
+        if os.path.exists(db_path):
+            conn = sqlite3.connect(db_path, timeout=2.0)
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, skip_count FROM tracks")
+            for row in cursor.fetchall():
+                skip_counts[row[0]] = row[1] or 0
+            conn.close()
+    except Exception as e:
+        logger.warning(f"Could not load skip counts for shuffle: {e}")
+
+    # Build pool of tracks with score weights
+    pool = []
+    for t in tracks:
+        tid = t.get("id", "")
+        skips = skip_counts.get(tid, 0)
+        weight = max(1.0, 10.0 - (skips * 2.0))
+        pool.append({
+            "track": t,
+            "artist": (t.get("artist") or "Unknown").strip().lower(),
+            "weight": weight,
+        })
+
+    # Artist-spaced greedy placement
+    shuffled_tracks: List[Dict[str, Any]] = []
+    last_artist = ""
+    if req.current_track_id:
+        for p in pool:
+            if p["track"].get("id") == req.current_track_id:
+                last_artist = p["artist"]
+                break
+
+    while pool:
+        # Filter candidates whose artist differs from the last placed artist
+        candidates = [p for p in pool if p["artist"] != last_artist]
+        if not candidates:
+            candidates = pool
+
+        # Weighted random selection among candidates
+        total_weight = sum(c["weight"] for c in candidates)
+        rnd = random.uniform(0, total_weight)
+        cumulative = 0.0
+        chosen = candidates[0]
+        for c in candidates:
+            cumulative += c["weight"]
+            if rnd <= cumulative:
+                chosen = c
+                break
+
+        shuffled_tracks.append(chosen["track"])
+        last_artist = chosen["artist"]
+        pool.remove(chosen)
+
+    return {
+        "status": "ok",
+        "algorithm": "smart_artist_spaced_weighted",
+        "shuffled_tracks": shuffled_tracks,
+    }
+
 

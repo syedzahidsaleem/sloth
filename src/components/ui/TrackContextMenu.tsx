@@ -233,6 +233,10 @@ export type TrackContextMenuContentProps = {
   sideOffset?: number;
 };
 
+export const TrackContextMenuDivider: FC = () => (
+  <div className="border-border my-1 border-b-(length:--border-width)" role="separator" />
+);
+
 export const TrackContextMenuContent: FC<TrackContextMenuContentProps> = ({
   children,
   align = 'end',
