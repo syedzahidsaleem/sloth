@@ -1,8 +1,6 @@
 /**
- * Ensure any repository we take reference from or code from isn't referenced or spoken about anywhere either in files or readme or code
- * Original: packages/player/src/views/Settings/Settings.tsx
- * Adapted for Sloth by syedzahidsaleem2@gmail.com
- * Changes: [styling system, data layer, routing, SQLite persistence, Sloth engine controls, equalizer, MCP server]
+ * Sloth UI Component
+ * Author: Syed Zahid Saleem <syedzahidsaleem2@gmail.com>
  */
 
 import { FC, useState, useEffect } from 'react';
