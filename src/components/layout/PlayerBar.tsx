@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useRef } from 'react';
 import {
   Play,
   Pause,
@@ -81,12 +81,35 @@ export const PlayerBar: FC<PlayerBarProps> = ({
 
   const remainingSeconds = Math.max(0, totalDurationSeconds - progressSeconds);
 
-  const handleSeekClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!onSeek || totalDurationSeconds <= 0) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
+  const seekRef = useRef<HTMLDivElement>(null);
+
+  const calculateAndSeek = (clientX: number) => {
+    if (!onSeek || totalDurationSeconds <= 0 || !seekRef.current) return;
+    const rect = seekRef.current.getBoundingClientRect();
+    const clickX = clientX - rect.left;
     const ratio = Math.max(0, Math.min(1, clickX / rect.width));
     onSeek(ratio * totalDurationSeconds);
+  };
+
+  const handleSeekClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    calculateAndSeek(e.clientX);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!onSeek || totalDurationSeconds <= 0) return;
+    calculateAndSeek(e.clientX);
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      calculateAndSeek(moveEvent.clientX);
+    };
+
+    const onMouseUp = () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
   };
 
   return (
@@ -100,14 +123,16 @@ export const PlayerBar: FC<PlayerBarProps> = ({
     >
       {/* 1. Full-Width Top Progress / Seek Bar */}
       <div
+        ref={seekRef}
         data-testid="player-seek-bar"
         className="border-border surface-seekbar-track relative h-4 w-full cursor-pointer border-t-(length:--border-width) select-none"
         onClick={handleSeekClick}
+        onMouseDown={handleMouseDown}
       >
         {/* Timecodes: elapsed left, remaining right */}
-        <div className="pointer-events-none absolute inset-0 z-10 flex flex-row items-center justify-between px-2 text-[10px] font-mono leading-none font-semibold">
-          <span className="tabular-nums text-foreground/80">{formatTime(progressSeconds)}</span>
-          <span className="tabular-nums text-foreground/80">-{formatTime(remainingSeconds)}</span>
+        <div className="pointer-events-none absolute inset-0 z-10 flex flex-row items-center justify-between px-2 text-[11px] font-mono leading-none font-medium pt-0.5">
+          <span className="tabular-nums text-foreground">{formatTime(progressSeconds)}</span>
+          <span className="tabular-nums text-foreground">-{formatTime(remainingSeconds)}</span>
         </div>
 
         {/* Progress Bar Fill */}

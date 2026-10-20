@@ -150,4 +150,26 @@ describe('Sloth WebAudioPlayer Architecture', () => {
     player.setVolume(0.8);
     expect(listener).toHaveBeenCalledTimes(2); // No further calls after unsubscribe
   });
+
+  it('calculates seek positions and starts playback from 0:00', async () => {
+    await player.openPlaylist(mockTracks, 0, false);
+    const totalDuration = mockTracks[0].durationSeconds;
+    const clickRatio = 0.5;
+    const targetSeconds = clickRatio * totalDuration;
+    expect(targetSeconds).toBe(177.5);
+
+    // Initial playback start is 0:00
+    player.seek(0);
+    expect(player.getState().currentTime).toBe(0);
+
+    // Mock duration on active channel for test environment
+    const active = (player as any).getActiveChannel();
+    if (active.audio) {
+      active.audio.duration = totalDuration;
+    }
+
+    // Seeking to half the track accurately reaches targetSeconds
+    player.seek(targetSeconds);
+    expect(player.getState().currentTime).toBe(177.5);
+  });
 });
