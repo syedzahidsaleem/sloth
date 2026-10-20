@@ -200,7 +200,7 @@ class SLOTHRecommender:
                     ("Starboy", "The Weeknd, Daft Punk", "Starboy", ["R&B", "Pop"], 0.75, 0.70, 186.0),
                     ("Instant Crush", "Daft Punk ft. Julian Casablancas", "Random Access Memories", ["Electronic", "Synthpop"], 0.65, 0.68, 110.0),
                     ("Veridis Quo", "Daft Punk", "Discovery", ["Electronic", "House"], 0.55, 0.50, 106.0),
-                    ("Resonance", "HOME", "Odyssey", ["Chillwave", "Synthwave"], 0.60, 0.55, 85.0),
+                    ("One More Time", "Daft Punk", "Discovery", ["Electronic", "House"], 0.80, 0.85, 123.0),
                     ("Days of Thunder", "The Midnight", "Days of Thunder", ["Synthwave", "Retrowave"], 0.72, 0.78, 120.0),
                     ("Sunset", "The Midnight", "Endless Summer", ["Synthwave", "Electronic"], 0.68, 0.75, 115.0),
                     ("Tum Hi Ho", "Arijit Singh", "Aashiqui 2", ["Bollywood", "Romantic"], 0.35, 0.60, 94.0),
@@ -564,17 +564,18 @@ class SLOTHRecommender:
                     mode=cached.mode,
                 )
             else:
+                fallback_track = list(self._tracks_cache.values())[idx % len(self._tracks_cache)] if self._tracks_cache else None
                 t = RecommendedTrack(
-                    track_id=tid,
+                    track_id=fallback_track.track_id if fallback_track else tid,
                     score=float(1.0 - (idx * 0.02)),
-                    title=f"Synthetic Track #{idx+1}",
-                    artist="Sloth Neural Ensemble",
-                    artist_id="artist_synth",
-                    album="Diffusion Session",
-                    genres=["Ambient", "Electronic"],
+                    title=fallback_track.title if fallback_track else "Midnight City",
+                    artist=fallback_track.artist if fallback_track else "M83",
+                    artist_id=fallback_track.artist_id if fallback_track else "m83",
+                    album=fallback_track.album if fallback_track else "Hurry Up, We're Dreaming",
+                    genres=fallback_track.genres if fallback_track else ["Electronic", "Synthpop"],
                     valence=wp.valence,
                     arousal=wp.arousal,
-                    bpm=120.0,
+                    bpm=fallback_track.bpm if fallback_track else 105.0,
                     key=0,
                     mode=1,
                 )
