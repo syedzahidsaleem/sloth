@@ -65,3 +65,33 @@ export function getAllUserPrefs(db: SlothDatabase = defaultDb): Record<string, u
 
   return output;
 }
+
+/**
+ * -------------------------------------------------------------
+ * Resume Position Helpers
+ * -------------------------------------------------------------
+ */
+
+export function getResumePositions(db: SlothDatabase = defaultDb): Record<string, number> {
+  return getUserPref<Record<string, number>>('resume_positions', {}, db) ?? {};
+}
+
+export function getResumePosition(trackId: string, db: SlothDatabase = defaultDb): number | null {
+  const map = getResumePositions(db);
+  return map[trackId] ?? null;
+}
+
+export function setResumePosition(trackId: string, positionMs: number, db: SlothDatabase = defaultDb): void {
+  const map = getResumePositions(db);
+  map[trackId] = positionMs;
+  setUserPref('resume_positions', map, db);
+}
+
+export function clearResumePosition(trackId: string, db: SlothDatabase = defaultDb): void {
+  const map = getResumePositions(db);
+  if (trackId in map) {
+    delete map[trackId];
+    setUserPref('resume_positions', map, db);
+  }
+}
+

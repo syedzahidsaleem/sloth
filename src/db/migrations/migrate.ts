@@ -104,6 +104,36 @@ CREATE TABLE IF NOT EXISTS lyrics (
     source TEXT,
     created_at INTEGER NOT NULL DEFAULT (unixepoch())
 );
+
+CREATE TABLE IF NOT EXISTS liked_songs (
+    track_id TEXT PRIMARY KEY NOT NULL,
+    title TEXT,
+    artist TEXT,
+    album TEXT,
+    cover_url TEXT,
+    duration_ms INTEGER,
+    source TEXT,
+    liked_at INTEGER NOT NULL DEFAULT (unixepoch())
+);
+CREATE INDEX IF NOT EXISTS idx_liked_songs_liked_at ON liked_songs(liked_at);
+
+CREATE TABLE IF NOT EXISTS followed_artists (
+    artist_id TEXT PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    image_url TEXT,
+    followed_at INTEGER NOT NULL DEFAULT (unixepoch())
+);
+CREATE INDEX IF NOT EXISTS idx_followed_artists_followed_at ON followed_artists(followed_at);
+
+CREATE TABLE IF NOT EXISTS saved_albums (
+    album_id TEXT PRIMARY KEY NOT NULL,
+    title TEXT NOT NULL,
+    artist TEXT,
+    cover_url TEXT,
+    release_year INTEGER,
+    saved_at INTEGER NOT NULL DEFAULT (unixepoch())
+);
+CREATE INDEX IF NOT EXISTS idx_saved_albums_saved_at ON saved_albums(saved_at);
 `;
 
 /**

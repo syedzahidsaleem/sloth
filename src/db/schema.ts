@@ -138,6 +138,45 @@ export const lyricsTranslations = sqliteTable('lyrics_translations', {
   createdAt: integer('created_at').default(sql`(unixepoch())`).notNull(),
 });
 
+/**
+ * 11. Liked Songs Table
+ * User favorite tracks with metadata and timestamp
+ */
+export const likedSongs = sqliteTable('liked_songs', {
+  trackId: text('track_id').primaryKey(),
+  title: text('title'),
+  artist: text('artist'),
+  album: text('album'),
+  coverUrl: text('cover_url'),
+  durationMs: integer('duration_ms'),
+  source: text('source'),
+  likedAt: integer('liked_at').default(sql`(unixepoch())`).notNull(),
+});
+
+/**
+ * 12. Followed Artists Table
+ * Followed artists with metadata and timestamp
+ */
+export const followedArtists = sqliteTable('followed_artists', {
+  artistId: text('artist_id').primaryKey(),
+  name: text('name').notNull(),
+  imageUrl: text('image_url'),
+  followedAt: integer('followed_at').default(sql`(unixepoch())`).notNull(),
+});
+
+/**
+ * 13. Saved Albums Table
+ * User saved albums with metadata and timestamp
+ */
+export const savedAlbums = sqliteTable('saved_albums', {
+  albumId: text('album_id').primaryKey(),
+  title: text('title').notNull(),
+  artist: text('artist'),
+  coverUrl: text('cover_url'),
+  releaseYear: integer('release_year'),
+  savedAt: integer('saved_at').default(sql`(unixepoch())`).notNull(),
+});
+
 // Infer model types
 export type Track = typeof tracks.$inferSelect;
 export type NewTrack = typeof tracks.$inferInsert;
@@ -168,4 +207,13 @@ export type NewLyricsItem = typeof lyrics.$inferInsert;
 
 export type LyricsTranslationItem = typeof lyricsTranslations.$inferSelect;
 export type NewLyricsTranslationItem = typeof lyricsTranslations.$inferInsert;
+
+export type LikedSong = typeof likedSongs.$inferSelect;
+export type NewLikedSong = typeof likedSongs.$inferInsert;
+
+export type FollowedArtist = typeof followedArtists.$inferSelect;
+export type NewFollowedArtist = typeof followedArtists.$inferInsert;
+
+export type SavedAlbum = typeof savedAlbums.$inferSelect;
+export type NewSavedAlbum = typeof savedAlbums.$inferInsert;
 

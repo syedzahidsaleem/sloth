@@ -11,3 +11,5 @@ export * from './overrides';
 export * from './prefs';
 export * from './sync';
 export * from './lyrics';
+export * from './library';
+

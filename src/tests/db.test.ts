@@ -61,6 +61,22 @@ import {
   upsertLyrics,
   getLyricsByTrackId,
   deleteLyrics,
+  likeSong,
+  unlikeSong,
+  isSongLiked,
+  getAllLikedSongs,
+  followArtist,
+  unfollowArtist,
+  isArtistFollowed,
+  getAllFollowedArtists,
+  saveAlbum,
+  unsaveAlbum,
+  isAlbumSaved,
+  getAllSavedAlbums,
+  getResumePositions,
+  getResumePosition,
+  setResumePosition,
+  clearResumePosition,
 } from '../db';
 
 describe('Sloth Local Database Layer (SQLite + Drizzle ORM)', () => {
@@ -519,6 +535,100 @@ describe('Sloth Local Database Layer (SQLite + Drizzle ORM)', () => {
       const deleted = deleteLyrics('trk-300', conn.db);
       expect(deleted).toBe(true);
       expect(getLyricsByTrackId('trk-300', conn.db)).toBeNull();
+    });
+  });
+
+  describe('10. Library Domain Queries (Liked Songs, Followed Artists, Saved Albums, Resume Positions)', () => {
+    it('manages liked songs', () => {
+      expect(isSongLiked('trk-999', conn.db)).toBe(false);
+
+      const liked = likeSong(
+        {
+          trackId: 'trk-999',
+          title: 'Starboy',
+          artist: 'The Weeknd',
+          album: 'Starboy',
+          source: 'youtube',
+          durationMs: 230000,
+        },
+        conn.db
+      );
+
+      expect(liked.trackId).toBe('trk-999');
+      expect(liked.title).toBe('Starboy');
+      expect(isSongLiked('trk-999', conn.db)).toBe(true);
+
+      const all = getAllLikedSongs(10, conn.db);
+      expect(all).toHaveLength(1);
+      expect(all[0].trackId).toBe('trk-999');
+
+      const unliked = unlikeSong('trk-999', conn.db);
+      expect(unliked).toBe(true);
+      expect(isSongLiked('trk-999', conn.db)).toBe(false);
+    });
+
+    it('manages followed artists', () => {
+      expect(isArtistFollowed('art-555', conn.db)).toBe(false);
+
+      const followed = followArtist(
+        {
+          artistId: 'art-555',
+          name: 'The Weeknd',
+          imageUrl: 'https://example.com/weeknd.jpg',
+        },
+        conn.db
+      );
+
+      expect(followed.artistId).toBe('art-555');
+      expect(followed.name).toBe('The Weeknd');
+      expect(isArtistFollowed('art-555', conn.db)).toBe(true);
+
+      const all = getAllFollowedArtists(10, conn.db);
+      expect(all).toHaveLength(1);
+      expect(all[0].artistId).toBe('art-555');
+
+      const unfollowed = unfollowArtist('art-555', conn.db);
+      expect(unfollowed).toBe(true);
+      expect(isArtistFollowed('art-555', conn.db)).toBe(false);
+    });
+
+    it('manages saved albums', () => {
+      expect(isAlbumSaved('alb-777', conn.db)).toBe(false);
+
+      const saved = saveAlbum(
+        {
+          albumId: 'alb-777',
+          title: 'After Hours',
+          artist: 'The Weeknd',
+          releaseYear: 2020,
+        },
+        conn.db
+      );
+
+      expect(saved.albumId).toBe('alb-777');
+      expect(saved.title).toBe('After Hours');
+      expect(isAlbumSaved('alb-777', conn.db)).toBe(true);
+
+      const all = getAllSavedAlbums(10, conn.db);
+      expect(all).toHaveLength(1);
+      expect(all[0].albumId).toBe('alb-777');
+
+      const unsaved = unsaveAlbum('alb-777', conn.db);
+      expect(unsaved).toBe(true);
+      expect(isAlbumSaved('alb-777', conn.db)).toBe(false);
+    });
+
+    it('manages track playback resume positions', () => {
+      expect(getResumePosition('trk-resume-1', conn.db)).toBeNull();
+
+      setResumePosition('trk-resume-1', 45200, conn.db);
+      expect(getResumePosition('trk-resume-1', conn.db)).toBe(45200);
+
+      const all = getResumePositions(conn.db);
+      expect(all['trk-resume-1']).toBe(45200);
+
+      clearResumePosition('trk-resume-1', conn.db);
+      expect(getResumePosition('trk-resume-1', conn.db)).toBeNull();
     });
   });
 });
