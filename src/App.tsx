@@ -557,7 +557,13 @@ export default function App() {
         topbar={
           <TopBar
             searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
+            onSearchChange={(q) => {
+              setSearchQuery(q);
+              if (q.trim().length > 0 && route.view !== 'search') {
+                setActiveTab('search');
+                setRoute({ view: 'search' });
+              }
+            }}
             onSearchSubmit={handleSearchSubmit}
             onBack={() => handleTabChange('dashboard')}
             onForward={() => {}}
@@ -738,6 +744,7 @@ export default function App() {
             {route.view === 'search' && (
               <SearchPage
                 initialQuery={searchQuery}
+                onQueryChange={setSearchQuery}
                 onPlayTrack={handlePlayTrack}
                 onPlayAll={(tracks) => {
                   setQueue(tracks);
@@ -750,6 +757,7 @@ export default function App() {
                 }}
                 onSelectArtist={(artId) => setRoute({ view: 'artist', id: artId })}
                 onSelectAlbum={(albId) => setRoute({ view: 'album', id: albId })}
+                onSelectPlaylist={(plId) => setRoute({ view: 'playlists', id: plId })}
                 currentTrackId={currentTrack.id}
                 isPlaying={isPlaying}
               />
