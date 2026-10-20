@@ -15,26 +15,18 @@ import {
   ModalActions,
   ModalClose,
 } from '@/components/ui';
+import { usePlaylistStore } from '@/stores/playlistStore';
 
 export interface PlaylistsPageProps {
   onSelectPlaylist?: (playlistId: string) => void;
   onPlayPlaylist?: (playlistId: string) => void;
 }
 
-export interface PlaylistItem {
-  id: string;
-  name: string;
-  itemCount: number;
-  thumbnails: string[];
-}
-
-const INITIAL_PLAYLISTS: PlaylistItem[] = [];
-
 export default function PlaylistsPage({
   onSelectPlaylist,
   onPlayPlaylist,
 }: PlaylistsPageProps) {
-  const [playlists, setPlaylists] = useState<PlaylistItem[]>(INITIAL_PLAYLISTS);
+  const { playlists, createPlaylist } = usePlaylistStore();
   const [filterText, setFilterText] = useState('');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState('');
@@ -48,13 +40,7 @@ export default function PlaylistsPage({
 
   const handleCreatePlaylist = () => {
     if (!newPlaylistName.trim()) return;
-    const newEntry: PlaylistItem = {
-      id: `pl-${Date.now()}`,
-      name: newPlaylistName.trim(),
-      itemCount: 0,
-      thumbnails: [],
-    };
-    setPlaylists([newEntry, ...playlists]);
+    createPlaylist(newPlaylistName.trim());
     setNewPlaylistName('');
     setIsCreateOpen(false);
   };
@@ -123,7 +109,7 @@ export default function PlaylistsPage({
             <PlaylistCard
               key={pl.id}
               name={pl.name}
-              itemCount={pl.itemCount}
+              itemCount={pl.trackIds ? pl.trackIds.length : pl.tracks?.length || 0}
               thumbnails={pl.thumbnails}
               onClick={() => onSelectPlaylist?.(pl.id)}
               onPlay={() => onPlayPlaylist?.(pl.id)}
