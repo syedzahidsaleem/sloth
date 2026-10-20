@@ -47,7 +47,7 @@ export function resultToUITrack(res: AskSlothTrackResult): Track {
     artist: res.artist,
     album: res.album || 'Unknown Album',
     durationSeconds: 180 + (Math.abs(hashString(res.track_id)) % 140),
-    coverUrl: `https://images.unsplash.com/photo-${1510000000000 + (Math.abs(hashString(res.track_id)) % 50000000)}?w=300&q=80`,
+    coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/cb/7b/a9/cb7ba903-b5f1-cc21-90db-7a81b7aa0997/724596951057.jpg/600x600bb.jpg',
     badge: `${Math.round(res.bpm)} BPM • ${Math.round(res.score * 100)}% match`,
   };
 }

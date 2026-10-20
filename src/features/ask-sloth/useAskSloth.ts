@@ -100,25 +100,31 @@ export function useAskSloth() {
         throw new Error(`Engine returned HTTP ${res.status}`);
       }
     } catch {
-      // Deterministic offline fallback mock for reliable UI / test mode
-      const mockResults: AskSlothTrackResult[] = Array.from({ length: 8 }, (_, i) => {
-        const id = `mock_${i + 1}`;
-        const bpm = 80 + i * 8;
-        return {
-          track_id: id,
-          score: Math.max(0.65, 0.95 - i * 0.04),
-          title: `Atmospheric Echo #${i + 1}`,
-          artist: i % 2 === 0 ? 'M83' : 'Kavv',
-          artist_id: `artist_${i}`,
-          album: 'Resonance Sessions',
-          genres: ['ambient', 'chillout', 'downtempo'],
-          valence: 0.35 + (i % 3) * 0.1,
-          arousal: 0.25 + (i % 4) * 0.1,
-          bpm,
-          key: i % 12,
-          mode: 1,
-        };
-      });
+      // Deterministic offline fallback using genuine tracks for reliable UI / test mode
+      const genuineTracks = [
+        { title: 'Midnight City', artist: 'M83', album: "Hurry Up, We're Dreaming", genres: ['Electronic', 'Synthpop'], bpm: 105 },
+        { title: 'Starboy', artist: 'The Weeknd, Daft Punk', album: 'Starboy', genres: ['R&B', 'Pop'], bpm: 186 },
+        { title: 'Instant Crush', artist: 'Daft Punk ft. Julian Casablancas', album: 'Random Access Memories', genres: ['Electronic', 'Synthpop'], bpm: 110 },
+        { title: 'Veridis Quo', artist: 'Daft Punk', album: 'Discovery', genres: ['Electronic', 'House'], bpm: 106 },
+        { title: 'One More Time', artist: 'Daft Punk', album: 'Discovery', genres: ['Electronic', 'House'], bpm: 123 },
+        { title: 'Levitating', artist: 'Dua Lipa', album: 'Future Nostalgia', genres: ['Pop', 'Disco'], bpm: 103 },
+        { title: 'BAARISHEIN', artist: 'Anuv Jain', album: 'Baarishein - Single', genres: ['Indie', 'Acoustic'], bpm: 110 },
+        { title: 'Wait', artist: 'M83', album: "Hurry Up, We're Dreaming", genres: ['Electronic', 'Ambient'], bpm: 85 },
+      ];
+      const mockResults: AskSlothTrackResult[] = genuineTracks.map((t, i) => ({
+        track_id: `sloth_offline_${i + 1}`,
+        score: Math.max(0.65, 0.95 - i * 0.04),
+        title: t.title,
+        artist: t.artist,
+        artist_id: `artist_${i}`,
+        album: t.album,
+        genres: t.genres,
+        valence: 0.5,
+        arousal: 0.5,
+        bpm: t.bpm,
+        key: i % 12,
+        mode: 1,
+      }));
 
       setResults(mockResults);
       setInterpretation(
