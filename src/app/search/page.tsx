@@ -31,7 +31,7 @@ export const ALL_SEARCHABLE_TRACKS: Track[] = [
     artist: 'Anuv Jain',
     album: 'Single',
     durationSeconds: 208,
-    coverUrl: 'https://i.ytimg.com/vi/PJWemSzExXs/hq720.jpg',
+    coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/a7/46/2f/a7462f7e-6dde-b235-2f5e-90e31af919a7/7799192004134_cover.jpg/600x600bb.jpg',
     audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/22/a0/7d/22a07d46-b904-0717-95da-ec335aac6407/mzaf_13582924850644616784.plus.aac.p.m4a',
     isFavorite: true,
   },
@@ -41,7 +41,7 @@ export const ALL_SEARCHABLE_TRACKS: Track[] = [
     artist: 'Anuv Jain',
     album: 'Acoustic Sessions',
     durationSeconds: 215,
-    coverUrl: 'https://i.ytimg.com/vi/NLKwRW2y-sg/hq720.jpg',
+    coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/a7/46/2f/a7462f7e-6dde-b235-2f5e-90e31af919a7/7799192004134_cover.jpg/600x600bb.jpg',
     audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/22/a0/7d/22a07d46-b904-0717-95da-ec335aac6407/mzaf_13582924850644616784.plus.aac.p.m4a',
     isFavorite: false,
   },
@@ -51,7 +51,7 @@ export const ALL_SEARCHABLE_TRACKS: Track[] = [
     artist: 'Arko Feat. Atif Aslam',
     album: 'Baarishein - Single',
     durationSeconds: 260,
-    coverUrl: 'https://i.ytimg.com/vi/6fTilfKvxbo/hq720.jpg',
+    coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music128/v4/da/cc/80/dacc8042-e493-4568-124e-38555270ac63/00602537882793.rgb.jpg/600x600bb.jpg',
     audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/b4/f2/75/b4f2758c-0124-3da6-420a-074656306afa/mzaf_136391431314283786.plus.aac.p.m4a',
     isFavorite: true,
   },
@@ -61,7 +61,7 @@ export const ALL_SEARCHABLE_TRACKS: Track[] = [
     artist: 'M83',
     album: "Hurry Up, We're Dreaming",
     durationSeconds: 243,
-    coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80',
+    coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/cb/7b/a9/cb7ba903-b5f1-cc21-90db-7a81b7aa0997/724596951057.jpg/600x600bb.jpg',
     audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/24/09/79/2409794c-3d5d-af26-580e-7dc00ee4f207/mzaf_369629549966021675.plus.aac.p.m4a',
     isFavorite: true,
   },
@@ -71,19 +71,9 @@ export const ALL_SEARCHABLE_TRACKS: Track[] = [
     artist: 'The Weeknd, Daft Punk',
     album: 'Starboy',
     durationSeconds: 230,
-    coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&q=80',
+    coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/b5/92/bb/b592bb72-52e3-e756-9b26-9f56d08f47ab/16UMGIM67864.rgb.jpg/600x600bb.jpg',
     audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/11/71/d6/1171d6ad-3c96-e027-2af6-58028426588c/mzaf_15137631797407745471.plus.aac.p.m4a',
     isFavorite: false,
-  },
-  {
-    id: 'trk-3',
-    title: 'Resonance',
-    artist: 'HOME',
-    album: 'Odyssey',
-    durationSeconds: 212,
-    coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80',
-    audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/33/bb/1a/33bb1a1a-1448-3118-6891-639e61784145/mzaf_3810752549913623044.plus.aac.p.m4a',
-    isFavorite: true,
   },
   {
     id: 'trk-4',
@@ -91,26 +81,37 @@ export const ALL_SEARCHABLE_TRACKS: Track[] = [
     artist: 'Daft Punk, Julian Casablancas',
     album: 'Random Access Memories',
     durationSeconds: 337,
-    coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80',
+    coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/e8/43/5f/e8435ffa-b6b9-b171-40ab-4ff3959ab661/886443919266.jpg/600x600bb.jpg',
     audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/dc/1e/c2/dc1ec21b-96a0-470c-ee89-2b09346fa847/mzaf_7827098614541126525.plus.aac.p.m4a',
     isFavorite: false,
+  },
+  {
+    id: 'trk-5',
+    title: 'Veridis Quo',
+    artist: 'Daft Punk',
+    album: 'Discovery',
+    durationSeconds: 344,
+    coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/fd/4a/77/fd4a77db-0ebc-d043-41a2-f32fa1bb0fb4/dj.qrikkdwj.jpg/600x600bb.jpg',
+    audioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/e0/cc/c4/e0ccc4af-ad90-59fe-9a7c-9c32d1a3c380/mzaf_2643765405421046671.plus.aac.p.m4a',
+    isFavorite: true,
   },
 ];
 
 export const ALL_SEARCHABLE_ARTISTS: { id: string; name: string; role: string; imageUrl?: string }[] = [
-  { id: 'anuv-jain', name: 'Anuv Jain', role: 'Singer-Songwriter' },
-  { id: 'atif-aslam', name: 'Atif Aslam', role: 'Playback Singer' },
-  { id: 'm83', name: 'M83', role: 'Electronic / Synth' },
-  { id: 'daft-punk', name: 'Daft Punk', role: 'French House Duo' },
-  { id: 'the-weeknd', name: 'The Weeknd', role: 'R&B / Pop' },
-  { id: 'home', name: 'HOME', role: 'Chillwave' },
+  { id: 'anuv-jain', name: 'Anuv Jain', role: 'Singer-Songwriter', imageUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/a7/46/2f/a7462f7e-6dde-b235-2f5e-90e31af919a7/7799192004134_cover.jpg/600x600bb.jpg' },
+  { id: 'atif-aslam', name: 'Atif Aslam', role: 'Playback Singer', imageUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music128/v4/da/cc/80/dacc8042-e493-4568-124e-38555270ac63/00602537882793.rgb.jpg/600x600bb.jpg' },
+  { id: 'm83', name: 'M83', role: 'Electronic / Synth', imageUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/cb/7b/a9/cb7ba903-b5f1-cc21-90db-7a81b7aa0997/724596951057.jpg/600x600bb.jpg' },
+  { id: 'daft-punk', name: 'Daft Punk', role: 'French House Duo', imageUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/e8/43/5f/e8435ffa-b6b9-b171-40ab-4ff3959ab661/886443919266.jpg/600x600bb.jpg' },
+  { id: 'the-weeknd', name: 'The Weeknd', role: 'R&B / Pop', imageUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/b5/92/bb/b592bb72-52e3-e756-9b26-9f56d08f47ab/16UMGIM67864.rgb.jpg/600x600bb.jpg' },
+  { id: 'dua-lipa', name: 'Dua Lipa', role: 'Pop / Disco', imageUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/6c/11/d6/6c11d681-aa3a-d59e-4c2e-f77e181026ab/190295092665.jpg/600x600bb.jpg' },
 ];
 
 export const ALL_SEARCHABLE_ALBUMS: { id: string; title: string; subtitle: string; coverUrl?: string }[] = [
-  { id: 'alb-hurry-up', title: "Hurry Up, We're Dreaming", subtitle: 'M83 • 2011' },
-  { id: 'alb-random-access', title: 'Random Access Memories', subtitle: 'Daft Punk • 2013' },
-  { id: 'alb-odyssey', title: 'Odyssey', subtitle: 'HOME • 2014' },
-  { id: 'alb-starboy', title: 'Starboy', subtitle: 'The Weeknd • 2016' },
+  { id: 'alb-hurry-up', title: "Hurry Up, We're Dreaming", subtitle: 'M83 • 2011', coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/cb/7b/a9/cb7ba903-b5f1-cc21-90db-7a81b7aa0997/724596951057.jpg/600x600bb.jpg' },
+  { id: 'alb-random-access', title: 'Random Access Memories', subtitle: 'Daft Punk • 2013', coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/e8/43/5f/e8435ffa-b6b9-b171-40ab-4ff3959ab661/886443919266.jpg/600x600bb.jpg' },
+  { id: 'alb-discovery', title: 'Discovery', subtitle: 'Daft Punk • 2001', coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/fd/4a/77/fd4a77db-0ebc-d043-41a2-f32fa1bb0fb4/dj.qrikkdwj.jpg/600x600bb.jpg' },
+  { id: 'alb-starboy', title: 'Starboy', subtitle: 'The Weeknd • 2016', coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/b5/92/bb/b592bb72-52e3-e756-9b26-9f56d08f47ab/16UMGIM67864.rgb.jpg/600x600bb.jpg' },
+  { id: 'alb-future-nostalgia', title: 'Future Nostalgia', subtitle: 'Dua Lipa • 2020', coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/6c/11/d6/6c11d681-aa3a-d59e-4c2e-f77e181026ab/190295092665.jpg/600x600bb.jpg' },
 ];
 
 export const POPULAR_SEARCH_TAGS: string[] = [
@@ -229,13 +230,16 @@ export const SearchPage: FC<SearchPageProps> = ({
       }
 
       if (!isCancelled) {
-        // Filter from seed catalog if both remote sources fail
-        const matched = ALL_SEARCHABLE_TRACKS.filter(
-          (t) =>
-            t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            t.artist.toLowerCase().includes(searchTerm.toLowerCase()),
-        );
-        setTracks(matched.length > 0 ? matched : ALL_SEARCHABLE_TRACKS);
+        // If both remote sources returned nothing, filter from genuine seed catalog or show empty
+        const trimmed = debouncedQuery.trim();
+        const matched = trimmed
+          ? ALL_SEARCHABLE_TRACKS.filter(
+              (t) =>
+                t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                t.artist.toLowerCase().includes(searchTerm.toLowerCase()),
+            )
+          : ALL_SEARCHABLE_TRACKS;
+        setTracks(matched);
         setIsLoading(false);
       }
     };
