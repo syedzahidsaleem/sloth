@@ -1,8 +1,12 @@
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
+import { Play, Heart, Disc3, Radio, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ViewShell } from '@/components/ui/ViewShell';
 import { CardsRow, CardsRowItem } from '@/components/ui/CardsRow';
 import { TrackRow, Track } from '@/components/ui/TrackRow';
+import { ArtistCard } from '@/components/ui/ArtistCard';
+import { useLibraryStore } from '@/stores/libraryStore';
+import { FALLBACK_DAILY_MIXES, DailyMix } from '@/services/engineClient';
 
 export interface DashboardPageProps {
   onBrowsePlugins?: () => void;
@@ -22,22 +26,55 @@ export const RECENTLY_PLAYED_ALBUMS: CardsRowItem[] = [
     imageUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/cb/7b/a9/cb7ba903-b5f1-cc21-90db-7a81b7aa0997/724596951057.jpg/600x600bb.jpg',
   },
   {
-    id: 'alb-2',
+    id: 'alb-starboy',
     title: 'Starboy',
     subtitle: 'The Weeknd • 2016',
     imageUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/b5/92/bb/b592bb72-52e3-e756-9b26-9f56d08f47ab/16UMGIM67864.rgb.jpg/600x600bb.jpg',
   },
   {
-    id: 'alb-3',
+    id: 'alb-random-access',
     title: 'Random Access Memories',
     subtitle: 'Daft Punk • 2013',
     imageUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/e8/43/5f/e8435ffa-b6b9-b171-40ab-4ff3959ab661/886443919266.jpg/600x600bb.jpg',
   },
   {
-    id: 'alb-4',
+    id: 'alb-future-nostalgia',
     title: 'Future Nostalgia',
     subtitle: 'Dua Lipa • 2020',
     imageUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/6c/11/d6/6c11d681-aa3a-d59e-4c2e-f77e181026ab/190295092665.jpg/600x600bb.jpg',
+  },
+];
+
+export const FEATURED_ARTISTS = [
+  {
+    id: 'm83',
+    name: 'M83',
+    role: 'Synthpop & Electronic',
+    imageUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/cb/7b/a9/cb7ba903-b5f1-cc21-90db-7a81b7aa0997/724596951057.jpg/600x600bb.jpg',
+  },
+  {
+    id: 'daft-punk',
+    name: 'Daft Punk',
+    role: 'Electronic Duo',
+    imageUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/e8/43/5f/e8435ffa-b6b9-b171-40ab-4ff3959ab661/886443919266.jpg/600x600bb.jpg',
+  },
+  {
+    id: 'the-weeknd',
+    name: 'The Weeknd',
+    role: 'R&B / Pop',
+    imageUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/b5/92/bb/b592bb72-52e3-e756-9b26-9f56d08f47ab/16UMGIM67864.rgb.jpg/600x600bb.jpg',
+  },
+  {
+    id: 'dua-lipa',
+    name: 'Dua Lipa',
+    role: 'Dance Pop',
+    imageUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/6c/11/d6/6c11d681-aa3a-d59e-4c2e-f77e181026ab/190295092665.jpg/600x600bb.jpg',
+  },
+  {
+    id: 'anuv-jain',
+    name: 'Anuv Jain',
+    role: 'Indie Acoustic',
+    imageUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/a7/46/2f/a7462f7e-6dde-b235-2f5e-90e31af919a7/7799192004134_cover.jpg/600x600bb.jpg',
   },
 ];
 
@@ -118,17 +155,69 @@ export const TRENDING_TRACKS: Track[] = [
 export const DashboardPage: FC<DashboardPageProps> = ({
   onBrowsePlugins,
   onPlayTrack,
+  onSelectArtist,
   onSelectAlbum,
   tracks = [],
   currentTrackId,
   isPlaying,
 }) => {
+  const { isLiked, toggleLikeSong } = useLibraryStore();
   const displayTracks = tracks.length > 0 ? tracks : TRENDING_TRACKS;
+
+  // Time-based greeting
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  }, []);
+
+  // Quick 6 shortcut items
+  const quickShortcuts = [
+    {
+      id: 'sc-liked',
+      title: 'Liked Songs',
+      coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&auto=format&fit=crop&q=80',
+      icon: <Heart size={20} className="fill-accent-red text-accent-red" />,
+      onClick: () => onPlayTrack?.(displayTracks[0]),
+    },
+    {
+      id: 'sc-dm1',
+      title: 'Daily Mix 1',
+      coverUrl: FALLBACK_DAILY_MIXES[0].coverUrl,
+      onClick: () => onPlayTrack?.(FALLBACK_DAILY_MIXES[0].tracks[0]),
+    },
+    {
+      id: 'sc-dm2',
+      title: 'Daily Mix 2',
+      coverUrl: FALLBACK_DAILY_MIXES[1].coverUrl,
+      onClick: () => onPlayTrack?.(FALLBACK_DAILY_MIXES[1].tracks[0]),
+    },
+    {
+      id: 'sc-m83',
+      title: 'M83 Radio',
+      coverUrl: FEATURED_ARTISTS[0].imageUrl,
+      icon: <Radio size={18} className="text-[var(--primary)]" />,
+      onClick: () => onSelectArtist?.('M83'),
+    },
+    {
+      id: 'sc-daftpunk',
+      title: 'Daft Punk',
+      coverUrl: FEATURED_ARTISTS[1].imageUrl,
+      onClick: () => onSelectArtist?.('Daft Punk'),
+    },
+    {
+      id: 'sc-weeknd',
+      title: 'The Weeknd',
+      coverUrl: FEATURED_ARTISTS[2].imageUrl,
+      onClick: () => onSelectArtist?.('The Weeknd'),
+    },
+  ];
 
   return (
     <ViewShell
       data-testid="dashboard-view"
-      title="Dashboard"
+      title={greeting}
       headerActions={
         <div className="flex items-center gap-2">
           {onBrowsePlugins && (
@@ -144,107 +233,182 @@ export const DashboardPage: FC<DashboardPageProps> = ({
         </div>
       }
     >
-      <div className="flex flex-col gap-8 pb-12 w-full">
-        {/* Welcome to Sloth Banner */}
-        <div className="surface-card border-border shadow-shadow rounded-lg border-(length:--border-width) p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex flex-col gap-1">
-            <h2 className="text-xl font-extrabold tracking-tight text-foreground">
-              Welcome to Sloth
-            </h2>
-            <p className="text-xs text-foreground/70 max-w-xl">
-              Unified music streaming with 6-layer Gated Fusion, acoustic embeddings, and community plugins. Play music instantly below.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => onPlayTrack?.(displayTracks[0])}
-              className="font-bold"
-            >
-              ▶ Play Trending Mix
-            </Button>
-            {onBrowsePlugins && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={onBrowsePlugins}
-                className="font-bold"
-              >
-                Plugins Store
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Sloth Picks / Neural Recommendations */}
+      <div className="flex flex-col gap-8 pb-12 w-full font-sans select-none">
+        {/* ROW 1: Time-Based Greeting + 6 Quick Shortcuts Grid */}
         <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold text-foreground">Neural Recommendations</h3>
-            <span className="text-xs font-mono text-foreground/50">BERT4Rec + LightHGCN + MERT</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {SLOTH_PICKS.map((pick) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {quickShortcuts.map((sc) => (
               <div
-                key={pick.id}
-                className="surface-card border-border shadow-shadow group relative flex flex-col rounded-lg border-(length:--border-width) p-3 transition-transform hover:-translate-y-0.5 cursor-pointer"
-                onClick={() => {
-                  const match = displayTracks.find((t) => t.title.toLowerCase() === pick.title.toLowerCase()) || {
-                    id: pick.id,
-                    title: pick.title,
-                    artist: pick.subtitle.split('•')[0]?.trim() || 'Artist',
-                    durationSeconds: 240,
-                    coverUrl: pick.imageUrl,
-                    isFavorite: false,
-                  };
-                  onPlayTrack?.(match);
-                }}
+                key={sc.id}
+                onClick={sc.onClick}
+                className="group relative flex items-center gap-3 overflow-hidden rounded-md border-2 border-border surface-muted hover:surface-card hover:shadow-[3px_3px_0px_var(--border)] transition-all cursor-pointer p-0 pr-3"
               >
-                <div className="relative aspect-square w-full overflow-hidden rounded border-(length:--border-width) border-border mb-3">
-                  <img
-                    src={pick.imageUrl}
-                    alt={pick.title}
-                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                  />
-                  <div className="absolute top-2 right-2 rounded bg-black/80 px-2 py-0.5 text-[10px] font-bold text-white border border-white/20">
-                    {pick.badge}
+                <div className="size-14 shrink-0 overflow-hidden border-r-2 border-border bg-black/20 flex items-center justify-center">
+                  {sc.icon ? (
+                    sc.icon
+                  ) : (
+                    <img
+                      src={sc.coverUrl}
+                      alt={sc.title}
+                      className="size-full object-cover pointer-events-none select-none"
+                    />
+                  )}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-bold text-foreground truncate">
+                    {sc.title}
                   </div>
                 </div>
-                <div className="text-sm font-bold text-foreground truncate">{pick.title}</div>
-                <div className="text-xs text-foreground/60 truncate">{pick.subtitle}</div>
+
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity size-8 rounded-full bg-[var(--primary)] text-foreground flex items-center justify-center shadow-[1px_1px_0px_var(--border)] shrink-0">
+                  <Play size={13} className="fill-current translate-x-0.5" />
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Recently Played / Featured Albums */}
+        {/* ROW 2: Jump Back In */}
         <CardsRow
-          title="Featured Albums"
+          title="Jump Back In"
+          subtitle="Recently played albums and sessions"
           items={RECENTLY_PLAYED_ALBUMS.map((item) => ({
             ...item,
             onClick: () => onSelectAlbum?.(item.id),
           }))}
         />
 
-        {/* Recommended Tracks Table */}
-        <div className="flex flex-col gap-2">
+        {/* ROW 3: Top Mixes (Daily Mixes 1 - 6) */}
+        <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold text-foreground">Trending & Popular Tracks</h3>
-            <span className="text-xs text-foreground/50">{displayTracks.length} tracks available</span>
+            <div>
+              <h3 className="text-lg font-bold text-foreground">Top Mixes</h3>
+              <p className="text-xs opacity-60 text-foreground">Fresh daily mixes tailored to your taste</p>
+            </div>
+            <span className="text-xs font-mono opacity-50 text-foreground">Updated Today</span>
           </div>
-          <div className="flex flex-col gap-1">
-            {displayTracks.map((track, i) => (
-              <TrackRow
-                key={track.id}
-                track={track}
-                index={i + 1}
-                isCurrent={track.id === currentTrackId}
-                isPlaying={isPlaying && track.id === currentTrackId}
-                onPlay={onPlayTrack}
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+            {FALLBACK_DAILY_MIXES.map((mix: DailyMix) => (
+              <div
+                key={mix.id}
+                onClick={() => onPlayTrack?.(mix.tracks[0])}
+                className="group relative flex flex-col p-2.5 rounded-md border-2 border-border surface-muted hover:surface-card hover:shadow-[3px_3px_0px_var(--border)] transition-all cursor-pointer"
+              >
+                <div className="relative aspect-square w-full rounded overflow-hidden border border-border bg-black/20 mb-2">
+                  <img
+                    src={mix.coverUrl}
+                    alt={mix.title}
+                    className="size-full object-cover group-hover:scale-105 transition-transform"
+                  />
+                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
+                    <div className="size-9 rounded-full bg-[var(--primary)] text-foreground flex items-center justify-center shadow-[2px_2px_0px_var(--border)]">
+                      <Play size={14} className="fill-current translate-x-0.5" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-xs font-bold text-foreground truncate">{mix.title}</div>
+                <div className="text-[11px] opacity-70 text-foreground truncate mt-0.5">{mix.genre}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ROW 4: More of What You Like (Neural Gated Fusion) */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-foreground">More of What You Like</h3>
+              <p className="text-xs opacity-60 text-foreground">Synthesized via LightHGCN + MERT acoustic embeddings</p>
+            </div>
+            <span className="text-xs font-mono text-[var(--primary)] flex items-center gap-1">
+              <Sparkles size={12} />
+              AI Matched
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            {displayTracks.slice(0, 4).map((track) => (
+              <div
+                key={`pick-${track.id}`}
+                onClick={() => onPlayTrack?.(track)}
+                className="surface-card border-border shadow-[2px_2px_0px_var(--border)] group relative flex flex-col rounded-md border-2 p-3 transition-transform hover:-translate-y-0.5 cursor-pointer"
+              >
+                <div className="relative aspect-square w-full overflow-hidden rounded border border-border mb-2.5">
+                  <img
+                    src={track.coverUrl}
+                    alt={track.title}
+                    className="size-full object-cover transition-transform group-hover:scale-105"
+                  />
+                  <div className="absolute top-2 right-2 rounded bg-black/80 px-2 py-0.5 text-[10px] font-bold text-white border border-white/20">
+                    Neural Match (98%)
+                  </div>
+                </div>
+                <div className="text-xs font-bold text-foreground truncate">{track.title}</div>
+                <div className="text-[11px] opacity-70 text-foreground truncate mt-0.5">{track.artist}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ROW 5: Recently Played Artists */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold text-foreground">Recently Played Artists</h3>
+            <span className="text-xs opacity-50 text-foreground">Top Affinities</span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+            {FEATURED_ARTISTS.map((artist) => (
+              <ArtistCard
+                key={artist.id}
+                name={artist.name}
+                role={artist.role}
+                imageUrl={artist.imageUrl}
+                onClick={() => onSelectArtist?.(artist.name || artist.id)}
               />
             ))}
           </div>
         </div>
+
+        {/* ROW 6: Based on Recent Listening */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-foreground">Based on Recent Listening</h3>
+              <p className="text-xs opacity-60 text-foreground">Tracks with similar tempo, valence, and key signature</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            {displayTracks.map((track, i) => (
+              <TrackRow
+                key={track.id}
+                track={{
+                  ...track,
+                  isFavorite: isLiked(track.id),
+                }}
+                index={i}
+                isCurrent={track.id === currentTrackId}
+                isPlaying={isPlaying && track.id === currentTrackId}
+                onPlay={onPlayTrack}
+                onFavoriteToggle={() => toggleLikeSong(track)}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* ROW 7: New Releases & Discovery */}
+        <CardsRow
+          title="New Releases & Discovery"
+          subtitle="Explore the latest album drops"
+          items={RECENTLY_PLAYED_ALBUMS.map((item) => ({
+            ...item,
+            onClick: () => onSelectAlbum?.(item.title || item.id),
+          }))}
+        />
       </div>
     </ViewShell>
   );
