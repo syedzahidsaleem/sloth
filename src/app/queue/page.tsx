@@ -1,8 +1,6 @@
 /**
- * Ensure any repository we take reference from or code from isn't referenced or spoken about anywhere either in files or readme or code
- * Original: packages/ui/src/components/QueuePanel/QueuePanel.tsx
- * Adapted for Sloth by syedzahidsaleem2@gmail.com
- * Changes: [styling system, data layer, routing, full-screen queue page view, clear queue action]
+ * Sloth Play Queue Page
+ * Author: Syed Zahid Saleem <syedzahidsaleem2@gmail.com>
  */
 
 import { useState } from 'react';
@@ -18,16 +16,9 @@ export interface QueuePageProps {
   onClearQueue?: () => void;
 }
 
-const DEFAULT_QUEUE: Track[] = [
-  { id: 'trk-1', title: 'Midnight City', artist: 'M83', album: "Hurry Up, We're Dreaming", durationSeconds: 243, coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=120&q=80', isFavorite: true },
-  { id: 'trk-2', title: 'Starboy', artist: 'The Weeknd, Daft Punk', album: 'Starboy', durationSeconds: 230, coverUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=120&q=80', isFavorite: false },
-  { id: 'trk-3', title: 'Resonance', artist: 'HOME', album: 'Odyssey', durationSeconds: 212, coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=120&q=80', isFavorite: true },
-  { id: 'trk-4', title: 'Instant Crush', artist: 'Daft Punk, Julian Casablancas', album: 'Random Access Memories', durationSeconds: 337, coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=120&q=80', isFavorite: false },
-];
-
 export default function QueuePage({
-  queue = DEFAULT_QUEUE,
-  currentTrackId = 'trk-1',
+  queue = [],
+  currentTrackId,
   isPlaying = false,
   onPlayTrack,
   onClearQueue,
