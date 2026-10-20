@@ -12,15 +12,15 @@ import {
 import { Track } from './components/ui/TrackRow';
 import { SettingsModal, SettingsTabId } from './components/settings/SettingsModal';
 
-const SLIDE_DISTANCE = 16;
-const SCALE_FACTOR = 0.98;
+const SLIDE_DISTANCE = 24;
+const SCALE_FACTOR = 0.96;
 
 const routeVariants = {
   enter: {
     x: SLIDE_DISTANCE,
     scale: SCALE_FACTOR,
     opacity: 0,
-    filter: 'blur(3px)',
+    filter: 'blur(4px)',
   },
   center: {
     x: 0,
@@ -32,7 +32,7 @@ const routeVariants = {
     x: -SLIDE_DISTANCE,
     scale: SCALE_FACTOR,
     opacity: 0,
-    filter: 'blur(3px)',
+    filter: 'blur(4px)',
   },
 };
 
@@ -334,51 +334,9 @@ export default function App() {
   }, [isPlaying, currentTrack.durationSeconds, currentTrack.audioUrl, repeatMode]);
 
   const handlePlayTrack = useCallback(async (incomingTrack: Track) => {
-    let track = incomingTrack;
+    let track = { ...incomingTrack };
 
-    // Resolve audio preview URL if missing
-    if (!track.audioUrl) {
-      try {
-        const res = await fetch(
-          `http://127.0.0.1:8001/api/resolve?title=${encodeURIComponent(track.title)}&artist=${encodeURIComponent(track.artist)}`,
-          { signal: AbortSignal.timeout(3000) }
-        );
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.audioUrl) {
-            track = {
-              ...track,
-              audioUrl: data.audioUrl,
-              durationSeconds: data.durationSeconds || track.durationSeconds,
-              coverUrl: data.coverUrl || track.coverUrl,
-            };
-          }
-        }
-      } catch {
-        // Fallback to direct iTunes search
-        try {
-          const itunesRes = await fetch(
-            `https://itunes.apple.com/search?term=${encodeURIComponent(`${track.title} ${track.artist}`)}&entity=song&limit=1`,
-            { signal: AbortSignal.timeout(3000) }
-          );
-          if (itunesRes.ok) {
-            const itunesData = await itunesRes.json();
-            if (itunesData.results?.[0]?.previewUrl) {
-              track = {
-                ...track,
-                audioUrl: itunesData.results[0].previewUrl,
-                coverUrl:
-                  (itunesData.results[0].artworkUrl100 || '').replace('100x100bb', '600x600bb') ||
-                  track.coverUrl,
-              };
-            }
-          }
-        } catch {
-          // Keep original track
-        }
-      }
-    }
-
+    // Update queue immediately so UI reflects track info and state without delay
     setQueue((prev) => {
       const existingIdx = prev.findIndex((t) => t.id === track.id);
       if (existingIdx !== -1) {
@@ -394,16 +352,51 @@ export default function App() {
     setProgress(0);
     setIsPlaying(true);
 
+    // Record into history
+    setHistoryTracks((prev) => [track, ...prev.filter((t) => t.id !== track.id)]);
+
+    // Check if track needs real full-length audio stream starting from 0:00
+    const isPreview =
+      !track.audioUrl ||
+      track.audioUrl.includes('itunes.apple.com') ||
+      track.audioUrl.includes('mzstatic') ||
+      track.audioUrl.includes('AudioPreview');
+
+    if (isPreview) {
+      try {
+        const query = `${track.title} ${track.artist}`.trim();
+        const res = await fetch(
+          `http://127.0.0.1:8001/api/stream/resolve?q=${encodeURIComponent(query)}`,
+          { signal: AbortSignal.timeout(6000) }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.audioUrl) {
+            track = {
+              ...track,
+              audioUrl: data.audioUrl,
+              durationSeconds: data.durationSeconds || track.durationSeconds,
+              coverUrl: data.coverUrl || track.coverUrl,
+            };
+            setQueue((prev) =>
+              prev.map((t) => (t.id === track.id ? { ...t, ...track } : t))
+            );
+          }
+        }
+      } catch (err) {
+        console.warn('Full stream resolution error, fallback in place:', err);
+      }
+    }
+
     if (audioRef.current && track.audioUrl) {
-      audioRef.current.src = track.audioUrl;
+      if (audioRef.current.src !== track.audioUrl) {
+        audioRef.current.src = track.audioUrl;
+      }
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch((err) => {
         console.warn('Direct audio play error:', err);
       });
     }
-
-    // Record into history
-    setHistoryTracks((prev) => [track, ...prev.filter((t) => t.id !== track.id)]);
   }, []);
 
   const handleNextTrack = () => {
@@ -533,7 +526,7 @@ export default function App() {
                   damping: 30,
                   mass: 0.8,
                 }}
-                className="h-full w-full overflow-hidden flex flex-col"
+                className="will-change-[transform,filter] surface-background absolute inset-0 h-full w-full overflow-hidden flex flex-col"
               >
                 {/* VIEW 1: DASHBOARD (Matches Screenshot 1) */}
             {(route.view === 'dashboard' || route.view === 'home') && (
@@ -729,13 +722,21 @@ export default function App() {
         ref={audioRef}
         preload="auto"
         onTimeUpdate={(e) => {
-          setProgress(Math.floor(e.currentTarget.currentTime));
+          setProgress(e.currentTarget.currentTime);
         }}
         onDurationChange={(e) => {
-          const dur = Math.floor(e.currentTarget.duration);
-          if (dur > 0 && (!currentTrack.durationSeconds || currentTrack.durationSeconds === 0)) {
+          const dur = e.currentTarget.duration;
+          if (dur > 0 && isFinite(dur)) {
             setQueue((prev) =>
-              prev.map((t, idx) => (idx === currentTrackIndex ? { ...t, durationSeconds: dur } : t))
+              prev.map((t, idx) => (idx === currentTrackIndex ? { ...t, durationSeconds: Math.round(dur) } : t))
+            );
+          }
+        }}
+        onLoadedMetadata={(e) => {
+          const dur = e.currentTarget.duration;
+          if (dur > 0 && isFinite(dur)) {
+            setQueue((prev) =>
+              prev.map((t, idx) => (idx === currentTrackIndex ? { ...t, durationSeconds: Math.round(dur) } : t))
             );
           }
         }}
@@ -745,9 +746,13 @@ export default function App() {
               audioRef.current.currentTime = 0;
               audioRef.current.play().catch(console.warn);
             }
+            setProgress(0);
           } else {
             handleNextTrack();
           }
+        }}
+        onError={(e) => {
+          console.warn('Audio element error:', e);
         }}
       />
     </>
