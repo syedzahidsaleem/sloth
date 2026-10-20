@@ -228,27 +228,49 @@ export function getSlothSettings(): SlothSettings {
   }
 }
 
+export function withTransitionsSuspended(fn: () => void): void {
+  if (typeof document === 'undefined') {
+    fn();
+    return;
+  }
+  document.documentElement.setAttribute('data-transitions', 'suspended');
+  fn();
+  if (typeof requestAnimationFrame !== 'undefined') {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.documentElement.removeAttribute('data-transitions');
+      });
+    });
+  } else {
+    setTimeout(() => {
+      document.documentElement.removeAttribute('data-transitions');
+    }, 0);
+  }
+}
+
 export function applyTheme(themeId: string) {
   if (typeof document === 'undefined') return;
-  const root = document.documentElement;
-  
-  if (themeId === 'dark') {
-    root.setAttribute('data-theme', 'dark');
-  } else if (themeId === 'light') {
-    root.removeAttribute('data-theme');
-  } else {
-    // Preserve current dark mode state when switching basic themes
-    const wasDark = root.getAttribute('data-theme') === 'dark';
-    if (wasDark) {
+  withTransitionsSuspended(() => {
+    const root = document.documentElement;
+
+    if (themeId === 'dark') {
       root.setAttribute('data-theme', 'dark');
-    } else {
+    } else if (themeId === 'light') {
       root.removeAttribute('data-theme');
+    } else {
+      // Preserve current dark mode state when switching basic themes
+      const wasDark = root.getAttribute('data-theme') === 'dark';
+      if (wasDark) {
+        root.setAttribute('data-theme', 'dark');
+      } else {
+        root.removeAttribute('data-theme');
+      }
+      const fullId = themeId.startsWith('nuclear:') ? themeId : 'nuclear:' + themeId;
+      root.setAttribute('data-theme-id', fullId);
+      const cleanId = themeId.replace('nuclear:', '').replace('sloth:', '');
+      root.setAttribute('data-theme-variant', cleanId);
     }
-    const fullId = themeId.startsWith('nuclear:') ? themeId : `nuclear:${themeId}`;
-    root.setAttribute('data-theme-id', fullId);
-    const cleanId = themeId.replace('nuclear:', '').replace('sloth:', '');
-    root.setAttribute('data-theme-variant', cleanId);
-  }
+  });
 }
 
 /**

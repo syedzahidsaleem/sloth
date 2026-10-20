@@ -86,6 +86,12 @@
   --primary: oklch(0.8 0.12 4.56);
   --primary-foreground: oklch(0% 0 0);
 
+  /* Seekbar colors (Matches Nuclear) */
+  --seekbar-track: var(--muted);
+  --seekbar-track-foreground: var(--muted-foreground);
+  --seekbar: var(--primary);
+  --seekbar-foreground: var(--primary-foreground);
+
   /* Accents and their foregrounds */
   --accent-green: oklch(0.88 0.13 145);
   --accent-yellow: oklch(0.8882 0.15 95);
@@ -345,4 +351,21 @@
   background-color: var(--accent-red);
   background-image: var(--accent-red-gradient, none);
   color: var(--accent-red-foreground);
+}
+
+@utility surface-seekbar-track {
+  background-color: var(--seekbar-track, var(--muted));
+  background-image: var(--seekbar-track-gradient, var(--muted-gradient, none));
+  color: var(--seekbar-track-foreground, var(--muted-foreground));
+}
+
+@utility surface-seekbar {
+  background-color: var(--seekbar, var(--primary));
+  background-image: var(--seekbar-gradient, var(--primary-gradient, none));
+  color: var(--seekbar-foreground, var(--primary-foreground));
+}
+
+[data-transitions='suspended'],
+[data-transitions='suspended'] * {
+  transition: none !important;
 }

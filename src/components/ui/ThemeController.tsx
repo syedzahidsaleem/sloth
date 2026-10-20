@@ -1,6 +1,7 @@
 import { FC, useEffect, useState } from 'react';
 import { Sun, Moon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { withTransitionsSuspended } from '@/services/settingsStore';
 
 export type ThemeControllerProps = {
   className?: string;
@@ -26,11 +27,13 @@ export const ThemeController: FC<ThemeControllerProps> = ({ className }) => {
   const toggleTheme = () => {
     const nextDark = !isDark;
     setIsDark(nextDark);
-    if (nextDark) {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    } else {
-      document.documentElement.removeAttribute('data-theme');
-    }
+    withTransitionsSuspended(() => {
+      if (nextDark) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+    });
   };
 
   return (
