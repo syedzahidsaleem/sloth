@@ -56,6 +56,7 @@ import { GenreQuizModal } from './components/onboarding';
 import { getSlothSettings, applyTheme } from './services/settingsStore';
 import { ToastContainer } from './components/ui/ToastContainer';
 import { useLibraryStore } from './stores/libraryStore';
+import { useKeyboardShortcuts } from './hooks';
 
 export const SAMPLE_TRACKS: Track[] = [
   {
@@ -225,39 +226,7 @@ export default function App() {
     setIsSettingsOpen(true);
   };
 
-  // Keyboard Shortcuts (Space, Ctrl+K, Ctrl+Q, Ctrl+F)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if typing in input
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement ||
-        (e.target as HTMLElement).isContentEditable
-      ) {
-        return;
-      }
 
-      if (e.code === 'Space') {
-        e.preventDefault();
-        if (queue.length > 0) {
-          setIsPlaying((prev) => !prev);
-        }
-      } else if (e.ctrlKey && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        askSloth.openModal();
-      } else if (e.ctrlKey && e.key.toLowerCase() === 'q') {
-        e.preventDefault();
-        setIsRightCollapsed((prev) => !prev);
-      } else if (e.ctrlKey && e.key.toLowerCase() === 'f') {
-        e.preventDefault();
-        const searchInput = document.querySelector<HTMLInputElement>('[data-testid="search-box"]');
-        searchInput?.focus();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [queue.length, askSloth]);
 
   // Initial Check & Theme Initialization
   useEffect(() => {
@@ -532,6 +501,55 @@ export default function App() {
     setActiveTab('search');
     setRoute({ view: 'search' });
   };
+
+  // Global Keyboard Shortcuts
+  useKeyboardShortcuts({
+    onPlayPause: () => {
+      if (queue.length === 0) {
+        handlePlayTrack(SAMPLE_TRACKS[0]);
+      } else {
+        setIsPlaying((prev) => !prev);
+      }
+    },
+    onSeekRelative: (deltaSeconds) => {
+      setProgress((prev) => {
+        const next = Math.max(0, Math.min(currentTrack.durationSeconds || 300, prev + deltaSeconds));
+        if (audioRef.current && isFinite(next)) {
+          audioRef.current.currentTime = next;
+        }
+        return next;
+      });
+    },
+    onVolumeChangeRelative: (deltaPercent) => {
+      setVolume((prev) => Math.max(0, Math.min(100, prev + deltaPercent)));
+      setIsMuted(false);
+    },
+    onPreviousTrack: handlePreviousTrack,
+    onNextTrack: handleNextTrack,
+    onMuteToggle: () => setIsMuted((prev) => !prev),
+    onLyricsToggle: () => {
+      if (route.view === 'lyrics') {
+        setRoute({ view: 'dashboard' });
+        setActiveTab('dashboard');
+      } else {
+        setRoute({ view: 'lyrics' });
+        setActiveTab('lyrics' as any);
+      }
+    },
+    onQueueToggle: () => setIsRightCollapsed((prev) => !prev),
+    onAskSlothOpen: () => askSloth.openModal(),
+    onSearchFocus: () => {
+      setActiveTab('search');
+      setRoute({ view: 'search' });
+    },
+    onShuffleToggle: () => setIsShuffle((prev) => !prev),
+    onRepeatCycle: handleRepeatToggle,
+    onEscape: () => {
+      if (isSettingsOpen) setIsSettingsOpen(false);
+      if (isOnboardingOpen) setIsOnboardingOpen(false);
+      askSloth.closeModal();
+    },
+  });
 
   return (
     <>
