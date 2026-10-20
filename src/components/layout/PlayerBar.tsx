@@ -11,6 +11,7 @@ import {
   VolumeX,
   Music2,
   Heart,
+  ListMusic,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Slider } from '@/components/ui/Slider';
@@ -37,6 +38,8 @@ export interface PlayerBarProps {
   isMuted?: boolean;
   onVolumeChange?: (vol: number) => void;
   onMuteToggle?: () => void;
+  isQueueOpen?: boolean;
+  onQueueToggle?: () => void;
   onTitleClick?: () => void;
   onArtistClick?: () => void;
   className?: string;
@@ -70,6 +73,8 @@ export const PlayerBar: FC<PlayerBarProps> = ({
   isMuted = false,
   onVolumeChange,
   onMuteToggle,
+  isQueueOpen = false,
+  onQueueToggle,
   onTitleClick,
   onArtistClick,
   className = '',
@@ -273,8 +278,25 @@ export const PlayerBar: FC<PlayerBarProps> = ({
           </Button>
         </div>
 
-        {/* RIGHT COLUMN: Volume Icon & Horizontal Slider */}
+        {/* RIGHT COLUMN: Queue Toggle + Volume Icon & Horizontal Slider */}
         <div className="flex items-center justify-end gap-2">
+          {onQueueToggle && (
+            <Button
+              size="icon-sm"
+              variant={isQueueOpen ? 'default' : 'text'}
+              onClick={onQueueToggle}
+              data-testid="player-queue-button"
+              title={isQueueOpen ? 'Close Queue' : 'Open Queue'}
+              aria-label="Queue"
+              aria-pressed={isQueueOpen}
+              className={cn('size-8 transition-transform active:scale-95', {
+                'border-2 border-border shadow-[2px_2px_0px_var(--border)]': isQueueOpen,
+              })}
+            >
+              <ListMusic size={16} />
+            </Button>
+          )}
+
           <Button
             size="icon-sm"
             variant="text"
