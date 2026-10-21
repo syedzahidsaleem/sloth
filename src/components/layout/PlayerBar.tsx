@@ -12,7 +12,7 @@ import {
   Music2,
   Heart,
   ListMusic,
-  Mic2,
+  MicVocal,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Slider } from '@/components/ui/Slider';
@@ -348,17 +348,20 @@ export const PlayerBar: FC<PlayerBarProps> = ({
           {onLyricsToggle && (
             <Button
               size="icon-sm"
-              variant={isLyricsOpen ? 'default' : 'text'}
+              variant={isLyricsOpen ? 'default' : 'secondary'}
               onClick={onLyricsToggle}
               data-testid="player-lyrics-button"
-              title={isLyricsOpen ? 'Close Lyrics' : 'Open Lyrics'}
+              title={isLyricsOpen ? 'Hide lyrics (Ctrl+L)' : 'Show lyrics (Ctrl+L)'}
               aria-label="Lyrics"
               aria-pressed={isLyricsOpen}
-              className={cn('size-8 transition-transform active:scale-95', {
-                'border-2 border-border shadow-[2px_2px_0px_var(--border)]': isLyricsOpen,
-              })}
+              className={cn(
+                'size-8 transition-all cursor-pointer font-bold',
+                isLyricsOpen
+                  ? 'surface-primary border-(length:--border-width) border-border text-foreground shadow-shadow translate-x-shadow-x translate-y-shadow-y'
+                  : 'hover:border-(length:--border-width) hover:border-border text-foreground/80 hover:text-foreground'
+              )}
             >
-              <Mic2 size={16} />
+              <MicVocal size={16} />
             </Button>
           )}
 

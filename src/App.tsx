@@ -209,13 +209,35 @@ export default function App() {
   // Ask Sloth natural language command palette
   const askSloth = useAskSloth();
 
+  // Track previous route and tab so closing lyrics returns exactly where the user was
+  const lastNonLyricsRouteRef = useRef<{ view: any; id?: string }>({ view: 'dashboard' });
+  const lastNonLyricsTabRef = useRef<NavItemKey>('dashboard');
+
+  const handleToggleLyrics = () => {
+    if (route.view === 'lyrics') {
+      const prevRoute = lastNonLyricsRouteRef.current || { view: 'dashboard' };
+      const prevTab = lastNonLyricsTabRef.current || 'dashboard';
+      setRoute(prevRoute as any);
+      setActiveTab(prevTab);
+    } else {
+      lastNonLyricsRouteRef.current = route;
+      lastNonLyricsTabRef.current = activeTab;
+      setRoute({ view: 'lyrics' });
+      setActiveTab('lyrics' as any);
+    }
+  };
+
   // Handle Tab Switch
   const handleTabChange = (tab: NavItemKey) => {
-    setActiveTab(tab);
     if (tab === 'preferences' || tab === 'settings') {
       setIsSettingsOpen(true);
       return;
     }
+    if (tab === 'lyrics') {
+      handleToggleLyrics();
+      return;
+    }
+    setActiveTab(tab);
     if (tab === 'dashboard' || tab === 'home') {
       setRoute({ view: 'dashboard' });
     } else {
@@ -578,15 +600,7 @@ export default function App() {
     onPreviousTrack: handlePreviousTrack,
     onNextTrack: handleNextTrack,
     onMuteToggle: () => setIsMuted((prev) => !prev),
-    onLyricsToggle: () => {
-      if (route.view === 'lyrics') {
-        setRoute({ view: 'dashboard' });
-        setActiveTab('dashboard');
-      } else {
-        setRoute({ view: 'lyrics' });
-        setActiveTab('lyrics' as any);
-      }
-    },
+    onLyricsToggle: handleToggleLyrics,
     onQueueToggle: () => setIsRightCollapsed((prev) => !prev),
     onAskSlothOpen: () => askSloth.openModal(),
     onSearchFocus: () => {
@@ -596,8 +610,18 @@ export default function App() {
     onShuffleToggle: () => setIsShuffle((prev) => !prev),
     onRepeatCycle: handleRepeatToggle,
     onEscape: () => {
-      if (isSettingsOpen) setIsSettingsOpen(false);
-      if (isOnboardingOpen) setIsOnboardingOpen(false);
+      if (isSettingsOpen) {
+        setIsSettingsOpen(false);
+        return;
+      }
+      if (isOnboardingOpen) {
+        setIsOnboardingOpen(false);
+        return;
+      }
+      if (route.view === 'lyrics') {
+        handleToggleLyrics();
+        return;
+      }
       askSloth.closeModal();
     },
   });
@@ -655,15 +679,7 @@ export default function App() {
             isQueueOpen={!isRightCollapsed}
             onQueueToggle={() => setIsRightCollapsed((prev) => !prev)}
             isLyricsOpen={route.view === 'lyrics'}
-            onLyricsToggle={() => {
-              if (route.view === 'lyrics') {
-                setRoute({ view: 'dashboard' });
-                setActiveTab('dashboard');
-              } else {
-                setRoute({ view: 'lyrics' });
-                setActiveTab('lyrics' as any);
-              }
-            }}
+            onLyricsToggle={handleToggleLyrics}
             onArtworkClick={() => {
               if (currentTrack.album) {
                 setRoute({ view: 'album', id: currentTrack.album });
@@ -805,12 +821,14 @@ export default function App() {
             {/* VIEW 7: LYRICS */}
             {route.view === 'lyrics' && (
               <LyricsPage
+                trackId={currentTrack.id}
                 trackTitle={currentTrack.title}
                 artistName={currentTrack.artist}
                 albumName={currentTrack.album}
                 durationSeconds={currentTrack.durationSeconds}
                 progressSeconds={progress}
                 onSeek={handleSeek}
+                onClose={handleToggleLyrics}
               />
             )}
 

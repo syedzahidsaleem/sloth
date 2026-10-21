@@ -8,6 +8,7 @@ import {
   filterLyricsCreditLines,
   parseLrc,
 } from '../lyrics/metrolist-fetcher';
+import { getCuratedFallbackLrc } from '../lyrics/parser';
 
 describe('Metrolist LRCLib Lyrics Fetcher & Parser', () => {
   it('cleans title metadata, brackets, video tags, and features', () => {
@@ -79,5 +80,29 @@ describe('Metrolist LRCLib Lyrics Fetcher & Parser', () => {
 
     expect(parsed.lines[3].timeMs).toBe(30000);
     expect(parsed.lines[3].text).toBe('Chorus line repeated');
+  });
+
+  it('provides rich, validated synchronized fallback LRCs for popular & Indian acoustic tracks', () => {
+    const tracksToVerify = [
+      { title: 'Midnight City', artist: 'M83' },
+      { title: 'Starboy', artist: 'The Weeknd, Daft Punk' },
+      { title: 'Instant Crush', artist: 'Daft Punk' },
+      { title: 'One More Time', artist: 'Daft Punk' },
+      { title: 'Baarishein', artist: 'Anuv Jain' },
+      { title: 'Pee Loon', artist: 'Mohit Chauhan' },
+      { title: 'Levitating', artist: 'Dua Lipa' },
+      { title: 'Veridis Quo', artist: 'Daft Punk' },
+    ];
+
+    for (const { title, artist } of tracksToVerify) {
+      const fallback = getCuratedFallbackLrc(title, artist);
+      expect(fallback, `Fallback LRC missing for ${title}`).toBeDefined();
+      expect(typeof fallback).toBe('string');
+
+      const parsed = parseLrc(fallback!);
+      expect(parsed.isSynced, `${title} should be parsed as synchronized`).toBe(true);
+      expect(parsed.lines.length, `${title} should contain parsed lines`).toBeGreaterThan(3);
+      expect(parsed.lines[0].timeMs).toBeGreaterThanOrEqual(0);
+    }
   });
 });

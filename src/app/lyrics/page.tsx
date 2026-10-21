@@ -1,12 +1,15 @@
 /**
  * Sloth Dynamic Synchronized Lyrics View
- * Fetches real synced/timed LRC lyrics from LRCLib for the currently playing track.
+ * Fetches real synced/timed LRC lyrics from LRCLib with Metrolist cascade & offline fallback for the currently playing track.
  * Author: Syed Zahid Saleem <syedzahidsaleem2@gmail.com>
  */
 
 import { useState, useEffect } from 'react';
 import { LyricsView } from '@/components/lyrics';
-import { ParsedLyrics, parseLrc, SAMPLE_MIDNIGHT_CITY_LRC } from '@/lyrics/parser';
+import { ParsedLyrics, parseLrc, getCuratedFallbackLrc } from '@/lyrics/parser';
+import { MetrolistLyricsFetcher } from '@/lyrics/metrolist-fetcher';
+
+const clientLyricsFetcher = new MetrolistLyricsFetcher();
 
 export interface LyricsPageProps {
   trackTitle?: string;
@@ -16,6 +19,7 @@ export interface LyricsPageProps {
   progressSeconds?: number;
   onSeek?: (seconds: number) => void;
   onClose?: () => void;
+  trackId?: string;
 }
 
 export default function LyricsPage({
@@ -26,6 +30,7 @@ export default function LyricsPage({
   progressSeconds = 0,
   onSeek = () => {},
   onClose = () => {},
+  trackId,
 }: LyricsPageProps) {
   const [lyrics, setLyrics] = useState<ParsedLyrics | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -33,9 +38,19 @@ export default function LyricsPage({
   useEffect(() => {
     const cleanT = trackTitle.trim();
     const cleanA = artistName.trim();
-    if (!cleanT) {
+    if (!cleanT || cleanT === 'No track playing') {
       setLyrics(null);
+      setIsLoading(false);
       return;
+    }
+
+    // Check offline curated fallback first for instantaneous response
+    const fallbackLrc = getCuratedFallbackLrc(cleanT, cleanA);
+    if (fallbackLrc) {
+      const parsed = parseLrc(fallbackLrc);
+      parsed.trackName = cleanT;
+      parsed.artistName = cleanA;
+      setLyrics(parsed);
     }
 
     let isCancelled = false;
@@ -43,58 +58,28 @@ export default function LyricsPage({
 
     const fetchLyrics = async () => {
       try {
-        // 1. Search LRCLib with combined artist and title query
-        const queryTerm = `${cleanA} ${cleanT}`.trim();
-        const searchUrl = `https://lrclib.net/api/search?q=${encodeURIComponent(queryTerm)}`;
-        const res = await fetch(searchUrl, {
-          headers: { Accept: 'application/json' },
+        const fetched = await clientLyricsFetcher.getLyrics({
+          title: cleanT,
+          artist: cleanA,
+          album: albumName,
+          duration: durationSeconds > 0 ? durationSeconds : undefined,
         });
 
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            const syncedItem = data.find((d: any) => d.syncedLyrics);
-            const targetItem = syncedItem || data.find((d: any) => d.plainLyrics);
-            if (targetItem && (targetItem.syncedLyrics || targetItem.plainLyrics)) {
-              const parsed = parseLrc(targetItem.syncedLyrics || targetItem.plainLyrics);
-              parsed.trackName = targetItem.trackName;
-              parsed.artistName = targetItem.artistName;
-              if (!isCancelled) {
-                setLyrics(parsed);
-                setIsLoading(false);
-                return;
-              }
-            }
-          }
-        }
-
-        // 2. Fallback: Search with cleaned title if artist query had no match
-        const titleRes = await fetch(
-          `https://lrclib.net/api/search?q=${encodeURIComponent(cleanT)}`,
-          { headers: { Accept: 'application/json' } },
-        );
-        if (titleRes.ok) {
-          const titleData = await titleRes.json();
-          if (Array.isArray(titleData) && titleData.length > 0) {
-            const syncedItem = titleData.find((d: any) => d.syncedLyrics);
-            const targetItem = syncedItem || titleData.find((d: any) => d.plainLyrics);
-            if (targetItem && (targetItem.syncedLyrics || targetItem.plainLyrics)) {
-              const parsed = parseLrc(targetItem.syncedLyrics || targetItem.plainLyrics);
-              if (!isCancelled) {
-                setLyrics(parsed);
-                setIsLoading(false);
-                return;
-              }
-            }
-          }
+        if (!isCancelled && fetched && (fetched.lines.length > 0 || fetched.plainText)) {
+          setLyrics(fetched);
+          setIsLoading(false);
+          return;
         }
       } catch (err) {
         console.warn('Lyrics fetch error:', err);
       }
 
       if (!isCancelled) {
-        if (cleanT.toLowerCase().includes('midnight city')) {
-          setLyrics(parseLrc(SAMPLE_MIDNIGHT_CITY_LRC));
+        if (fallbackLrc) {
+          const parsed = parseLrc(fallbackLrc);
+          parsed.trackName = cleanT;
+          parsed.artistName = cleanA;
+          setLyrics(parsed);
         } else {
           setLyrics(null);
         }
@@ -107,7 +92,7 @@ export default function LyricsPage({
     return () => {
       isCancelled = true;
     };
-  }, [trackTitle, artistName]);
+  }, [trackTitle, artistName, albumName, durationSeconds, trackId]);
 
   return (
     <div className="surface-background h-full w-full select-none" data-testid="lyrics-page">
@@ -121,6 +106,7 @@ export default function LyricsPage({
         totalDurationSeconds={durationSeconds}
         onSeek={onSeek}
         onClose={onClose}
+        trackId={trackId}
       />
     </div>
   );
