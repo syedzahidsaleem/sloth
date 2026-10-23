@@ -41,3 +41,15 @@ Thumbs.db
 # Read-only references safeguard
 references/
 _hub/
+
+# Internal Agent, Spec & Development Files (Local Only)
+GEMINI.md
+**/GEMINI.md
+.agents/
+docs/
+scripts/
+lighthouse*.json
+lighthouserc.cjs
+src/mcp-server/
+src/tests/mcp-server.test.ts
+

@@ -2,30 +2,30 @@
 
 > A modern, high-performance music application built with deliberate aesthetics, resilient audio streaming, intelligent recommendations, and synchronized social listening.
 
+🚀 **Live Production App**: [https://syedzahidsaleem.github.io/sloth/](https://syedzahidsaleem.github.io/sloth/)
+
 ---
 
-## Architectural Blueprint
+## Architectural Highlights
 
-Sloth synergizes key architectural paradigms from leading open-source music clients:
+Sloth synergizes key architectural paradigms from leading modern music clients:
 
-- **Nuclear UI & Plugin SDK**: Modular UI components, OKLCH design tokens, dynamic theme engine, extensible source plugin registry, and local library scanner.
-- **Meld Recommendation & Cache Architecture**: Recommendation scoring algorithms, 3-tier cache layer, Qobuz & YouTube providers, and ISRC + fuzzy track matching pipeline.
-- **Metrolist InnerTube & Synchronization**: YouTube Music InnerTube pipeline, LRCLib lyrics synchronization, and WebSocket-driven "Listen Together" protocol.
-- **Spotube Audio Engine**: Audio player orchestration, SponsorBlock chapter segment handling, and offline caching/download pipelines.
+- **Nuclear-Inspired Tactile UI**: Modular layout components, OKLCH design tokens, dynamic theme engine, extensible source plugin registry, and local library scanner.
+- **Smart Recommendations & Dynamic Autoplay**: Cultural & genre clustering, Spotify-style seed-matched queue population, and automatic circumplex mood bias adaptation.
+- **InnerTube & Synchronized Lyrics**: YouTube Music InnerTube pipeline, real-time synchronized LRCLib lyrics with word/line karaoke highlighting, and WebSocket-driven "Listen Together" protocol.
+- **Resilient Audio Engine**: Audio player orchestration, smooth seekbar synchronization, SponsorBlock chapter segment handling, and offline caching pipelines.
 
-For detailed dependency tracking, see [`docs/DEPENDENCIES.md`](docs/DEPENDENCIES.md).
-For architectural decisions, see [`docs/decisions/`](docs/decisions/).
 For upstream license notices and attribution, see [`LICENSE-NOTICES`](LICENSE-NOTICES).
 
 ---
 
-## Reference Repositories (External)
+## Tech Stack
 
-Reference sources are maintained out-of-tree at `D:\Coding\_hub\references\`:
-- `nuclear/` — UI source of truth, theme tokens, plugin SDK
-- `meld/` — Recommendation engine, matching pipeline, cache
-- `metrolist/` — InnerTube client, lyrics pipeline, listen-together
-- `spotube/` — Audio player engine, download pipeline, SponsorBlock
+- **Frontend / Client**: Next.js App Router / React 19, TypeScript (strict mode), Tailwind CSS v4, Motion (`motion/react`)
+- **Desktop Runtime**: Tauri v2
+- **Database**: SQLite with Drizzle ORM
+- **Engine Server**: Python FastAPI (engine server for recommendations, audio extraction, scoring)
+- **Component Architecture**: Class Variance Authority (CVA) with Neobrutalist tactile depth
 
 ---
 
