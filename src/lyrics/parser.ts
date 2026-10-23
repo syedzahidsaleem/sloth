@@ -507,7 +507,7 @@ export function getCuratedFallbackLrc(title: string, artist = ''): string | null
   if (t.includes('one more time')) return SAMPLE_ONE_MORE_TIME_LRC;
   if (t.includes('veridis quo')) return SAMPLE_VERIDIS_QUO_LRC;
   if (t.includes('levitating')) return SAMPLE_LEVITATING_LRC;
-  if (t.includes('baarishein')) return SAMPLE_BAARISHEIN_LRC;
+  if (t.includes('baarishein') || a.includes('anuv jain')) return SAMPLE_BAARISHEIN_LRC;
   if (t.includes('pee loon')) return SAMPLE_PEE_LOON_LRC;
   if (t.includes('kesariya')) return SAMPLE_KESARIYA_LRC;
   if (t.includes('blinding lights')) return SAMPLE_BLINDING_LIGHTS_LRC;

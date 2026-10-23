@@ -7,9 +7,7 @@
 import { useState, useEffect, useMemo, FC } from 'react';
 import {
   Play,
-  Pause,
   Plus,
-  Heart,
   SlidersHorizontal,
   X,
   Music,
@@ -369,7 +367,7 @@ export const SearchPage: FC<SearchPageProps> = ({
       (p) =>
         p.name.toLowerCase().includes(lower) ||
         p.description?.toLowerCase().includes(lower) ||
-        p.tracks.some((t) => t.title.toLowerCase().includes(lower) || t.artist.toLowerCase().includes(lower))
+        p.tracks?.some((t) => t.title.toLowerCase().includes(lower) || t.artist.toLowerCase().includes(lower))
     );
   }, [playlists, debouncedQuery]);
 
@@ -655,11 +653,11 @@ export const SearchPage: FC<SearchPageProps> = ({
                     key={pl.id}
                     id={pl.id}
                     name={pl.name}
-                    itemCount={pl.tracks.length}
-                    thumbnails={pl.tracks.map((t) => t.coverUrl).filter(Boolean) as string[]}
+                    itemCount={pl.tracks?.length || 0}
+                    thumbnails={(pl.tracks || []).map((t) => t.coverUrl).filter(Boolean) as string[]}
                     onClick={() => onSelectPlaylist?.(pl.id)}
                     onPlay={() => {
-                      if (pl.tracks.length > 0) {
+                      if (pl.tracks && pl.tracks.length > 0) {
                         onPlayTrack?.(pl.tracks[0]);
                       }
                     }}
@@ -789,11 +787,11 @@ export const SearchPage: FC<SearchPageProps> = ({
               key={pl.id}
               id={pl.id}
               name={pl.name}
-              itemCount={pl.tracks.length}
-              thumbnails={pl.tracks.map((t) => t.coverUrl).filter(Boolean) as string[]}
+              itemCount={pl.tracks?.length || 0}
+              thumbnails={(pl.tracks || []).map((t) => t.coverUrl).filter(Boolean) as string[]}
               onClick={() => onSelectPlaylist?.(pl.id)}
               onPlay={() => {
-                if (pl.tracks.length > 0) {
+                if (pl.tracks && pl.tracks.length > 0) {
                   onPlayTrack?.(pl.tracks[0]);
                 }
               }}

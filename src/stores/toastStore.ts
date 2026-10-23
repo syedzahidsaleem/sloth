@@ -17,9 +17,22 @@ export interface ToastItem {
   onAction?: () => void;
 }
 
+export type ShowToastOptions = {
+  title: string;
+  message?: string;
+  variant?: string;
+  type?: ToastType;
+  durationMs?: number;
+};
+
 export interface ToastStore {
   toasts: ToastItem[];
   addToast: (toast: Omit<ToastItem, 'id'>) => string;
+  showToast: (
+    optionsOrTitle: ShowToastOptions | string,
+    message?: string,
+    type?: ToastType
+  ) => string;
   removeToast: (id: string) => void;
   clearToasts: () => void;
 }
@@ -46,6 +59,44 @@ export const useToastStore = create<ToastStore>((set) => ({
         }));
       }, newItem.durationMs);
     }
+
+    return id;
+  },
+
+  showToast: (optionsOrTitle, message, type = 'info') => {
+    let tTitle: string;
+    let tMessage: string | undefined = message;
+    let tType: ToastType = type;
+    let tDuration: number | undefined;
+
+    if (typeof optionsOrTitle === 'object') {
+      tTitle = optionsOrTitle.title;
+      tMessage = optionsOrTitle.message;
+      const v = optionsOrTitle.variant || optionsOrTitle.type;
+      tType = (v === 'danger' || v === 'error') ? 'error' : (v === 'success' ? 'success' : 'info');
+      tDuration = optionsOrTitle.durationMs;
+    } else {
+      tTitle = optionsOrTitle;
+    }
+
+    const id = `toast-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const newItem: ToastItem = {
+      id,
+      type: tType,
+      title: tTitle,
+      message: tMessage,
+      durationMs: tDuration ?? (tType === 'undo' ? 5000 : 3000),
+    };
+
+    set((state) => ({
+      toasts: [...state.toasts.slice(-4), newItem],
+    }));
+
+    setTimeout(() => {
+      set((state) => ({
+        toasts: state.toasts.filter((t) => t.id !== id),
+      }));
+    }, newItem.durationMs);
 
     return id;
   },

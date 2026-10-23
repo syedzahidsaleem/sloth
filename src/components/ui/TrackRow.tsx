@@ -327,7 +327,7 @@ export const TrackRow: FC<TrackRowProps> = ({
             {track.album && (
               <TrackContextMenuAction
                 icon={<Disc size={14} />}
-                onClick={() => onNavigateToAlbum?.(track.album)}
+                onClick={() => { const alb = track.album; if (alb) onNavigateToAlbum?.(alb); }}
               >
                 Go to album
               </TrackContextMenuAction>

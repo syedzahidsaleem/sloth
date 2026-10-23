@@ -11,7 +11,6 @@ import {
   Copy,
   Check,
   Loader2,
-  AlertCircle,
   XCircle,
 } from 'lucide-react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';

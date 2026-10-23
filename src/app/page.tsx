@@ -1,5 +1,5 @@
 import { FC, useMemo } from 'react';
-import { Play, Heart, Disc3, Radio, Sparkles } from 'lucide-react';
+import { Play, Heart, Radio, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ViewShell } from '@/components/ui/ViewShell';
 import { CardsRow, CardsRowItem } from '@/components/ui/CardsRow';

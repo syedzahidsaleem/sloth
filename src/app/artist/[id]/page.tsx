@@ -88,6 +88,7 @@ export default function ArtistPage({
   artistId = 'm83',
   onPlayTrack,
   onPlayArtist,
+  onPlayTopTracks,
   onSelectAlbum,
   onSelectArtist,
   currentTrackId,

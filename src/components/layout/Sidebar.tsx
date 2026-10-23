@@ -174,7 +174,7 @@ export const Sidebar: FC<SidebarProps> = ({
                       {pl.name}
                     </span>
                     <span className="text-[10px] text-foreground/40 font-mono">
-                      {pl.tracks.length}
+                      {pl.tracks?.length || 0}
                     </span>
                   </button>
                 );

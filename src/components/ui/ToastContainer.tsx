@@ -7,7 +7,7 @@
 import { FC } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { CheckCircle2, AlertCircle, Info, RotateCcw, X } from 'lucide-react';
-import { useToastStore, ToastItem } from '@/stores/toastStore';
+import { useToastStore } from '@/stores/toastStore';
 import { Button } from './Button';
 import { cn } from '@/lib/utils';
 

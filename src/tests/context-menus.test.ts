@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { AlbumCard } from '../components/ui/AlbumCard';
 import { ArtistCard } from '../components/ui/ArtistCard';
 import { PlaylistCard } from '../components/ui/PlaylistCard';

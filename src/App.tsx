@@ -794,13 +794,13 @@ export default function App() {
               <PlaylistsPage
                 onPlayPlaylist={(plId) => {
                   const pl = usePlaylistStore.getState().getPlaylistById(plId);
-                  if (pl && pl.tracks.length > 0) {
+                  if (pl?.tracks && pl.tracks.length > 0) {
                     replaceQueue(pl.tracks, 0);
                   }
                 }}
                 onSelectPlaylist={(plId) => {
                   const pl = usePlaylistStore.getState().getPlaylistById(plId);
-                  if (pl && pl.tracks.length > 0) {
+                  if (pl?.tracks && pl.tracks.length > 0) {
                     replaceQueue(pl.tracks, 0);
                   }
                 }}

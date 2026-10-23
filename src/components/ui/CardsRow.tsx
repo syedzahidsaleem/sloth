@@ -29,6 +29,7 @@ export type CardsRowLabels = {
 
 export type CardsRowProps = {
   title: string;
+  subtitle?: string;
   badge?: string;
   items: CardsRowItem[];
   labels?: CardsRowLabels;
@@ -43,6 +44,7 @@ const defaultLabels: CardsRowLabels = {
 
 const CardsRowBase: FC<CardsRowProps> = ({
   title,
+  subtitle,
   badge,
   items,
   labels = defaultLabels,
@@ -76,12 +78,17 @@ const CardsRowBase: FC<CardsRowProps> = ({
   return (
     <div data-testid={testId} className={cn('flex flex-col gap-3', className)}>
       <div className="flex min-h-10 items-center justify-between gap-4">
-        <div className="flex items-center gap-2.5">
-          <h2 className="text-foreground text-lg font-bold tracking-tight">{title}</h2>
-          {badge && (
-            <Badge data-testid="cards-row-badge" variant="pill" color="purple">
-              {badge}
-            </Badge>
+        <div className="flex flex-col gap-0.5">
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-foreground text-lg font-bold tracking-tight">{title}</h2>
+            {badge && (
+              <Badge data-testid="cards-row-badge" variant="pill" color="purple">
+                {badge}
+              </Badge>
+            )}
+          </div>
+          {subtitle && (
+            <p className="text-xs text-foreground/60">{subtitle}</p>
           )}
         </div>
 

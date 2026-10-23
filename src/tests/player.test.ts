@@ -153,7 +153,7 @@ describe('Sloth WebAudioPlayer Architecture', () => {
 
   it('calculates seek positions and starts playback from 0:00', async () => {
     await player.openPlaylist(mockTracks, 0, false);
-    const totalDuration = mockTracks[0].durationSeconds;
+    const totalDuration = mockTracks[0].durationSeconds ?? 0;
     const clickRatio = 0.5;
     const targetSeconds = clickRatio * totalDuration;
     expect(targetSeconds).toBe(177.5);

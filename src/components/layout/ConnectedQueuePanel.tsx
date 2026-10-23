@@ -10,7 +10,6 @@ import {
   Music,
   Trash2,
   Play,
-  Pause,
   X,
   MoreHorizontal,
   GripVertical,
@@ -501,7 +500,8 @@ export const ConnectedQueuePanel: FC<ConnectedQueuePanelProps> = ({
                                   <TrackContextMenuAction
                                     icon={<Disc size={14} />}
                                     onClick={() => {
-                                      onNavigateToAlbum?.(track.album);
+                                      const albumName = track.album;
+                                      if (albumName) onNavigateToAlbum?.(albumName);
                                     }}
                                   >
                                     Go to album
@@ -591,7 +591,7 @@ export const ConnectedQueuePanel: FC<ConnectedQueuePanelProps> = ({
 
             <div className="flex justify-end gap-2">
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={() => setIsPlaylistModalOpen(false)}
               >

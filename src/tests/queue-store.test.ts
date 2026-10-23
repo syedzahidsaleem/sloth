@@ -4,7 +4,7 @@
  * Repeat Modes, Undo Queue Replacement, and Persistence.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { useQueueStore, fisherYatesShuffle } from '../stores/queueStore';
 import { Track } from '../components/ui/TrackRow';
 
