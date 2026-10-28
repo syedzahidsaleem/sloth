@@ -143,12 +143,18 @@ export function calculateStringSimilarity(str1: string, str2: string): number {
 }
 
 /**
- * Converts timestamp string components (mm, ss, xx) into total milliseconds
+ * Converts timestamp string components (mm, ss, xx) into total milliseconds.
+ * Accurately parses centiseconds (2 digits) and milliseconds (3 digits).
+ *
+ * @param minutes - String representation of minutes
+ * @param seconds - String representation of seconds
+ * @param hundredths - String representation of centiseconds or milliseconds
+ * @returns Total milliseconds integer
  */
 export function parseTimestampToMs(minutes: string, seconds: string, hundredths: string): number {
-  const min = parseInt(minutes, 10);
-  const sec = parseInt(seconds, 10);
-  let ms = parseInt(hundredths, 10);
+  const min = parseInt(minutes, 10) || 0;
+  const sec = parseInt(seconds, 10) || 0;
+  let ms = parseInt(hundredths, 10) || 0;
 
   // If 2 digits, it's centiseconds (multiply by 10)
   if (hundredths.length === 2) {
