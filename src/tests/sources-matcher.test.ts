@@ -32,6 +32,25 @@ describe('Sloth Track Matching Pipeline & Overrides Store', () => {
       expect(levenshteinSimilarity('Midnight City', 'Midnight City (Radio Edit)')).toBeGreaterThan(0.75);
     });
 
+    it('handles Levenshtein distance boundary conditions with empty strings and single characters', () => {
+      expect(levenshteinDistance('', '')).toBe(0);
+      expect(levenshteinDistance('sloth', '')).toBe(5);
+      expect(levenshteinDistance('', 'music')).toBe(5);
+      expect(levenshteinDistance('a', 'b')).toBe(1);
+      expect(levenshteinDistance('a', 'a')).toBe(0);
+      expect(levenshteinSimilarity('', '')).toBe(1.0);
+      expect(levenshteinSimilarity('a', '')).toBe(0.0);
+      expect(levenshteinSimilarity('', 'song')).toBe(0.0);
+    });
+
+    it('handles token similarity boundary conditions with empty or non-alphanumeric inputs', () => {
+      expect(tokenSimilarity('', '')).toBe(1.0);
+      expect(tokenSimilarity('!!!', '???')).toBe(1.0);
+      expect(tokenSimilarity('Sloth', '')).toBe(0.0);
+      expect(tokenSimilarity('', 'Stream')).toBe(0.0);
+      expect(tokenSimilarity('SingleWord', 'SingleWord')).toBe(1.0);
+    });
+
     it('computes token similarity handling artist permutations', () => {
       const a = 'Daft Punk, The Weeknd';
       const b = 'The Weeknd & Daft Punk';
