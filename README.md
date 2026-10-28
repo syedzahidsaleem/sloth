@@ -29,6 +29,64 @@ For upstream license notices and attribution, see [`LICENSE-NOTICES`](LICENSE-NO
 
 ---
 
+## Developer Setup & Commands
+
+### Prerequisites
+- Node.js 20+ and `pnpm` (v9+)
+- Python 3.10+ (for recommendation engine service)
+
+### Getting Started
+
+```bash
+# 1. Install dependencies
+pnpm install
+
+# 2. Configure environment variables
+cp .env.example .env.local
+
+# 3. Start local development server
+pnpm dev
+
+# 4. Start the Python FastAPI recommendation engine (optional for local engine features)
+pnpm engine:start
+```
+
+### Verification & Testing
+
+```bash
+# Run unit test suite with Vitest
+pnpm test --run
+
+# Run type-checking
+pnpm typecheck
+
+# Build production bundle / static export
+pnpm build
+```
+
+---
+
+## Directory Architecture
+
+```
+sloth/
+├── src/
+│   ├── app/           # Next.js App Router views (search, queue, lyrics, library, settings)
+│   ├── components/    # Reusable UI components & layouts (PlayerBar, Sidebar, Modals)
+│   ├── hooks/         # Custom React hooks (keyboard shortcuts, audio synchronization)
+│   ├── lyrics/        # LRCLib fetching, LRC parsing, and karaoke timecode matching
+│   ├── player/        # Universal audio player orchestration & Web Audio pipelines
+│   ├── sources/       # Source plugin registry, ISRC canonical matching, and fuzzy solvers
+│   ├── stores/        # Zustand application state with SQLite/storage persistence
+│   ├── styles/        # OKLCH design tokens, theme configurations, and base CSS
+│   └── tests/         # Vitest automated test suites
+├── server/            # Python FastAPI recommendation engine & audio extraction service
+├── public/            # Static assets, icons, and app manifest
+└── .github/           # GitHub Actions CI/CD workflows (Pages automated deployment)
+```
+
+---
+
 ## Security & Secrets
 
 Sloth strictly implements zero-leak secrets hygiene:
