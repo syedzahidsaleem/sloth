@@ -127,4 +127,28 @@ describe('createKeyboardShortcutListener', () => {
     expect(blurSpy).toHaveBeenCalled();
     expect(onEscape).toHaveBeenCalledTimes(1);
   });
+
+  it('handles macOS metaKey modifier equivalently to ctrlKey for shortcuts', () => {
+    const onLyricsToggle = vi.fn();
+    const onQueueToggle = vi.fn();
+    const listener = createKeyboardShortcutListener({ onLyricsToggle, onQueueToggle });
+
+    // Cmd + L (macOS)
+    listener(mockEvent({ key: 'l', metaKey: true }));
+    expect(onLyricsToggle).toHaveBeenCalledTimes(1);
+
+    // Cmd + Q (macOS)
+    listener(mockEvent({ key: 'q', metaKey: true }));
+    expect(onQueueToggle).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores standard non-modifier hotkeys when inside contentEditable elements', () => {
+    const onPlayPause = vi.fn();
+    const listener = createKeyboardShortcutListener({ onPlayPause });
+
+    const editableMock = { isContentEditable: true } as unknown as HTMLElement;
+    listener(mockEvent({ code: 'Space', target: editableMock }));
+
+    expect(onPlayPause).not.toHaveBeenCalled();
+  });
 });
