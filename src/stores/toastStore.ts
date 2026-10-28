@@ -7,6 +7,16 @@ import { create } from 'zustand';
 
 export type ToastType = 'info' | 'success' | 'error' | 'undo';
 
+/** Maximum number of stacked toast notifications rendered simultaneously */
+export const MAX_STACKED_TOASTS = 5;
+
+/** Default auto-dismiss timeout intervals in milliseconds */
+export const TOAST_DURATIONS = {
+  DEFAULT: 3000,
+  UNDO: 5000,
+  ERROR: 4000,
+} as const;
+
 export interface ToastItem {
   id: string;
   type: ToastType;
@@ -45,11 +55,13 @@ export const useToastStore = create<ToastStore>((set) => ({
     const newItem: ToastItem = {
       ...toast,
       id,
-      durationMs: toast.durationMs ?? (toast.type === 'undo' ? 5000 : 3000),
+      durationMs:
+        toast.durationMs ??
+        (toast.type === 'undo' ? TOAST_DURATIONS.UNDO : TOAST_DURATIONS.DEFAULT),
     };
 
     set((state) => ({
-      toasts: [...state.toasts.slice(-4), newItem], // Keep max 5 stacked
+      toasts: [...state.toasts.slice(-(MAX_STACKED_TOASTS - 1)), newItem],
     }));
 
     if (newItem.durationMs && newItem.durationMs > 0) {
@@ -85,11 +97,12 @@ export const useToastStore = create<ToastStore>((set) => ({
       type: tType,
       title: tTitle,
       message: tMessage,
-      durationMs: tDuration ?? (tType === 'undo' ? 5000 : 3000),
+      durationMs:
+        tDuration ?? (tType === 'undo' ? TOAST_DURATIONS.UNDO : TOAST_DURATIONS.DEFAULT),
     };
 
     set((state) => ({
-      toasts: [...state.toasts.slice(-4), newItem],
+      toasts: [...state.toasts.slice(-(MAX_STACKED_TOASTS - 1)), newItem],
     }));
 
     setTimeout(() => {
