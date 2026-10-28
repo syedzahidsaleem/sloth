@@ -81,6 +81,19 @@ export const FONTS = {
   mono: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
 } as const;
 
+/**
+ * Supported Sloth theme identifiers for dynamic theme switching.
+ */
+export const THEME_IDS = [
+  'nuclear:default',
+  'nuclear:arctic-moss',
+  'nuclear:aurora',
+  'nuclear:ember',
+  'nuclear:lagoon',
+] as const;
+
+export type ThemeId = (typeof THEME_IDS)[number];
+
 export const TOKENS = {
   surfaces: SURFACES,
   text: TEXT_COLORS,
@@ -88,6 +101,7 @@ export const TOKENS = {
   layout: LAYOUT,
   radii: RADII,
   fonts: FONTS,
+  themes: THEME_IDS,
 } as const;
 
 /**
