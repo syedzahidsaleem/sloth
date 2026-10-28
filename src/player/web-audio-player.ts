@@ -18,6 +18,13 @@ export interface PlayerTrack {
   durationSeconds?: number;
 }
 
+/**
+ * Validates that a numeric duration is positive, finite, and within playable bounds.
+ */
+export function isValidPlaybackDuration(duration: number | undefined | null): duration is number {
+  return typeof duration === 'number' && isFinite(duration) && duration > 0;
+}
+
 export type PlaybackStatus = 'stopped' | 'buffering' | 'playing' | 'paused';
 export type RepeatMode = 'off' | 'all' | 'one';
 
