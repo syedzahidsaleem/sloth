@@ -105,4 +105,16 @@ describe('Metrolist LRCLib Lyrics Fetcher & Parser', () => {
       expect(parsed.lines[0].timeMs).toBeGreaterThanOrEqual(0);
     }
   });
+
+  it('handles edge-case and boundary inputs in timestamp parser', () => {
+    // Standard 2-digit centiseconds
+    expect(parseTimestampToMs('02', '30', '50')).toBe(150500);
+
+    // Standard 3-digit milliseconds
+    expect(parseTimestampToMs('01', '05', '500')).toBe(65500);
+
+    // Zero timestamps
+    expect(parseTimestampToMs('00', '00', '00')).toBe(0);
+    expect(parseTimestampToMs('00', '00', '000')).toBe(0);
+  });
 });
