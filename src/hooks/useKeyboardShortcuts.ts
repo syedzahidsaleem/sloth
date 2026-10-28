@@ -33,6 +33,15 @@ export interface KeyboardShortcutHandlers {
   onEscape?: () => void;
 }
 
+/** Default seek interval in seconds for ArrowLeft / ArrowRight */
+export const SHORTCUT_SEEK_STEP_SECONDS = 5;
+
+/** Fast seek interval in seconds when holding Shift */
+export const SHORTCUT_SEEK_FAST_SECONDS = 15;
+
+/** Volume adjustment delta percentage for ArrowUp / ArrowDown */
+export const SHORTCUT_VOLUME_STEP_PERCENT = 5;
+
 export function createKeyboardShortcutListener(handlers: KeyboardShortcutHandlers) {
   return (e: KeyboardEvent) => {
     // Check if user is typing in an input, textarea, or contentEditable element
@@ -83,13 +92,13 @@ export function createKeyboardShortcutListener(handlers: KeyboardShortcutHandler
     // ArrowLeft / ArrowRight: Seek
     if (!ctrlOrMeta && e.key === 'ArrowLeft' && !isInput) {
       e.preventDefault();
-      const delta = e.shiftKey ? -15 : -5;
+      const delta = e.shiftKey ? -SHORTCUT_SEEK_FAST_SECONDS : -SHORTCUT_SEEK_STEP_SECONDS;
       handlers.onSeekRelative?.(delta);
       return;
     }
     if (!ctrlOrMeta && e.key === 'ArrowRight' && !isInput) {
       e.preventDefault();
-      const delta = e.shiftKey ? 15 : 5;
+      const delta = e.shiftKey ? SHORTCUT_SEEK_FAST_SECONDS : SHORTCUT_SEEK_STEP_SECONDS;
       handlers.onSeekRelative?.(delta);
       return;
     }
@@ -97,12 +106,12 @@ export function createKeyboardShortcutListener(handlers: KeyboardShortcutHandler
     // ArrowUp / ArrowDown: Volume
     if (!ctrlOrMeta && e.key === 'ArrowUp' && !isInput) {
       e.preventDefault();
-      handlers.onVolumeChangeRelative?.(5);
+      handlers.onVolumeChangeRelative?.(SHORTCUT_VOLUME_STEP_PERCENT);
       return;
     }
     if (!ctrlOrMeta && e.key === 'ArrowDown' && !isInput) {
       e.preventDefault();
-      handlers.onVolumeChangeRelative?.(-5);
+      handlers.onVolumeChangeRelative?.(-SHORTCUT_VOLUME_STEP_PERCENT);
       return;
     }
 
