@@ -102,11 +102,15 @@ export function hybridStringSimilarity(a: string, b: string): number {
 }
 
 /**
- * Match a target track metadata against a candidate search result:
- * 1. Exact ISRC match -> confidence 1.0
- * 2. Title + artist fuzzy match -> base confidence ~0.85
- * 3. Duration within ±2 seconds -> +0.10 boost
- * 4. Confidence < 0.75 -> flagged for manual override
+ * Match a target track metadata against a candidate search result using multi-stage confidence scoring:
+ * 1. Exact ISRC match -> confidence 1.0 (authoritative)
+ * 2. Title + artist fuzzy match -> base confidence ~0.85 (hybrid Levenshtein + token Jaccard)
+ * 3. Duration confirmation within ±2 seconds -> +0.10 boost
+ * 4. Overall confidence < 0.75 -> flagged for manual user confirmation
+ *
+ * @param track Target track metadata
+ * @param candidate Source search result candidate
+ * @returns Detailed match result with breakdown and method tag
  */
 export function matchTrack(
   track: TrackMeta,

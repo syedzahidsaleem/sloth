@@ -3,43 +3,84 @@
  * Compatible with Nuclear's Plugin SDK and Meld's matching architectures.
  */
 
+/**
+ * Metadata descriptor for a canonical music track.
+ * Used across the application to uniquely identify and match tracks against audio backends.
+ */
 export interface TrackMeta {
+  /** Canonical track identifier (UUID, local DB ID, or catalog ID) */
   id: string;
+  /** Primary track title without extraneous audio/video noise */
   title: string;
+  /** Primary performing artist or ensemble name */
   artist: string;
+  /** Album name if known */
   album?: string;
+  /** International Standard Recording Code (12 alphanumeric characters) */
   isrc?: string;
+  /** Track playback length in seconds */
   durationSeconds?: number;
 }
 
+/**
+ * A candidate search result returned by an audio source provider.
+ */
 export interface SourceSearchResult {
+  /** Provider-specific stream or video/audio identifier */
   id: string;
+  /** Track title as indexed by the audio source */
   title: string;
+  /** Artist name as indexed by the audio source */
   artist: string;
+  /** Album or release name if provided by source */
   album?: string;
+  /** Track duration in seconds as reported by the source */
   durationSeconds?: number;
+  /** ISRC code if cataloged by the provider */
   isrc?: string;
+  /** Identifier of the source plugin that discovered this result */
   sourceId: string;
+  /** Artwork or thumbnail preview URL */
   thumbnailUrl?: string;
+  /** Flag indicating whether the source can deliver uncompressed or FLAC streams */
   lossless?: boolean;
+  /** Stream bitrate in kbps (e.g. 128, 256, 320, 1411) */
   bitrate?: number;
+  /** Audio bit depth (e.g. 16, 24) */
   bitDepth?: number;
+  /** Audio sample rate in Hz (e.g. 44100, 48000, 96000) */
   sampleRate?: number;
 }
 
+/**
+ * Playable audio stream resolution payload.
+ */
 export interface SourceResolvedStream {
+  /** Fully qualified URI or signed playback stream URL */
   url: string;
+  /** ID of the provider plugin that resolved this stream */
   sourceId: string;
+  /** Canonical Sloth track identifier */
   trackId: string;
+  /** Resolved track title */
   title: string;
+  /** Resolved artist name */
   artist: string;
+  /** Audio MIME type (e.g., 'audio/webm; codecs="opus"', 'audio/mp4') */
   mimeType: string;
+  /** Audio codec (e.g., 'opus', 'aac', 'flac') */
   codec?: string;
+  /** Bitrate in kbps */
   bitrate?: number;
+  /** Sample rate in Hz */
   sampleRate?: number;
+  /** Bit depth */
   bitDepth?: number;
+  /** Whether the stream is lossless */
   isLossless: boolean;
+  /** Unix timestamp (ms) after which the signed stream URL becomes invalid */
   expiresAt?: number;
+  /** Canonical ISRC identifier */
   isrc?: string;
 }
 
@@ -62,9 +103,15 @@ export interface NuclearStream {
   bitrate?: number;
 }
 
+/**
+ * Universal interface for audio providers (YouTube, SoundCloud, Bandcamp, local, etc.).
+ */
 export interface AudioSource {
+  /** Unique provider slug (e.g. 'youtube', 'soundcloud') */
   id: string;
+  /** Human-readable display label */
   label: string;
+  /** Whether this provider natively supports lossless audio streaming */
   supportsLossless: boolean;
 
   /**
