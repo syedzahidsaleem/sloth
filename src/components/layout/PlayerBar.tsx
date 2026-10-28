@@ -49,10 +49,20 @@ export interface PlayerBarProps {
   className?: string;
 }
 
-const formatTime = (seconds: number): string => {
-  if (isNaN(seconds) || seconds < 0) return '0:00';
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
+/**
+ * Formats a duration in seconds into mm:ss (or hh:mm:ss if >= 1 hour).
+ * Handles NaN, negative numbers, and non-finite numbers safely.
+ */
+export const formatTime = (seconds: number): string => {
+  if (isNaN(seconds) || !isFinite(seconds) || seconds < 0) return '0:00';
+  const totalSecs = Math.floor(seconds);
+  const hours = Math.floor(totalSecs / 3600);
+  const mins = Math.floor((totalSecs % 3600) / 60);
+  const secs = totalSecs % 60;
+
+  if (hours > 0) {
+    return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
