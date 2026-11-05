@@ -1,0 +1,6 @@
+server/
+*.py
+render.yaml
+*.db
+*.sqlite
+scripts/
