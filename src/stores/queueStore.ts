@@ -8,6 +8,7 @@
 import { create } from 'zustand';
 import { Track } from '@/components/ui/TrackRow';
 import { toast } from './toastStore';
+import { getEngineBaseUrl } from '@/lib/engineUrl';
 
 export type RepeatMode = 'off' | 'all' | 'one';
 
@@ -427,7 +428,7 @@ export const useQueueStore = create<QueueStore>((set, get) => {
         // Attempt smart weighted shuffle via FastAPI engine
         let shuffledRemaining: Track[] = [];
         try {
-          const res = await fetch('http://127.0.0.1:8001/api/engine/shuffle-order', {
+          const res = await fetch(`${getEngineBaseUrl()}/api/engine/shuffle-order`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -531,7 +532,7 @@ export const useQueueStore = create<QueueStore>((set, get) => {
 
       try {
         const res = await fetch(
-          `http://127.0.0.1:8001/api/engine/recommend/next?title=${encodeURIComponent(
+          `${getEngineBaseUrl()}/api/engine/recommend/next?title=${encodeURIComponent(
             currentTrack.title
           )}&artist=${encodeURIComponent(currentTrack.artist || '')}&limit=12`,
           { signal: AbortSignal.timeout(1000) }

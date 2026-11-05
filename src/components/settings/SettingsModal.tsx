@@ -19,6 +19,7 @@ import { Toggle } from '@/components/ui/Toggle';
 import { Slider } from '@/components/ui/Slider';
 import { Select } from '@/components/ui/Select';
 import { SlothLogo } from '@/components/ui/SlothLogo';
+import { getEngineBaseUrl } from '@/lib/engineUrl';
 import { cn } from '@/lib/utils';
 import {
   getSlothSettings,
@@ -183,7 +184,7 @@ export const SettingsModal: FC<SettingsModalProps> = ({
     setEngineStatus({ state: 'checking' });
     const start = performance.now();
     try {
-      const res = await fetch('http://127.0.0.1:8001/health', {
+      const res = await fetch(`${getEngineBaseUrl()}/health`, {
         signal: AbortSignal.timeout(3500),
       });
       const latency = Math.round(performance.now() - start);
@@ -202,7 +203,7 @@ export const SettingsModal: FC<SettingsModalProps> = ({
     } catch {
       setEngineStatus({
         state: 'offline',
-        message: 'Engine offline on localhost:8001 (fallback resolver active)',
+        message: `Engine offline (${getEngineBaseUrl()}) - fallback resolver active`,
       });
     }
   }, []);

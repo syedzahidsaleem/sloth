@@ -31,6 +31,7 @@ import {
   FontSizePreference,
   SETTINGS_CHANGE_EVENT,
 } from '@/services/settingsStore';
+import { getEngineBaseUrl } from '@/lib/engineUrl';
 import {
   ACCENTS,
   AccentPalette,
@@ -109,7 +110,7 @@ export const SettingsPage: FC = () => {
     setIsReindexing(true);
     setReindexMessage(null);
     try {
-      const res = await fetch('http://localhost:8001/reindex', { method: 'POST' });
+      const res = await fetch(`${getEngineBaseUrl()}/reindex`, { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
         setReindexMessage(`Indexed ${data.tracks_indexed || 500} tracks in ${data.elapsed_ms || 12}ms`);

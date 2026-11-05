@@ -13,11 +13,12 @@ import {
   SyncPlaybackPayload,
 } from './types';
 import { SyncEngine, syncEngine } from './SyncEngine';
+import { getListenTogetherWsUrl } from '@/lib/engineUrl';
 
 const STORAGE_KEY_TOKEN = 'sloth_lt_token';
 const STORAGE_KEY_ROOM = 'sloth_lt_room';
 const STORAGE_KEY_USER = 'sloth_lt_user';
-const DEFAULT_SERVER_URL = 'ws://127.0.0.1:8000/ws';
+const DEFAULT_SERVER_URL = getListenTogetherWsUrl();
 
 export interface UseListenTogetherOptions {
   serverUrl?: string;

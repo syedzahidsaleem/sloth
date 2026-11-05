@@ -11,6 +11,7 @@ import {
 } from './components/layout';
 import { Track } from './components/ui/TrackRow';
 import { SettingsModal, SettingsTabId } from './components/settings/SettingsModal';
+import { getEngineBaseUrl } from './lib/engineUrl';
 
 const SLIDE_DISTANCE = 24;
 const SCALE_FACTOR = 0.96;
@@ -307,7 +308,7 @@ export default function App() {
     const fetchRecommendations = async () => {
       try {
         const res = await fetch(
-          `http://127.0.0.1:8001/api/engine/recommend/next?title=${encodeURIComponent(
+          `${getEngineBaseUrl()}/api/engine/recommend/next?title=${encodeURIComponent(
             currentTrack.title
           )}&artist=${encodeURIComponent(currentTrack.artist || '')}&limit=15`
         );
@@ -436,7 +437,7 @@ export default function App() {
       try {
         const query = `${track.title} ${track.artist}`.trim();
         const res = await fetch(
-          `http://127.0.0.1:8001/api/stream/resolve?q=${encodeURIComponent(query)}`,
+          `${getEngineBaseUrl()}/api/stream/resolve?q=${encodeURIComponent(query)}`,
           { signal: AbortSignal.timeout(6000) }
         );
         if (res.ok) {

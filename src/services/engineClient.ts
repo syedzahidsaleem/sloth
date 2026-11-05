@@ -5,8 +5,8 @@
  */
 
 import { Track } from '@/components/ui/TrackRow';
+import { getEngineBaseUrl } from '@/lib/engineUrl';
 
-const ENGINE_BASE = 'http://127.0.0.1:8001';
 const CACHE = new Map<string, { data: any; timestamp: number }>();
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -130,7 +130,7 @@ export const FALLBACK_DAILY_MIXES: DailyMix[] = [
 ];
 
 export async function getDailyMixes(): Promise<DailyMix[]> {
-  const url = `${ENGINE_BASE}/api/engine/recommend/next?title=mix&artist=all&limit=6`;
+  const url = `${getEngineBaseUrl()}/api/engine/recommend/next?title=mix&artist=all&limit=6`;
   const res = await fetchWithTimeout<{ recommendations?: any[] }>(url, {}, {}, 500);
   if (res && res.recommendations && res.recommendations.length >= 4) {
     return FALLBACK_DAILY_MIXES;
@@ -147,7 +147,7 @@ export async function getSilentRecommendations(
   limit = 12
 ): Promise<Track[]> {
   if (!title) return [];
-  const url = `${ENGINE_BASE}/api/engine/recommend/next?title=${encodeURIComponent(
+  const url = `${getEngineBaseUrl()}/api/engine/recommend/next?title=${encodeURIComponent(
     title
   )}&artist=${encodeURIComponent(artist)}&limit=${limit}`;
 
@@ -178,7 +178,7 @@ export async function getSmartShuffleOrder(
   currentTrackId?: string
 ): Promise<Track[]> {
   if (tracks.length <= 1) return tracks;
-  const url = `${ENGINE_BASE}/api/engine/shuffle-order`;
+  const url = `${getEngineBaseUrl()}/api/engine/shuffle-order`;
 
   const res = await fetchWithTimeout<{ shuffled_tracks: Track[] }>(
     url,

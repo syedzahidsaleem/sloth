@@ -26,6 +26,7 @@ import { useLibraryStore } from '@/stores/libraryStore';
 import { useQueueStore } from '@/stores/queueStore';
 import { useToastStore } from '@/stores/toastStore';
 import { cn } from '@/lib/utils';
+import { getEngineBaseUrl } from '@/lib/engineUrl';
 
 export interface SearchPageProps {
   initialQuery?: string;
@@ -218,7 +219,7 @@ export const SearchPage: FC<SearchPageProps> = ({
       try {
         // 1. Try FastAPI engine search endpoint
         const res = await fetch(
-          `http://127.0.0.1:8001/api/search?q=${encodeURIComponent(term)}&limit=30`,
+          `${getEngineBaseUrl()}/api/search?q=${encodeURIComponent(term)}&limit=30`,
           { signal: AbortSignal.timeout(3000) }
         );
         if (res.ok) {
