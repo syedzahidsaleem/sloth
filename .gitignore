@@ -8,6 +8,7 @@ dist/
 build/
 out/
 target/
+.vercel/
 __pycache__/
 *.py[cod]
 *$py.class
@@ -47,7 +48,7 @@ GEMINI.md
 **/GEMINI.md
 .agents/
 docs/
-scripts/
+/scripts/
 lighthouse*.json
 lighthouserc.cjs
 src/mcp-server/
