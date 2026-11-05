@@ -5,7 +5,7 @@ import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: './',
+  base: '/',
   plugins: [
     react(),
     tailwindcss(),
@@ -16,7 +16,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: path.resolve(__dirname, 'dist'),
+    outDir: 'dist',
     emptyOutDir: true,
     rollupOptions: {
       output: {
