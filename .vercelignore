@@ -3,4 +3,4 @@ server/
 render.yaml
 *.db
 *.sqlite
-scripts/
+/scripts/
